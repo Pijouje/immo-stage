@@ -1,4 +1,12 @@
 <script setup>
+
+definePageMeta({
+  pageTransition: {
+    name: 'auth',
+    mode: 'out-in'
+  }
+})
+
 import { ref } from 'vue'
 
 // Variables pour récupérer ce que l'utilisateur écrit
@@ -14,22 +22,6 @@ const handleLogin = () => {
 
 <template>
   <div class="connexion-page">
-    
-    <div class="Bandeau_haut">
-        <div class="Conteneur_Logo">
-            <div class="Logo_Cercle">🏠</div>
-            <div class="Nom_site">
-                <h2>NOM DU<br>SITE (AMIENS)</h2>
-            </div>
-        </div>
-
-        <div class="Menu_navigation">
-            <NuxtLink to="/contact">CONTACT</NuxtLink>
-            <NuxtLink to="/inscription">S'INSCRIRE</NuxtLink>
-            <NuxtLink to="/connexion">SE CONNECTER</NuxtLink>
-        </div>
-    </div>
-
     <div class="Carte">
         <div class="Haut_carte">
             <h1>STUD'LOC.</h1>
@@ -53,7 +45,7 @@ const handleLogin = () => {
                 <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
             </div>
 
-            <button type="submit" class="Bouton_Action">Accéder à mon espace</button>
+            <Bouton>Accéder à mon espace</Bouton>
 
             <NuxtLink to="/mot-de-passe-oublie" class="Lien_Oubli">J'ai oublié mon mot de passe</NuxtLink>
 
@@ -63,80 +55,16 @@ const handleLogin = () => {
   </div>
 </template>
 
-<style>
-/* STRUCTURE DE LA PAGE */
+<style scoped>
 .connexion-page {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f1f5f9;
-    min-height: 100vh;
+    min-height: calc(100vh - 90px); 
     display: flex;
     flex-direction: column;
 }
-
-/* BANDEAU HAUT */
-.Bandeau_haut {
-    width: 100%;
-    height: 90px;
-    background-color: #01111d;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 5%;
-    padding-right: 5%;
-    box-sizing: border-box;
-}
-
-/* LOGO */
-.Conteneur_Logo {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.Logo_Cercle {
-    width: 40px;
-    height: 40px;
-    background-color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.4rem;
-    color: #01111d;
-}
-
-.Nom_site h2 {
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin: 0;
-    letter-spacing: 1px;
-    text-align: left;
-    text-transform: uppercase;
-}
-
-/* MENU NAVIGATION */
-.Menu_navigation {
-    display: flex;
-    gap: 40px;
-    align-items: center;
-}
-
-.Menu_navigation a {
-    text-decoration: none;
-    color: white;
-    font-weight: 600;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: opacity 0.3s;
-}
-
-.Menu_navigation a:hover { opacity: 0.7; }
-
 /* CARTE CENTRALE */
 .Carte {
     background-color: white;
@@ -236,24 +164,6 @@ label {
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.Bouton_Action {
-    background-color: #2563EB;
-    color: white;
-    font-size: 1.2rem;
-    font-weight: 700;
-    padding: 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: background 0.2s;
-    width: 100%;
-}
-
-.Bouton_Action:hover {
-    background-color: #1d4ed8;
-}
-
 .Lien_Oubli {
     text-align: center;
     color: #2563EB;
@@ -264,4 +174,48 @@ label {
 }
 
 .Lien_Oubli:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+    
+    .connexion-page{
+        min-height: auto; 
+        padding-bottom: 40px;
+    }
+
+    .Carte {
+        margin: 40px auto; 
+        width: 90%;
+        padding: 30px 20px; 
+    }
+
+
+    .Haut_carte h1 {
+        font-size: 1.8rem;
+    }
+
+    .Onglet {
+        font-size: 0.9rem;
+        padding-bottom: 12px;
+    }
+
+    .Input_Style {
+        padding: 15px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .Carte {
+        margin: 20px auto;
+        padding: 20px 15px;
+    }
+    
+    .Haut_carte h1 {
+        font-size: 1.5rem;
+    }
+    
+    .Menu_navigation {
+        gap: 10px;
+    }
+}
 </style>
