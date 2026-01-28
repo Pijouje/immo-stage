@@ -14,4 +14,9 @@ export default defineNuxtConfig({
     defaultLocale: 'fr',
   },
 
+  app: {
+    pageTransition: { name: 'hero-flow', mode: 'out-in' },
+    layoutTransition: { name: 'hero-flow', mode: 'out-in' }
+  }
+
 })

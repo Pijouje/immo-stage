@@ -1,6 +1,10 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: false
+  layout: false,
+  pageTransition: {
+    name: 'hero-flow',
+    mode: 'out-in'
+  }
 })
 
 useHead({
