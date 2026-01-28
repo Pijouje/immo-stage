@@ -1,12 +1,10 @@
-<script setup>
-// 1. On désactive le layout standard pour cette page uniquement
-// car on veut un menu transparent sur la vidéo, pas la barre blanche.
+<script setup lang="ts">
 definePageMeta({
   layout: false
 })
 
 useHead({
-  title: 'Accueil - Immobilier de Luxe'
+  title: 'Accueil - NOM DU SITE'
 })
 </script>
 
@@ -21,15 +19,14 @@ useHead({
     </div>
 
     <header class="home-header">
-      <div class="logo">
-        <span class="icon-home">🏠</span>
-        <div class="logo-text">
-          <span>NOM DU</span>
-          <span>SITE (AMIENS)</span>
+      <div class="Conteneur_Logo">
+        <div class="Logo_Cercle">🏠</div>
+        <div class="Nom_site">
+          <h2>NOM DU<br>SITE (AMIENS)</h2>
         </div>
       </div>
 
-      <nav class="home-nav">
+      <nav class="Menu_navigation">
         <NuxtLink to="/contact">CONTACT</NuxtLink>
         <NuxtLink to="/inscription">S'INSCRIRE</NuxtLink>
         <NuxtLink to="/connexion">SE CONNECTER</NuxtLink>
@@ -52,145 +49,140 @@ useHead({
 </template>
 
 <style scoped>
-/* --- 1. CONFIGURATION DE LA PAGE --- */
+/* --- CONFIGURATION GÉNÉRALE --- */
 .home-container {
   position: relative;
   width: 100%;
-  height: 100vh; /* Prend 100% de la hauteur de l'écran */
+  height: 100vh;
   overflow: hidden;
-  font-family: 'Segoe UI', sans-serif;
-  color: white;
 }
 
-/* --- 2. VIDÉO DE FOND --- */
+/* --- VIDÉO & OVERLAY --- */
 .video-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* Tout au fond */
-  background-color: #333; /* Couleur de secours si pas de vidéo */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
 }
-
 .video-bg video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Remplit l'écran sans déformer */
+  width: 100%; height: 100%;
+  object-fit: cover;
 }
-
 .overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.2); /* Filtre noir transparent */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.3); /* Légèrement plus sombre pour lire le menu blanc */
   z-index: 1;
 }
 
-/* --- 3. HEADER TRANSPARENT --- */
+/* --- NAVBAR TRANSPARENTE (Fusion des styles) --- */
 .home-header {
-  position: absolute; /* Flotte au-dessus de la vidéo */
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 10; /* Devant tout le monde */
+  height: 90px; /* Même hauteur que ta navbar normale */
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start; /* Aligné en haut */
-  padding: 40px 60px; /* Marges comme sur ton image */
+  padding-left: 5%;
+  padding-right: 5%;
   box-sizing: border-box;
+  z-index: 10;
+  background-color: transparent; /* Pas de fond sombre ici */
 }
 
-.logo {
+/* Style du Logo récupéré de ta Navbar */
+.Conteneur_Logo {
   display: flex;
   align-items: center;
   gap: 15px;
-  font-weight: bold;
 }
 
-.icon-home {
-  font-size: 1.8rem;
-  background: white;
-  color: black;
+.Logo_Cercle {
   width: 40px;
   height: 40px;
-  border-radius: 50%; /* Rond parfait */
+  background-color: white;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 1.4rem;
+  color: #01111d;
 }
 
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.9rem;
-  line-height: 1.2;
-  letter-spacing: 1px;
-}
-
-.home-nav {
-  display: flex;
-  gap: 40px;
-}
-
-.home-nav a {
+.Nom_site h2 {
   color: white;
-  text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
   letter-spacing: 1px;
+  text-align: left;
   text-transform: uppercase;
 }
 
-/* --- 4. TEXTE ET BOUTON --- */
+/* Style du Menu récupéré de ta Navbar */
+.Menu_navigation {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+
+.Menu_navigation a {
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: opacity 0.3s;
+}
+
+.Menu_navigation a:hover { opacity: 0.7; }
+
+/* --- TEXTE CENTRAL ET BOUTON --- */
 .hero-content {
   position: relative;
   z-index: 5;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centre verticalement */
-  padding-left: 60px; /* Aligné avec le logo */
+  justify-content: center;
+  padding-left: 5%;
 }
 
 .main-title {
-  font-size: 3rem;
-  font-weight: 500;
+  color: white;
+  font-size: 3.5rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  line-height: 1.3;
-  margin-bottom: 50px;
+  line-height: 1.2;
+  margin-bottom: 100px;
 }
 
 .cta-button {
-  background-color: #e0e0e0; /* Gris très clair/Blanc cassé */
-  color: black;
+  align-self: center; /* Sort de l'alignement à gauche du parent pour se centrer */
+  margin-left: -5%;   /* Compense le padding-left du parent pour être pile au centre de l'écran */
+  background-color: #f2f2f2;
+  color: #01111d;
   text-decoration: none;
-  width: 160px;
-  padding: 15px 0;
-  border-radius: 30px; /* Forme de pilule */
+  width: 180px;
+  padding: 18px 0;
+  border-radius: 50px;
   text-align: center;
-  font-size: 0.8rem;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 100;
   letter-spacing: 1px;
   line-height: 1.2;
-  display: inline-block;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
 }
 
 .cta-button:hover {
   background-color: white;
-  transform: scale(1.05);
-}
-
-/* --- RESPONSIVE (MOBILE) --- */
-@media (max-width: 768px) {
-  .home-header { padding: 20px; flex-direction: column; align-items: center; gap: 20px; }
-  .logo-text { display: none; } /* On cache le texte du logo sur mobile */
-  .home-nav { gap: 15px; font-size: 0.7rem; }
-  .hero-content { padding-left: 0; align-items: center; text-align: center; }
-  .main-title { font-size: 1.8rem; margin-bottom: 30px; }
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 </style>
