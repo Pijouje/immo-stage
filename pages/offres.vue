@@ -1,4 +1,12 @@
 <script setup lang="ts">
+
+definePageMeta({
+  pageTransition: {
+    name: 'hero-flow',
+    mode: 'out-in'
+  }
+})
+
 // Données factices pour tes annonces (plus facile à maintenir que de tout copier-coller)
 const offres = [
   { id: 1, titre: 'T2 MEUBLÉ', lieu: 'Saint-Leu, Amiens', prix: '500€', image: '/images/t2.png' },
