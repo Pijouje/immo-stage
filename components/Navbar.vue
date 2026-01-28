@@ -2,9 +2,9 @@
     <header>
         <div class="Bandeau_haut">
         <div class="Conteneur_Logo">
-            <div class="Logo_Cercle">🏠</div>
+            <div class="Logo_Cercle"><NuxtLink to="/"><span>🏠</span></NuxtLink></div>
             <div class="Nom_site">
-                <h2>NOM DU<br>SITE (AMIENS)</h2>
+                <NuxtLink to="/"><h2>NOM DU<br>SITE (AMIENS)</h2></NuxtLink>
             </div>
         </div>
 
