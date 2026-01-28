@@ -19,7 +19,7 @@ const prenom = ref('')
 .page {
   min-height: calc(100vh - 90px);
     width: 100%;
-    background-image: url('/bg.png');
+    background-image: url('/images/bg.png');
     background-size: cover;
     background-position: center;
     display: flex;
