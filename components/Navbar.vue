@@ -37,6 +37,11 @@
         gap: 15px;
     }
 
+    .Conteneur_Logo a {
+        text-decoration: none; /* Enlève le soulignement */
+        color: inherit;        /* Garde la couleur définie par les enfants */
+    }
+
     .Logo_Cercle {
         width: 40px;
         height: 40px;
