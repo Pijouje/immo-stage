@@ -2,6 +2,7 @@
   <div>
     <Navbar /> <main>
       <slot /> </main>
+      <Footer />
   </div>
 </template>
 
@@ -11,6 +12,16 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+.layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1; /* Pousse le footer vers le bas */
 }
 
 @keyframes fadeUp { 
