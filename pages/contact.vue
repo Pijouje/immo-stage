@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 const nom = ref('')
 const message = ref("Bonjour Maitre Gims, je vous envoie le dossier complet dès ce soir.")
+const input = ref('')
 
 const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 </script>
@@ -59,6 +60,31 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             <div class="Logo_Cercle">🏠</div>
             <p>Concernant : T2 Meublé - Saint-Leu</p>
           </div>
+        </div>
+        <div class="conversation">
+            <div class="destinataire">
+                <div class="message-recu">
+                    <p>Bonjour {{ nom }}, merci pour votre message. Je reste à votre disposition pour toute information complémentaire.</p>
+                    <div class="heure-destinataire">{{ heureActuelle }}</div>
+                </div>
+                
+            </div>
+            <div class="receveur">
+                <div class="message-envoye">
+                    <p>Bonjour Maitre Gims, je vous envoie le dossier complet dès ce soir.</p>
+                    <div class="heure-receveur">{{ heureActuelle }}</div>
+                </div>
+                
+            </div>
+        </div>
+        <div class="partie-envoie">
+            <button class="btn-trombone">
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            
+            <input type="text" v-model="input" placeholder="Ecrivez votre texte ..." class="champ-texte"@keyup.enter="console.log('Envoyer le message')" />
+            
+            <button class="btn-envoyer">Envoyer</button>
         </div>
       </div>
     </div>
@@ -254,5 +280,126 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
     background-color: #f8fafc;
 }
 
+.conversation {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+}
 
+.destinataire {
+    display: flex;
+    justify-content: flex-start;
+    padding: 10px 30px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: transparent;
+}
+
+.receveur {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 30px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: transparent;
+}
+
+.message-recu {
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 20px 20px 20px 0;
+    border: 1px solid #e2e8f0;
+    max-width: 60%;
+    width: fit-content;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.message-envoye {
+    background-color: #2563EB;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 20px 20px 0 20px;
+    max-width: 60%;
+    width: fit-content;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+.message-recu p, .message-envoye p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.heure-destinataire {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.heure-receveur {
+    font-size: 0.75rem;
+    color: white;
+    margin-top: 5px;
+    text-align: right;
+}
+
+/* --- LA BARRE D'ENVOI --- */
+.partie-envoie {
+    height: 80px;
+    background-color: white;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    gap: 15px;
+}
+
+.btn-trombone {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.btn-trombone:hover {
+    color: #2563EB;
+}
+
+.champ-texte {
+    flex: 1;
+    background-color: #f1f5f9;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #334155;
+    outline: none;
+}
+
+.champ-texte::placeholder {
+    color: #94a3b8;
+}
+
+
+.btn-envoyer {
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-envoyer:hover {
+    background-color: #1d4ed8;
+}
 </style>
