@@ -129,8 +129,8 @@ const offres = [
 .btn-detail {
   display: block;
   text-align: center;
-  border: 2px solid #4a90e2; /* Bleu de ta maquette */
-  color: #4a90e2;
+  border: 2px solid #2563eb; /* Bleu de ta maquette */
+  color: #2563eb;
   text-decoration: none;
   padding: 10px;
   border-radius: 12px;
@@ -140,7 +140,7 @@ const offres = [
 }
 
 .btn-detail:hover {
-  background-color: #4a90e2;
+  background-color: #2563eb;
   color: white;
 }
 
