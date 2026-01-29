@@ -41,13 +41,22 @@ const offres = [
 
 <style scoped>
 .offres-page {
-  min-height: 100vh;
-  background-color: #f4f7f6; /* Gris très clair */
-  /* Optionnel : image de fond blueprint si tu l'as */
+  
+ 
+  box-sizing: border-box; 
+
+  min-height: calc(100vh - 90px);
+  width: 100%;
+  background-color: #f4f7f6;
   background-image: url('/images/bg.png'); 
   background-size: cover;
   background-position: center;
-  padding: 120px 0 60px 0; /* Marge en haut pour ne pas être sous la navbar */
+  
+  
+ 
+  
+  /* Ton padding reste le même pour espacer du menu */
+  padding: 120px 0 60px 0; 
 }
 
 .container {
