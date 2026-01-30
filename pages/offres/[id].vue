@@ -106,7 +106,7 @@ const prevImage = () => {
           
           <div class="header-line">
             <h1>{{ offre.titre }}</h1>
-            <div class="stars">⭐⭐⭐⭐⭐ <a href="#">{{ offre.avis }} avis</a></div>
+            <div class="stars">⭐⭐⭐⭐⭐ <NuxtLink to="/avis">{{ offre.avis }} avis</NuxtLink></div>
           </div>
           <p class="location">📍 {{ offre.lieu }}</p>
 
