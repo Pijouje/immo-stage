@@ -270,7 +270,7 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 }
 
 .sticky-card {
-  position: sticky;
+  position: static;
   top: 110px; /* Décale par rapport au haut de l'écran */
   background: white;
   padding: 30px;
