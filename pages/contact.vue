@@ -6,15 +6,25 @@ const message = ref("Bonjour Maitre Gims, je vous envoie le dossier complet dès
 const input = ref('')
 
 const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+const conversationOuverte = ref(false)
+
+const ouvrirConversation = () => {
+  conversationOuverte.value = true
+}
+
+const fermerConversation = () => {
+  conversationOuverte.value = false
+}
 </script>
 
 <template>
   <div class="page">
-    <div class="carte">
+    <div class="carte" :class="{ 'mode-chat': conversationOuverte }">
       <div class="partie-gauche">
         <h2>Mes Messages</h2>
         
-        <div class="contact active">
+        <div class="contact active" @click="ouvrirConversation">
           
           <div class="avatar"></div>
           
@@ -46,6 +56,12 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
       </div>
       <div class="zone-chat">
         <div class="haut-contact">
+            <button class="btn-retour" @click="fermerConversation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
           <div class="avatar-chat"></div>
           <div class="chat-info">
             <h3>Maitre le Gims</h3>
@@ -94,29 +110,44 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
 <style scoped>
 /* --- MISE EN PAGE GLOBALE --- */
 .page {
-    min-height: calc(100vh - 90px);
+    /* Hauteur totale moins la navbar */
+    height: calc(100vh - 90px); 
     width: 100%;
+    
     background-image: url('/images/bg.png');
     background-size: cover;
     background-position: center;
+    
+    /* Flexbox pour centrer parfaitement la carte au milieu */
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center;     /* Centre verticalement */
+    
+    /* Important : Un peu d'espace pour que la carte ne touche jamais les bords sur PC */
+    padding: 20px; 
+    box-sizing: border-box;
 }
 
+/* 2. LA CARTE : Flottante et élégante */
 .carte {
     background-color: white;
+    
+    /* LARGEUR : Elle prend la place qu'elle peut, mais s'arrête à 1200px */
     width: 100%;
     max-width: 1200px; 
-    height: 600px;
+    
+    /* HAUTEUR : C'est ici le secret pour qu'elle soit jolie */
+    /* Elle prendra 85% de la hauteur disponible, donc elle "flotte" */
+    height: 85%; 
+    
     border-radius: 16px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    
     display: flex; 
     flex-direction: row; 
-    margin: 80px auto; 
-    box-sizing: border-box;
-    transform: translateY(-27px);
     overflow: hidden;
+    
+    /* Plus besoin de margin ou transform car le Flexbox de .page gère le centrage */
 }
 
 /* --- COLONNE GAUCHE --- */
@@ -402,4 +433,61 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
 .btn-envoyer:hover {
     background-color: #1d4ed8;
 }
+
+.btn-retour {
+    display: none; 
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #334155; 
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%; 
+    margin-right: 10px;
+    transition: background-color 0.2s;
+}
+
+
+.btn-retour:hover {
+    background-color: #f1f5f9; 
+}
+
+@media (max-width: 768px) {
+    
+    .page {
+        padding: 0;
+        height: calc(100vh - 90px);
+    }
+    
+    .carte {
+        height: 100%;
+        border-radius: 0;
+        max-width: 100%;
+    }
+
+    .partie-gauche {
+        width: 100%;
+        display: flex;
+    }
+
+    .zone-chat {
+        display: none;
+    }
+
+    /* QUAND UNE CONVERSATION EST OUVERTE (Classe .mode-chat active) */
+    .carte.mode-chat .partie-gauche {
+        display: none;
+    }
+
+    .carte.mode-chat .zone-chat {
+        display: flex;
+        width: 100%;
+    }
+
+    .btn-retour {
+        display: flex;
+    }
+}
+
 </style>
