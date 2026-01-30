@@ -1,3 +1,35 @@
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const menuOuvert = ref(false);
+const refMenu = ref(null);
+const refBurger = ref(null);
+const toggleMenu = () => {
+    menuOuvert.value = !menuOuvert.value;
+};
+
+const fermerMenuSiClicDehors = (event) => {
+    if (!menuOuvert.value){
+        return;
+    }
+    if (
+        refMenu.value && refMenu.value.contains(event.target) || 
+        refBurger.value && refBurger.value.contains(event.target)
+    ) {
+        return;
+    }
+    menuOuvert.value = false;
+};
+onMounted(() => {
+    window.addEventListener('click', fermerMenuSiClicDehors);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('click', fermerMenuSiClicDehors);
+});
+
+</script>
+
 <template>
     <header>
         <div class="Bandeau_haut">
@@ -8,10 +40,18 @@
             </div>
         </div>
 
-        <div class="Menu_navigation">
-            <NuxtLink to="/contact">CONTACT</NuxtLink>
-            <NuxtLink to="/inscription">S'INSCRIRE</NuxtLink>
-            <NuxtLink to="/connexion">SE CONNECTER</NuxtLink>
+        <button class="bouton-burger" @click="toggleMenu" ref="refBurger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
+            <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
+            <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
+            <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
         </div>
     </div>
     </header>
@@ -20,14 +60,16 @@
 <style scoped>
     .Bandeau_haut {
         width: 100%;
-        height: 90px;
         background-color: #01111d;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-left: 5%;
-        padding-right: 5%;
+        padding: 25px 5%; 
         box-sizing: border-box;
+        position: relative;
+        z-index: 100;
+        flex-wrap: wrap;
+        align-content: flex-start; 
     }
 
     /* LOGO */
@@ -82,6 +124,50 @@
         transition: opacity 0.3s;
     }
 
-    .Menu_navigation a:hover { opacity: 0.7; }
+    .Menu_navigation a:hover { 
+        opacity: 0.7; 
+    }
+
+    /* BOUTON BURGER */
+    .bouton-burger {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    @media (max-width: 768px) {
+        .bouton-burger {
+            display: block;
+        }
+
+        .Menu_navigation {
+            position: absolute; 
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: #01111d;
+            flex-direction: column;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s ease-in-out;
+            display: flex;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .Menu_navigation.actif {
+            max-height: 500px;
+            opacity: 1;
+            padding: 20px 0;
+        }
+        
+        .Menu_navigation a {
+            margin: 10px 0;
+        }
+    }
 
 </style>
