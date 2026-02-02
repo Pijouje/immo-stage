@@ -105,9 +105,14 @@ const prevImage = () => {
         <div class="left-content">
           
           <div class="header-line">
-            <h1>{{ offre.titre }}</h1>
-            <div class="stars">⭐⭐⭐⭐⭐ <NuxtLink to="/avis">{{ offre.avis }} avis</NuxtLink></div>
+           <h1>{{ offre.titre }}</h1>
+  
+           <div class="rating-block">
+             <Etoile :note="offre.rating" />
+    
+             <NuxtLink to="/avis" class="avis-link">{{ offre.avis }} avis</NuxtLink>
           </div>
+        </div>
           <p class="location">📍 {{ offre.lieu }}</p>
 
           <div class="tags">
@@ -251,10 +256,30 @@ const prevImage = () => {
 }
 
 /* --- TEXTE --- */
-.header-line { display: flex; justify-content: space-between; align-items: center; }
+.header-line { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; /* Pour le mobile */
+  gap: 10px;
+}
 h1 { margin: 0; font-size: 2rem; font-weight: 800; }
-.stars { color: #f59e0b; font-weight: 600; }
-.stars a { color: #2563eb; text-decoration: underline; margin-left: 5px; }
+
+.rating-block {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espace entre les étoiles et le texte */
+}
+
+.avis-link { 
+  color: #2563eb; 
+  text-decoration: underline; 
+  font-weight: 600; 
+  font-size: 0.9rem;
+  /* Petit ajustement pour aligner le texte parfaitement avec les étoiles */
+  padding-top: 3px; 
+}
+
 .location { color: #64748b; font-size: 1.1rem; margin: 10px 0 20px 0; font-weight: 500; }
 .tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
 .tag { background: white; padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; border: 1px solid #e2e8f0; }
