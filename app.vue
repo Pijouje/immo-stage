@@ -5,6 +5,7 @@
 </template>
 
 <style>
+
 body {
   margin: 0;
   padding: 0;
@@ -36,6 +37,10 @@ body {
 
 .hero-flow-leave-to {
   opacity: 0;
+}
+
+html {
+  overflow-y: scroll; /* Force la barre tout le temps */
 }
 
 </style>
