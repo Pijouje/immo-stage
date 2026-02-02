@@ -29,9 +29,11 @@ const offres = [
               <span class="pin">📍</span> {{ offre.lieu }}
             </p>
             <p class="price"><strong>{{ offre.prix }}</strong> /mois</p>
-            <NuxtLink :to="`/offres/${offre.id}`" class="btn-detail">
-              Voir l'annonce
-            </NuxtLink>
+            <div class="card-content">
+             <OffreBouton :to="`/offres/${offre.id}`">
+               Voir l'annonce
+             </OffreBouton>
+            </div>
           </div>
         </div>
       </div>
@@ -125,24 +127,6 @@ const offres = [
   color: #01111d;
 }
 
-/* BOUTON VOIR L'ANNONCE */
-.btn-detail {
-  display: block;
-  text-align: center;
-  border: 2px solid #2563eb; /* Bleu de ta maquette */
-  color: #2563eb;
-  text-decoration: none;
-  padding: 10px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.btn-detail:hover {
-  background-color: #2563eb;
-  color: white;
-}
 
 /* RESPONSIVE */
 @media (max-width: 768px) {

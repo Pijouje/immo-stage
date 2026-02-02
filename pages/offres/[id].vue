@@ -155,10 +155,11 @@ const prevImage = () => {
               </div>
             </div>
 
-            <button class="cta-btn">Contacter le propriétaire</button>
+            <OffreBouton to="/contact">
+              Contacter le propriétaire
+            </OffreBouton>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -308,8 +309,6 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .sub-price { color: #64748b; font-size: 0.9rem; font-weight: 600; }
 .divider { height: 1px; background: #e2e8f0; margin: 20px 0; }
 .details-list .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #334155; }
-.cta-btn { width: 100%; padding: 15px; background: white; border: 2px solid #2563eb; color: #2563eb; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 20px; transition: all 0.2s; }
-.cta-btn:hover { background: #2563eb; color: white; }
 
 /* --- LIGHTBOX (Fixe) --- */
 .lightbox {
