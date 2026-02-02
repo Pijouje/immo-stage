@@ -131,7 +131,7 @@ const prevImage = () => {
         </div>
 
         <div class="right-sidebar">
-          <div class="price-card sticky-card">
+          <div class="price-card static-card">
             <div class="card-header">
               <span class="price">{{ offre.prix }}€</span>
               <span class="sub-price">/ mois charges comprises</span>
@@ -242,12 +242,12 @@ const prevImage = () => {
   border-radius: 20px; font-size: 0.8rem; font-weight: 600;
 }
 
-/* --- CONTENU SPLIT (Texte vs Sticky Card) --- */
+/* --- CONTENU SPLIT (Texte vs Static Card) --- */
 .content-split {
   display: grid;
   grid-template-columns: 2fr 1fr; /* 2/3 texte, 1/3 carte */
   gap: 50px; /* Espace entre texte et carte */
-  align-items: start; /* CRUCIAL pour le sticky */
+  align-items: start; /* CRUCIAL pour le static */
 }
 
 /* --- TEXTE --- */
@@ -263,13 +263,13 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .equip-list { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .equip { background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; font-weight: 600; }
 
-/* --- RIGHT SIDEBAR (STICKY) --- */
+/* --- RIGHT SIDEBAR (STATIC) --- */
 .right-sidebar {
   /* Le conteneur doit avoir la hauteur naturelle du contenu */
   height: 100%; 
 }
 
-.sticky-card {
+.static-card {
   position: static;
   top: 110px; /* Décale par rapport au haut de l'écran */
   background: white;
@@ -315,7 +315,7 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
   .content-split { grid-template-columns: 1fr; }
   .gallery-grid { height: 300px; grid-template-columns: 1fr; }
   .sub-photos { display: none; }
-  .sticky-card { position: static; margin-top: 30px; }
+  .static-card { position: static; margin-top: 30px; }
   .nav-btn { font-size: 2rem; padding: 10px; }
   .nav-btn.prev { left: 5px; }
   .nav-btn.next { right: 5px; }
