@@ -65,6 +65,7 @@ onUnmounted(() => {
                 <div class="avatar-cercle">
                     {{ userInitial }}
                 </div>
+                <span class="texte-profile">MON ESPACE</span>
             </NuxtLink>
         </div>
     </div>
@@ -178,6 +179,10 @@ onUnmounted(() => {
         border-color: white;
     }
 
+    .texte-profile {
+        display: none; 
+    }
+
     @media (max-width: 768px) {
         .bouton-burger {
             display: block;
@@ -210,9 +215,26 @@ onUnmounted(() => {
             margin: 10px 0;
         }
 
+        .texte-profile {
+            display: block; 
+            margin-left: 15px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: white;
+        }
+
         .lien-profile {
-            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            padding-right: 15px;
+        }
+
+        .avatar-cercle {
+            display: none;
         }
     }
-
 </style>
