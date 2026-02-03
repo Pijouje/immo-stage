@@ -342,6 +342,7 @@ useHead({
     .cta-button {
         margin-left: 0;
         align-self: center;
+        margin-top: 60px;
     }
 }
 </style>
