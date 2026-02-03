@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+
+const user = ref({
+    prenom: 'Alexis',
+    nom: 'Dupont'
+});
+
+const userInitial = computed(() => {
+    return user.value.prenom.charAt(0).toUpperCase();
+});
+
 definePageMeta({
   layout: false,
   pageTransition: {
@@ -34,6 +45,11 @@ useHead({
         <NuxtLink to="/contact">CONTACT</NuxtLink>
         <NuxtLink to="/inscription">S'INSCRIRE</NuxtLink>
         <NuxtLink to="/connexion">SE CONNECTER</NuxtLink>
+        <NuxtLink to="/profile" class="lien-profile">
+          <div class="avatar-cercle">
+              {{ userInitial }}
+          </div>
+        </NuxtLink>
       </nav>
     </header>
 
@@ -189,4 +205,32 @@ useHead({
   transform: translateY(-3px);
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
+
+.lien-profile{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-cercle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #5D4037;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.2s;
+}
+
+.lien-profile:hover .avatar-cercle {
+    transform: scale(1.1);
+    background-color: #8b5e54;
+    border-color: white;
+}
+
 </style>

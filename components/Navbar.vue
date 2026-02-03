@@ -1,5 +1,14 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+
+const user = ref({
+    prenom: 'Alexis',
+    nom: 'Dupont'
+});
+
+const userInitial = computed(() => {
+    return user.value.prenom.charAt(0).toUpperCase();
+});
 
 const menuOuvert = ref(false);
 const refMenu = ref(null);
@@ -52,6 +61,11 @@ onUnmounted(() => {
             <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
             <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
             <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
+            <NuxtLink to="/profile" @click="menuOuvert = false" class="lien-profile">
+                <div class="avatar-cercle">
+                    {{ userInitial }}
+                </div>
+            </NuxtLink>
         </div>
     </div>
     </header>
@@ -80,8 +94,8 @@ onUnmounted(() => {
     }
 
     .Conteneur_Logo a {
-        text-decoration: none; /* Enlève le soulignement */
-        color: inherit;        /* Garde la couleur définie par les enfants */
+        text-decoration: none;
+        color: inherit;
     }
 
     .Logo_Cercle {
@@ -137,6 +151,33 @@ onUnmounted(() => {
         padding: 5px;
     }
 
+    .lien-profile{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-cercle {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-color: #5D4037;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.2s;
+    }
+
+    .lien-profile:hover .avatar-cercle {
+        transform: scale(1.1);
+        background-color: #8b5e54;
+        border-color: white;
+    }
+
     @media (max-width: 768px) {
         .bouton-burger {
             display: block;
@@ -167,6 +208,10 @@ onUnmounted(() => {
         
         .Menu_navigation a {
             margin: 10px 0;
+        }
+
+        .lien-profile {
+            margin-top: 5px;
         }
     }
 
