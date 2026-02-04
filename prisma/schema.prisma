@@ -9,31 +9,121 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... tes models User et Offre ...
+enum Role {
+  ETUDIANT
+  PROPRIETAIRE
+  ADMIN
+}
 
-// Table Utilisateurs (Etudiants et Propriétaires)
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  password  String
   nom       String
   prenom    String?
-  password  String
-  role      String   @default("etudiant") 
+  avatar    String?  // Pour la photo de profil (le rond avec l'initiale)
+  role      Role     @default(ETUDIANT)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  offres      Offre[]       @relation("ProprietaireOffres") // Les offres qu'il a postées (si proprio)
+  avisDonnes  Avis[]        @relation("AvisAuteur")         // Les avis qu'il a écrits
+  documents   Document[]                                    // Ses pièces justificatives (Profile.vue)
+  messagesEnvoi Message[]   @relation("Expediteur")
+  messagesRecu  Message[]   @relation("Destinataire")
 }
 
-// Table Annonces
+// --------------------------------------
+// 2. GESTION DOCUMENTS (Profile.vue)
+// --------------------------------------
+
+enum DocStatus {
+  EN_ATTENTE
+  VALIDE
+  REFUSE
+}
+
+model Document {
+  id        Int       @id @default(autoincrement())
+  nom       String    // Ex: "Carte d'identité"
+  url       String    // Lien vers le fichier PDF/JPG
+  type      String    // "identite", "garant", etc.
+  status    DocStatus @default(EN_ATTENTE)
+  
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --------------------------------------
+// 3. GESTION DES OFFRES (Immo)
+// --------------------------------------
+
 model Offre {
   id          Int      @id @default(autoincrement())
   titre       String
-  lieu        String
+  description String   @db.Text
   prix        Int
-  image       String
-  description String   @db.Text // Permet les textes longs
+  charges     Int?     @default(0) // Nouveau: Charges comprises ou non
   caution     Int?
-  coloc       Int?     @default(3)
-  avis        Int?     @default(0)
-  rating      Float?   @default(0)
-  tags        Json?    // Pour stocker ['Fibre', 'Bus']
+  surface     Int?     // Utile pour l'immo
+  lieu        String
+  coloc       Int      @default(0) // Nombre de places dispos
+  
+  // Equipements (Tags) - On garde JSON pour la simplicité, c'est très bien ici
+  tags        Json?    // ['Fibre', 'Lave-linge', 'Proche Gare']
+
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  proprietaireId Int
+  proprietaire   User          @relation("ProprietaireOffres", fields: [proprietaireId], references: [id])
+  
+  images         OffreImage[]  // Galerie d'images ([id].vue)
+  avis           Avis[]        // Liste des avis liés à cette offre
+}
+
+// Table dédiée pour avoir plusieurs images par offre
+model OffreImage {
+  id       Int    @id @default(autoincrement())
+  url      String
+  offreId  Int
+  offre    Offre  @relation(fields: [offreId], references: [id], onDelete: Cascade)
+}
+
+// --------------------------------------
+// 4. GESTION DES AVIS (Avis.vue)
+// --------------------------------------
+
+model Avis {
+  id          Int      @id @default(autoincrement())
+  note        Int      // 1 à 5
+  commentaire String   @db.Text
+  createdAt   DateTime @default(now())
+
+  // Qui a écrit l'avis ?
+  auteurId    Int
+  auteur      User     @relation("AvisAuteur", fields: [auteurId], references: [id])
+
+  // Sur quelle offre ?
+  offreId     Int
+  offre       Offre    @relation(fields: [offreId], references: [id], onDelete: Cascade)
+}
+
+// --------------------------------------
+// 5. MESSAGERIE (Contact.vue)
+// --------------------------------------
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  contenu     String   @db.Text
+  createdAt   DateTime @default(now())
+  lu          Boolean  @default(false)
+
+  expediteurId Int
+  expediteur   User    @relation("Expediteur", fields: [expediteurId], references: [id])
+
+  destinataireId Int
+  destinataire   User    @relation("Destinataire", fields: [destinataireId], references: [id])
 }
