@@ -1,14 +1,39 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ... tes models User et Offre ...
+
+// Table Utilisateurs (Etudiants et Propriétaires)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nom       String
+  prenom    String?
+  password  String
+  role      String   @default("etudiant") 
+  createdAt DateTime @default(now())
+}
+
+// Table Annonces
+model Offre {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  lieu        String
+  prix        Int
+  image       String
+  description String   @db.Text // Permet les textes longs
+  caution     Int?
+  coloc       Int?     @default(3)
+  avis        Int?     @default(0)
+  rating      Float?   @default(0)
+  tags        Json?    // Pour stocker ['Fibre', 'Bus']
+  createdAt   DateTime @default(now())
 }
