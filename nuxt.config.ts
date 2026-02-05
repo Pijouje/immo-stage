@@ -1,12 +1,9 @@
-// nuxt.config.ts
+
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
 
-  // Module SEO pour Google et les IA
-  modules: ['@nuxtjs/seo'],
+  compatibilityDate: '2026-02-05',
+  modules: ['@sidebase/nuxt-auth', '@nuxtjs/seo'],
 
-  // Infos du site
   site: {
     url: 'https://ton-site-stage.com',
     name: 'Agence Immo',
@@ -17,6 +14,15 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'hero-flow', mode: 'out-in' },
     layoutTransition: { name: 'hero-flow', mode: 'out-in' }
+  },
+
+  auth: {
+    origin: process.env.AUTH_ORIGIN,
+    provider: {
+        type: 'authjs'
+    },
+    globalAppMiddleware: false, 
   }
+
 
 })
