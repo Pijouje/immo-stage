@@ -7,12 +7,12 @@ definePageMeta({
   }
 })
 
-// Données factices pour tes annonces (plus facile à maintenir que de tout copier-coller)
-const offres = [
-  { id: 1, titre: 'T2 MEUBLÉ', lieu: 'Saint-Leu, Amiens', prix: '500€', image: '/images/t2.png' },
-  { id: 2, titre: 'T3 MEUBLÉ', lieu: 'Saint-Leu, Amiens', prix: '500€', image: '/images/t3.png' },
-  { id: 3, titre: 'T4 MEUBLÉ', lieu: 'Saint-Leu, Amiens', prix: '500€', image: '/images/t4.png' },
-]
+const { data: offres, pending, error } = await useFetch('/api/offres')
+
+// Si jamais l'API échoue, on évite que la page plante
+if (error.value) {
+  console.error(error.value)
+}
 </script>
 
 <template>
