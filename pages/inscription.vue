@@ -9,16 +9,38 @@ definePageMeta({
 
 import { ref } from 'vue'
 
-// Variables pour récupérer ce que l'utilisateur écrit
-const email = ref('')
-const password = ref('')
 const nom = ref('')
 const prenom = ref('')
-
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const router = useRouter()
 // Fonction déclenchée quand on clique sur le bouton
-const handleInscription = () => {
-  console.log("Inscription de :", nom.value, prenom.value, email.value)
-  // Ici tu mettras plus tard ton appel API vers PHP
+const handleInscription = async () => {
+    if(!email.value || !password.value || !nom.value || !prenom.value) {
+        alert('Veuillez remplir tous les champs')
+        return
+    }
+    loading.value = true
+    try{
+        await $fetch('/api/auth/register', {
+            method: 'POST',
+            body: {
+                nom: nom.value,
+                prenom: prenom.value,
+                email: email.value,
+                password: password.value
+            }
+        })
+
+        alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.')
+        router.push('/connexion')
+
+    } catch (error) {
+        alert('Erreur: ' + error.statusMessage)
+    }finally {
+        loading.value = false
+    }
 }
 </script>
 
@@ -49,7 +71,7 @@ const handleInscription = () => {
 
             <div class="Groupe_Input">
                 <label for="email">Email</label>
-                <input v-model="email" type="email" id="email" placeholder="thomas@exemple.fr" class="Input_Style">
+                <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
             </div>
 
             <div class="Groupe_Input">

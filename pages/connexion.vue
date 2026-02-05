@@ -37,7 +37,7 @@ const handleLogin = () => {
             
             <div class="Groupe_Input">
                 <label for="email">Email</label>
-                <input v-model="email" type="email" id="email" placeholder="thomas@exemple.fr" class="Input_Style">
+                <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
             </div>
 
             <div class="Groupe_Input">
