@@ -13,12 +13,12 @@ export default defineEventHandler(async () => {
   })
 
   // On transforme un peu les données pour faciliter l'affichage côté Vue
+  // Vérifie que la fin de ton fichier server/api/offres.get.ts ressemble bien à ça :
   return offres.map(offre => ({
     id: offre.id,
     titre: offre.titre,
     lieu: offre.lieu,
-    // On ajoute le symbole € et on gère le cas où il n'y a pas d'image
     prix: `${offre.prix}€`, 
-    image: offre.images[0]?.url || '/images/default.png' 
+    image: offre.images[0]?.url || '/images/default.png' // C'est cette ligne qui compte
   }))
 })

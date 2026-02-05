@@ -1,56 +1,63 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const route = useRoute()
-const offreId = Number(route.params.id)
+// useFetch va utiliser cet ID pour appeler l'API qu'on a créée à l'étape 2
+const { data: offreRaw, error } = await useFetch(`/api/offres/${route.params.id}`)
 
-definePageMeta({
-  pageTransition: { name: 'hero-flow', mode: 'out-in' },
-  layoutTransition: { name: 'hero-flow', mode: 'out-in' }
-})
-
-// --- DATA ---
-const database = [
-  { 
-    id: 1, 
-    titre: 'T2 Meublé', 
-    lieu: 'Quartier Saint-Leu, Amiens', 
-    prix: 500, 
-    charges: 'charges comprises',
-    caution: 1000,
-    coloc: 3,
-    rating: 4.8,
-    avis: 3,
-    desc: "Superbe T2 situé en plein cœur de Saint-Leu...",
-    imgs: [
-      '/images/t2.png',
-      '/images/t3.png',
-      '/images/t4.png',
-      '/images/t2.png',
-    ], 
-    tags: ['Fibre optique', 'Machine à laver', 'Cuisine équipée', 'Bus 50m']
-  },
-  { id: 2, titre: 'T3 Meublé', lieu: 'Centre Ville', prix: 650, imgs: ['/images/t3.png'], tags: [] },
-  { id: 3, titre: 'T4 Meublé', lieu: 'Gare', prix: 800, imgs: ['/images/t4.png'], tags: [] },
-]
-
-const offreTrouvee = database.find(o => o.id === offreId)
-
-if (!offreTrouvee) {
+if (error.value || !offreRaw.value) {
   throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée', fatal: true })
 }
 
-const offre = offreTrouvee
-
 useHead({
-  title: `${offre.titre} - Location Amiens`
+  title: `${offreRaw.value.titre} - Location Amiens`
 })
 
-// --- LOGIQUE LIGHTBOX ---
+// --- ADAPTATION DES DONNÉES (Mapping) ---
+const offre = computed(() => {
+  const o = offreRaw.value
+
+  // SÉCURITÉ (Objet vide par défaut)
+  if (!o) {
+    return {
+      id: 0,
+      titre: 'Chargement...',
+      lieu: '',
+      prix: 0,
+      desc: '',
+      imgs: [],
+      charges: '',
+      rating: 0,
+      avisCount: 0,
+      tags: [] as string[], // <-- AJOUTE "as string[]" ICI
+      caution: 0,
+      coloc: 0
+    }
+  }
+
+  const noteMoyenne = o.avis && o.avis.length > 0 
+    ? o.avis.reduce((acc, curr) => acc + curr.note, 0) / o.avis.length 
+    : 0
+
+  return {
+    ...o,
+    desc: o.description || '',
+    imgs: o.images ? o.images.map(img => img.url) : [], 
+    charges: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
+    rating: Number(noteMoyenne.toFixed(1)),
+    avisCount: o.avis ? o.avis.length : 0, // C'est ici qu'on définit avisCount
+    
+    // CORRECTION ICI : On force le type avec "as string[]"
+    tags: Array.isArray(o.tags) ? (o.tags as string[]) : [] 
+  }
+})
+// --- LOGIQUE LIGHTBOX (Rien ne change ici) ---
 const isGalleryOpen = ref(false)
 const currentImageIndex = ref(0)
 
 const openGallery = (index: number) => {
+  // Petite sécurité si pas d'images
+  if (!offre.value.imgs || offre.value.imgs.length === 0) return 
   currentImageIndex.value = index
   isGalleryOpen.value = true
   document.body.style.overflow = 'hidden'
@@ -62,7 +69,7 @@ const closeGallery = () => {
 }
 
 const nextImage = () => {
-  if (currentImageIndex.value < offre.imgs.length - 1) {
+  if (currentImageIndex.value < offre.value.imgs.length - 1) {
     currentImageIndex.value++
   } else {
     currentImageIndex.value = 0
@@ -73,7 +80,7 @@ const prevImage = () => {
   if (currentImageIndex.value > 0) {
     currentImageIndex.value--
   } else {
-    currentImageIndex.value = offre.imgs.length - 1
+    currentImageIndex.value = offre.value.imgs.length - 1
   }
 }
 </script>
@@ -110,7 +117,7 @@ const prevImage = () => {
            <div class="rating-block">
              <Etoile :note="offre.rating" />
     
-             <NuxtLink to="/avis" class="avis-link">{{ offre.avis }} avis</NuxtLink>
+            <NuxtLink to="/avis" class="avis-link">{{ offre.avisCount }} avis</NuxtLink>
           </div>
         </div>
           <p class="location">📍 {{ offre.lieu }}</p>
