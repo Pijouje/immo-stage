@@ -98,7 +98,7 @@ const prevImage = () => {
           </div>
         </div>
 
-      </div>
+      </div>==
 
       <div class="content-split">
 
