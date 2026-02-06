@@ -15,12 +15,23 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const router = useRouter()
-// Fonction déclenchée quand on clique sur le bouton
+const MessageError = ref('')
+
 const handleInscription = async () => {
+    MessageError.value = ''
+
     if(!email.value || !password.value || !nom.value || !prenom.value) {
         alert('Veuillez remplir tous les champs')
         return
     }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{12,}$/;
+
+    if (!passwordRegex.test(password.value)) {
+        MessageError.value = "Le mot de passe doit contenir 12 caractères, une majuscule, un chiffre et un symbole."
+        return
+    }
+
     loading.value = true
     try{
         await $fetch('/api/auth/register', {
@@ -37,7 +48,7 @@ const handleInscription = async () => {
         router.push('/connexion')
 
     } catch (error) {
-        alert('Erreur: ' + error.statusMessage)
+        MessageError.value = error.statusMessage || 'Une erreur est survenue lors de l\'inscription.'
     }finally {
         loading.value = false
     }
@@ -78,6 +89,10 @@ const handleInscription = async () => {
                 <label for="password">Mot de passe</label>
                 <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
             </div>
+            
+            <p v-if="MessageError" class="error-text">
+                {{ MessageError }}
+            </p>
 
             <Bouton>S'inscrire maintenant</Bouton>
 
@@ -208,7 +223,18 @@ label {
     margin-top: 10px;
 }
 
-.Lien_Oubli:hover { text-decoration: underline; }
+.Lien_Oubli:hover { 
+    text-decoration: underline;
+}
+
+.error-text {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  margin-top: 2px;
+  margin-bottom: 0px;
+  text-align: center;
+  padding: 2px;
+}
 
 @media (max-width: 768px) {
     

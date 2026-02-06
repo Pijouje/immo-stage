@@ -1,4 +1,3 @@
-// server/api/auth/[...].ts
 import { NuxtAuthHandler } from '#auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaClient } from '@prisma/client'
