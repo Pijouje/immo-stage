@@ -97,7 +97,7 @@ const handleInscription = async () => {
                 <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
                 <div v-if="password.length > 0" class="password-checklist">
                     <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
-                        <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères min
+                        <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
                     </div>
                     <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
                         <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
