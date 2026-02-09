@@ -78,6 +78,7 @@ useHead({
       </button>
 
       <nav class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
+        <NuxtLink to="/offres" @click="menuOuvert = false">OFFRES</NuxtLink>
         <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
         <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
         <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
