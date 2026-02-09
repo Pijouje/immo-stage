@@ -8,15 +8,46 @@ definePageMeta({
 })
 
 import { ref } from 'vue'
+const { signIn } = useAuth()
+const router = useRouter()
 
-// Variables pour récupérer ce que l'utilisateur écrit
 const email = ref('')
 const password = ref('')
+const errorMessage = ref('')
+const loading = ref(false)
 
-// Fonction déclenchée quand on clique sur le bouton
-const handleLogin = () => {
-  console.log("Connexion avec :", email.value)
-  // Ici tu mettras plus tard ton appel API vers PHP
+const handleLogin = async() => {
+    errorMessage.value = ''
+    if(!email.value && !password.value) {
+        errorMessage.value = 'Veuillez remplir tous les champs'
+        return
+    }else if(!email.value) {
+        errorMessage.value = 'Veuillez entrer votre email'
+        return
+    }else if(!password.value) {
+        errorMessage.value = 'Veuillez entrer votre mot de passe'
+        return
+    }
+
+    loading.value = true
+
+    try{
+        const result = await signIn('credentials', {
+            email: email.value,
+            password: password.value,
+            redirect: false
+        })
+
+        if(result.error) {
+            errorMessage.value = 'Email ou mot de passe incorrect'
+            loading.value = false
+        } else {
+            router.push('/')
+        }
+    }catch (error) {
+        errorMessage.value = 'Une erreur est survenue lors de la connexion.'
+        loading.value = false
+    }
 }
 </script>
 
@@ -44,6 +75,9 @@ const handleLogin = () => {
                 <label for="password">Mot de passe</label>
                 <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
             </div>
+            <p v-if="errorMessage" class="error-text">
+                {{ errorMessage }}
+            </p>
 
             <Bouton>Accéder à mon espace</Bouton>
 
@@ -173,7 +207,18 @@ label {
     margin-top: 10px;
 }
 
-.Lien_Oubli:hover { text-decoration: underline; }
+.Lien_Oubli:hover { 
+    text-decoration: underline; 
+}
+
+.error-text {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  margin-top: 2px;
+  margin-bottom: 0px;
+  text-align: center;
+  padding: 2px;
+}
 
 @media (max-width: 768px) {
     

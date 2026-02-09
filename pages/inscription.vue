@@ -7,7 +7,7 @@ definePageMeta({
   }
 })
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const nom = ref('')
 const prenom = ref('')
@@ -17,6 +17,15 @@ const loading = ref(false)
 const router = useRouter()
 const MessageError = ref('')
 
+const hasMinLength = computed(() => password.value.length >= 12)
+const hasUpper = computed(() => /[A-Z]/.test(password.value))
+const hasLower = computed(() => /[a-z]/.test(password.value))
+const hasNumber = computed(() => /\d/.test(password.value))
+const hasSpecial = computed(() => /[@$!%*?&_]/.test(password.value))
+
+const isValid = computed(() => hasMinLength.value && hasUpper.value && hasLower.value && hasNumber.value && hasSpecial.value)
+
+
 const handleInscription = async () => {
     MessageError.value = ''
 
@@ -25,10 +34,8 @@ const handleInscription = async () => {
         return
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{12,}$/;
-
-    if (!passwordRegex.test(password.value)) {
-        MessageError.value = "Le mot de passe doit contenir 12 caractères, une majuscule, un chiffre et un symbole."
+    if (!isValid.value) {
+        MessageError.value = "Veuillez respecter tous les critères du mot de passe."
         return
     }
 
@@ -88,7 +95,25 @@ const handleInscription = async () => {
             <div class="Groupe_Input">
                 <label for="password">Mot de passe</label>
                 <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
+                <div v-if="password.length > 0" class="password-checklist">
+                    <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
+                        <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères min
+                    </div>
+                    <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
+                        <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+                    </div>
+                    <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
+                        <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+                    </div>
+                    <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
+                        <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+                    </div>
+                    <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
+                        <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                    </div>
+                </div>
             </div>
+            
             
             <p v-if="MessageError" class="error-text">
                 {{ MessageError }}
@@ -174,7 +199,9 @@ const handleInscription = async () => {
     margin-bottom: -2px;
 }
 
-.Onglet.inactif:hover { color: #000; }
+.Onglet.inactif:hover { 
+    color: #000; 
+}
 
 /* FORMULAIRE */
 .Formulaire {
@@ -225,6 +252,37 @@ label {
 
 .Lien_Oubli:hover { 
     text-decoration: underline;
+}
+
+.password-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 0.7rem;
+    background-color: #f8fafc;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.password-checklist div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.invalid {
+    color: #94a3b8; 
+}
+
+.valid {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.icon {
+    font-size: 0.8rem;
 }
 
 .error-text {
