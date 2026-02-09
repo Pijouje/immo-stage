@@ -30,7 +30,7 @@ const handleInscription = async () => {
     MessageError.value = ''
 
     if(!email.value || !password.value || !nom.value || !prenom.value) {
-        alert('Veuillez remplir tous les champs')
+        MessageError.value = 'Veuillez remplir tous les champs'
         return
     }
 
@@ -288,7 +288,7 @@ label {
 .error-text {
   color: #ff4d4d;
   font-size: 0.9rem;
-  margin-top: 2px;
+  margin-top: 5px;
   margin-bottom: 0px;
   text-align: center;
   padding: 2px;
