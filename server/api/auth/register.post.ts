@@ -7,6 +7,15 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event)
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{12,}$/;
+
+    if (!passwordRegex.test(body.password)) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Le mot de passe doit faire 12 caractères avec majuscule, chiffre et symbole.'
+        })
+    }
+
     const EmailExists = await prisma.user.findUnique({
         where: {
             email: body.email
