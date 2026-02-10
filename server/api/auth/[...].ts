@@ -1,9 +1,9 @@
 import { NuxtAuthHandler } from '#auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../../utils/prisma'
 import { compare } from 'bcrypt'
 
-const prisma = new PrismaClient()
+
 
 export default NuxtAuthHandler({
     secret: process.env.AUTH_SECRET,
