@@ -1,16 +1,33 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+// 1. On définit la forme de nos données (Interface)
+interface Offre {
+  id: number;
+  titre: string;
+  description: string;
+  prix: number;
+  lieu: string;
+  charges: number;
+  caution: number;
+  coloc: number;
+  tags: string[] | string; // Parfois prisma renvoie du JSON, parfois un tableau
+  images: { url: string }[];
+  avis: { note: number }[];
+}
+
 const route = useRoute()
-// useFetch va utiliser cet ID pour appeler l'API qu'on a créée à l'étape 2
-const { data: offreRaw, error } = await useFetch(`/api/offres/${route.params.id}`)
+
+// 2. On dit à useFetch d'utiliser cette interface <Offre>
+const { data: offreRaw, error } = await useFetch<Offre>(`/api/offres/${route.params.id}`)
 
 if (error.value || !offreRaw.value) {
   throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée', fatal: true })
 }
 
 useHead({
-  title: `${offreRaw.value.titre} - Location Amiens`
+  // Le ? permet d'éviter le crash si le titre n'est pas encore chargé
+  title: `${offreRaw.value?.titre || 'Offre'} - Location Amiens`
 })
 
 // --- ADAPTATION DES DONNÉES (Mapping) ---
@@ -29,26 +46,27 @@ const offre = computed(() => {
       charges: '',
       rating: 0,
       avisCount: 0,
-      tags: [] as string[], // <-- AJOUTE "as string[]" ICI
+      tags: [] as string[],
       caution: 0,
       coloc: 0
     }
   }
 
+  // TypeScript sait maintenant que o.avis est un tableau grâce à l'interface
   const noteMoyenne = o.avis && o.avis.length > 0 
-    ? o.avis.reduce((acc, curr) => acc + curr.note, 0) / o.avis.length 
+    ? o.avis.reduce((acc: number, curr: any) => acc + curr.note, 0) / o.avis.length 
     : 0
 
   return {
-    ...o,
+    ...o, // Copie toutes les propriétés de base
     desc: o.description || '',
-    imgs: o.images ? o.images.map(img => img.url) : [], 
+    imgs: o.images ? o.images.map((img: any) => img.url) : [], 
     charges: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
     rating: Number(noteMoyenne.toFixed(1)),
-    avisCount: o.avis ? o.avis.length : 0, // C'est ici qu'on définit avisCount
+    avisCount: o.avis ? o.avis.length : 0,
     
-    // CORRECTION ICI : On force le type avec "as string[]"
-    tags: Array.isArray(o.tags) ? (o.tags as string[]) : [] 
+    // Gestion sécurisée des tags
+    tags: Array.isArray(o.tags) ? o.tags : [] 
   }
 })
 // --- LOGIQUE LIGHTBOX (Rien ne change ici) ---
