@@ -1,55 +1,221 @@
 <script setup>
 definePageMeta({
-
+  middleware: 'sidebase-auth', // Protection de la page
   pageTransition: {
     name: 'auth',
     mode: 'out-in'
   }
 })
 
+import { ref, computed } from 'vue'
 
-import { ref } from 'vue'
+// Vérification de la session
+const { data: session, status } = useAuth()
 
-const user = ref({
-    prenom: 'Thomas',
-    nom: 'Dubois',
-    email: 'thomas.dubois@exemple.fr',
-    passwordMasked: '••••••••••••' 
-})
-
-const documents = ref([
-    { id: 1, nom: 'Carte d\'identité (Recto/Verso)', type: 'pdf' },
-    { id: 2, nom: 'Justificatif de domicile (-3 mois)', type: 'pdf' },
-    { id: 3, nom: 'Dernier avis d\'imposition', type: 'jpg' }
-])
-
-const handleEditProfile = (field) => {
-    console.log("Modifier le champ :", field)
-    // Logique pour ouvrir un formulaire de modification
+// Rediriger si pas connecté
+if (status.value === 'unauthenticated') {
+  navigateTo('/connexion')
 }
 
+// Récupération des données utilisateur
+const { data: userData, pending, error, refresh } = await useFetch('/api/profile/me')
+
+const user = computed(() => userData.value || {
+  prenom: '',
+  nom: '',
+  email: ''
+})
+
+const documents = computed(() => userData.value?.documents || [])
+
+const passwordMasked = '••••••••••••'
+
+// États pour les modales d'édition
+const isEditingName = ref(false)
+const isEditingEmail = ref(false)
+const isEditingPassword = ref(false)
+
+// Données temporaires pour l'édition
+const editForm = ref({
+  nom: '',
+  prenom: '',
+  email: '',
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const errorMessage = ref('')
+const successMessage = ref('')
+const loading = ref(false)
+
+// Fonction pour ouvrir l'édition du nom
+const handleEditProfile = (field) => {
+  errorMessage.value = ''
+  successMessage.value = ''
+  
+  if (field === 'name') {
+    editForm.value.nom = user.value.nom
+    editForm.value.prenom = user.value.prenom || ''
+    isEditingName.value = true
+  } else if (field === 'email') {
+    editForm.value.email = user.value.email
+    isEditingEmail.value = true
+  }
+}
+
+// Fonction pour sauvegarder le nom/prénom
+const saveNameChanges = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+  loading.value = true
+
+  try {
+    const response = await $fetch('/api/profile/update', {
+      method: 'PATCH',
+      body: {
+        nom: editForm.value.nom,
+        prenom: editForm.value.prenom
+      }
+    })
+
+    successMessage.value = response.message
+    isEditingName.value = false
+    await refresh() // Recharger les données
+  } catch (error) {
+    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fonction pour sauvegarder l'email
+const saveEmailChanges = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+  loading.value = true
+
+  try {
+    const response = await $fetch('/api/profile/update', {
+      method: 'PATCH',
+      body: {
+        email: editForm.value.email
+      }
+    })
+
+    successMessage.value = response.message
+    isEditingEmail.value = false
+    await refresh()
+  } catch (error) {
+    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fonction pour modifier le mot de passe
 const handleEditPassword = () => {
-    console.log("Redirection vers la modification du mot de passe")
+  errorMessage.value = ''
+  successMessage.value = ''
+  editForm.value.currentPassword = ''
+  editForm.value.newPassword = ''
+  editForm.value.confirmPassword = ''
+  isEditingPassword.value = true
+}
+
+// Fonction pour sauvegarder le nouveau mot de passe
+const savePasswordChanges = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  // Validation côté client
+  if (!editForm.value.currentPassword || !editForm.value.newPassword || !editForm.value.confirmPassword) {
+    errorMessage.value = 'Veuillez remplir tous les champs'
+    return
+  }
+
+  if (editForm.value.newPassword !== editForm.value.confirmPassword) {
+    errorMessage.value = 'Les mots de passe ne correspondent pas'
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await $fetch('/api/profile/update-password', {
+      method: 'PATCH',
+      body: {
+        currentPassword: editForm.value.currentPassword,
+        newPassword: editForm.value.newPassword
+      }
+    })
+
+    successMessage.value = response.message
+    isEditingPassword.value = false
+    
+    // Réinitialiser le formulaire
+    editForm.value.currentPassword = ''
+    editForm.value.newPassword = ''
+    editForm.value.confirmPassword = ''
+  } catch (error) {
+    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la modification du mot de passe'
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleAddDocument = () => {
-    console.log("Ouvrir l'explorateur de fichiers")
+  console.log("Ouvrir l'explorateur de fichiers")
+  // TODO: Implémenter l'upload de documents
 }
 
+// Validation du mot de passe en temps réel
+const hasMinLength = computed(() => editForm.value.newPassword.length >= 12)
+const hasUpper = computed(() => /[A-Z]/.test(editForm.value.newPassword))
+const hasLower = computed(() => /[a-z]/.test(editForm.value.newPassword))
+const hasNumber = computed(() => /\d/.test(editForm.value.newPassword))
+const hasSpecial = computed(() => /[@$!%*?&_]/.test(editForm.value.newPassword))
+const isPasswordValid = computed(() => 
+  hasMinLength.value && hasUpper.value && hasLower.value && hasNumber.value && hasSpecial.value
+)
 </script>
 
 <template>
   <div class="profile-page">
-    <div class="Carte">
+    
+    <!-- État de chargement -->
+    <div v-if="pending" class="Carte loading-state">
+      <div class="loader"></div>
+      <p>Chargement de votre profil...</p>
+    </div>
+
+    <!-- État d'erreur -->
+    <div v-else-if="error" class="Carte error-state">
+      <div class="icon">⚠️</div>
+      <h3>Erreur de chargement</h3>
+      <p>{{ error.message }}</p>
+      <button @click="refresh" class="btn-retry">Réessayer</button>
+    </div>
+
+    <!-- Contenu principal -->
+    <div v-else class="Carte">
         <div class="Haut_carte">
-            <h1>Test Utilisateur</h1>
+            <h1>Mon Profil</h1>
+        </div>
+
+        <!-- Messages de succès/erreur globaux -->
+        <div v-if="successMessage" class="success-message">
+          ✓ {{ successMessage }}
+        </div>
+        <div v-if="errorMessage && !isEditingName && !isEditingEmail && !isEditingPassword" class="error-message">
+          ⚠ {{ errorMessage }}
         </div>
 
         <div class="Contenu_Profil">
             
             <div class="Profil_Header">
                 <div class="Avatar_Profil">
-                    <span class="Avatar_Initiales">{{ user.prenom[0] }}{{ user.nom[0] }}</span>
+                    <span class="Avatar_Initiales">{{ user.prenom?.[0] || 'U' }}{{ user.nom?.[0] || '' }}</span>
                 </div>
                 <div class="Info_Principales">
                     <div class="Editable_Field">
@@ -73,7 +239,7 @@ const handleAddDocument = () => {
                 <div class="Groupe_Info">
                     <label>Mot de passe</label>
                     <div class="Password_Row">
-                        <span class="Password_Value">{{ user.passwordMasked }}</span>
+                        <span class="Password_Value">{{ passwordMasked }}</span>
                         <button @click="handleEditPassword" class="Lien_Modifier">Modifier</button>
                     </div>
                 </div>
@@ -84,13 +250,21 @@ const handleAddDocument = () => {
             <div class="Section_Documents">
                 <h3>Mes documents</h3>
                 
-                <div class="Liste_Documents">
+                <div v-if="documents.length > 0" class="Liste_Documents">
                     <div v-for="doc in documents" :key="doc.id" class="Document_Item">
                         <div class="Doc_Icone">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                         </div>
-                        <span class="Doc_Nom">{{ doc.nom }}</span>
+                        <div class="Doc_Info">
+                          <span class="Doc_Nom">{{ doc.nom }}</span>
+                          <span class="Doc_Status" :class="`status-${doc.status}`">
+                            {{ doc.status === 'VALIDE' ? '✓ Validé' : doc.status === 'REFUSE' ? '✗ Refusé' : '⏳ En attente' }}
+                          </span>
+                        </div>
                     </div>
+                </div>
+                <div v-else class="empty-documents">
+                  <p>Aucun document téléchargé pour le moment</p>
                 </div>
 
                 <Bouton @click="handleAddDocument" class="Btn_Ajout_Doc">
@@ -101,6 +275,110 @@ const handleAddDocument = () => {
 
         </div>
     </div>
+
+    <!-- MODALE ÉDITION NOM/PRÉNOM -->
+    <Transition name="modal">
+      <div v-if="isEditingName" class="modal-overlay" @click.self="isEditingName = false">
+        <div class="modal-content">
+          <h3>Modifier le nom et prénom</h3>
+          
+          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+          
+          <div class="Groupe_Input">
+            <label>Prénom</label>
+            <input v-model="editForm.prenom" type="text" class="Input_Style" placeholder="Votre prénom">
+          </div>
+          
+          <div class="Groupe_Input">
+            <label>Nom</label>
+            <input v-model="editForm.nom" type="text" class="Input_Style" placeholder="Votre nom">
+          </div>
+          
+          <div class="modal-actions">
+            <button @click="isEditingName = false" class="btn-cancel">Annuler</button>
+            <button @click="saveNameChanges" :disabled="loading" class="btn-save">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODALE ÉDITION EMAIL -->
+    <Transition name="modal">
+      <div v-if="isEditingEmail" class="modal-overlay" @click.self="isEditingEmail = false">
+        <div class="modal-content">
+          <h3>Modifier l'email</h3>
+          
+          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+          
+          <div class="Groupe_Input">
+            <label>Nouvel email</label>
+            <input v-model="editForm.email" type="email" class="Input_Style" placeholder="nouveau@email.com">
+          </div>
+          
+          <div class="modal-actions">
+            <button @click="isEditingEmail = false" class="btn-cancel">Annuler</button>
+            <button @click="saveEmailChanges" :disabled="loading" class="btn-save">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODALE MODIFICATION MOT DE PASSE -->
+    <Transition name="modal">
+      <div v-if="isEditingPassword" class="modal-overlay" @click.self="isEditingPassword = false">
+        <div class="modal-content modal-password">
+          <h3>Modifier le mot de passe</h3>
+          
+          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+          
+          <div class="Groupe_Input">
+            <label>Mot de passe actuel</label>
+            <input v-model="editForm.currentPassword" type="password" class="Input_Style" placeholder="••••••••">
+          </div>
+          
+          <div class="Groupe_Input">
+            <label>Nouveau mot de passe</label>
+            <input v-model="editForm.newPassword" type="password" class="Input_Style" placeholder="••••••••">
+            
+            <!-- Checklist de validation -->
+            <div v-if="editForm.newPassword.length > 0" class="password-checklist">
+              <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
+                <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
+              </div>
+              <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
+                <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+              </div>
+              <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
+                <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+              </div>
+              <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
+                <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+              </div>
+              <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
+                <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+              </div>
+            </div>
+          </div>
+          
+          <div class="Groupe_Input">
+            <label>Confirmer le nouveau mot de passe</label>
+            <input v-model="editForm.confirmPassword" type="password" class="Input_Style" placeholder="••••••••">
+          </div>
+          
+          <div class="modal-actions">
+            <button @click="isEditingPassword = false" class="btn-cancel">Annuler</button>
+            <button @click="savePasswordChanges" :disabled="loading || !isPasswordValid" class="btn-save">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -115,11 +393,9 @@ const handleAddDocument = () => {
     flex-direction: column;
 }
 
-/* --- MODIFICATION : CARTE PLUS LARGE SUR PC --- */
 .Carte {
     background-color: white;
     width: 100%;
-    /* Changement : au lieu de 600px, on prend 800px ou 2/3 de l'écran */
     max-width: 800px; 
     padding: 60px;
     border-radius: 16px;
@@ -131,10 +407,63 @@ const handleAddDocument = () => {
     box-sizing: border-box;
 }
 
-/* On peut ajouter une media query pour les très grands écrans */
+/* États de chargement et d'erreur */
+.loading-state, .error-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2563EB;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-state .icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.btn-retry {
+  background-color: #2563EB;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+/* Messages */
+.success-message, .error-message {
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.success-message {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
 @media (min-width: 1200px) {
     .Carte {
-        /* Sur grand écran, la carte prendra environ 66% de la largeur */
         max-width: 66%; 
     }
 }
@@ -188,18 +517,16 @@ const handleAddDocument = () => {
     gap: 5px;
 }
 
-/* --- NOUVEAU : Style pour le champ modifiable (Nom + Crayon) --- */
 .Editable_Field {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* Bouton Crayon discret */
 .Btn_Edit_Icon {
     background: none;
     border: none;
-    color: #94a3b8; /* Gris discret par défaut */
+    color: #94a3b8;
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
@@ -207,10 +534,9 @@ const handleAddDocument = () => {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    opacity: 0; /* Invisible par défaut */
+    opacity: 0;
 }
 
-/* Le crayon apparaît quand on survole le champ */
 .Editable_Field:hover .Btn_Edit_Icon {
     opacity: 1;
 }
@@ -219,7 +545,6 @@ const handleAddDocument = () => {
     color: #2563EB;
     background-color: #f1f5f9;
 }
-
 
 .Nom_Complet {
     margin: 0;
@@ -318,10 +643,39 @@ label {
     display: flex;
 }
 
+.Doc_Info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
 .Doc_Nom {
     font-weight: 600;
     color: #334155;
-    flex: 1;
+}
+
+.Doc_Status {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-VALIDE {
+  color: #16a34a;
+}
+
+.status-REFUSE {
+  color: #dc2626;
+}
+
+.status-EN_ATTENTE {
+  color: #ca8a04;
+}
+
+.empty-documents {
+  text-align: center;
+  padding: 30px;
+  color: #64748b;
 }
 
 .Btn_Ajout_Doc {
@@ -333,6 +687,146 @@ label {
     padding: 12px 24px;
 }
 
+/* MODALES */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin: 0 0 25px 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.Groupe_Input {
+  margin-bottom: 20px;
+}
+
+.Input_Style {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.Input_Style:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.btn-cancel, .btn-save {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.btn-cancel:hover {
+  background: #f8fafc;
+}
+
+.btn-save {
+  background: #2563EB;
+  border: none;
+  color: white;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checklist mot de passe dans la modale */
+.password-checklist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.password-checklist div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.invalid {
+  color: #94a3b8;
+}
+
+.valid {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.icon {
+  font-size: 0.9rem;
+}
+
+/* Animations des modales */
+.modal-enter-active, .modal-leave-active {
+  transition: opacity 0.3s;
+}
+
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: transform 0.3s;
+}
+
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.9);
+}
 
 @media (max-width: 768px) {
     .profile-page{
@@ -343,7 +837,7 @@ label {
     .Carte {
         margin: 40px auto; 
         width: 90%;
-        max-width: 100%; /* Annule la contrainte PC */
+        max-width: 100%;
         padding: 30px 20px; 
     }
 
@@ -361,10 +855,9 @@ label {
         align-items: center;
     }
     
-    /* Sur mobile, le crayon est toujours visible car pas de survol */
     .Btn_Edit_Icon {
         opacity: 1;
-        color: #2563EB; /* Plus visible sur mobile */
+        color: #2563EB;
     }
 
     .Password_Row {
@@ -373,6 +866,18 @@ label {
 
     .Btn_Ajout_Doc {
         width: 100%;
+    }
+
+    .modal-content {
+      padding: 30px 20px;
+    }
+
+    .modal-actions {
+      flex-direction: column;
+    }
+
+    .btn-cancel, .btn-save {
+      width: 100%;
     }
 }
 
