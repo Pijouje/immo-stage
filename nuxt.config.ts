@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   },
 
   auth: {
-    origin: process.env.AUTH_ORIGIN,
+    baseURL: process.env.AUTH_ORIGIN ?? 'http://localhost:3000/api/auth',
     provider: {
         type: 'authjs'
     },

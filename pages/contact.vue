@@ -1,21 +1,42 @@
 <script setup>
-import { ref } from 'vue'
+/*definePageMeta({ middleware: 'auth'})
+const { data: session } = useAuth()*/
 
-const nom = ref('')
-const message = ref("Bonjour Maitre Gims, je vous envoie le dossier complet dès ce soir.")
-const input = ref('')
+const session = ref({ user: { id: 1 } }) 
+
+const contactId = ref(2)
+const messages = ref([])
+const nouveauMessage = ref('')
+
+const chargerMessages = async () => {
+    const data = await $fetch('/api/messages/get?contactId=' + contactId.value)
+    messages.value = data
+}
+
+const envoyerMessages = async () => {
+    
+    if(!nouveauMessage.value){
+        return
+    }
+
+    await $fetch('/api/messages/send', {
+        method: 'POST',
+        body: {
+            destinataireId: contactId.value,
+            contenu: nouveauMessage.value
+        }
+    })
+
+    nouveauMessage.value = ''
+    chargerMessages()
+}
+
+onMounted(() => {
+    chargerMessages()
+    setInterval(chargerMessages, 3000)
+})
 
 const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-const conversationOuverte = ref(false)
-
-const ouvrirConversation = () => {
-  conversationOuverte.value = true
-}
-
-const fermerConversation = () => {
-  conversationOuverte.value = false
-}
 </script>
 
 <template>
@@ -78,29 +99,27 @@ const fermerConversation = () => {
           </div>
         </div>
         <div class="conversation">
-            <div class="destinataire">
-                <div class="message-recu">
-                    <p>Bonjour {{ nom }}, merci pour votre message. Je reste à votre disposition pour toute information complémentaire.</p>
-                    <div class="heure-destinataire">{{ heureActuelle }}</div>
-                </div>
+            <div v-for="msg in messages" :key="msg.id" 
+                :class="msg.expediteurId == session?.user?.id ? 'receveur' : 'destinataire'">
+                <div :class="msg.expediteurId == session?.user?.id ? 'message-envoye' : 'message-recu'">
+                    <p>{{ msg.contenu }}</p>
                 
-            </div>
-            <div class="receveur">
-                <div class="message-envoye">
-                    <p>Bonjour Maitre Gims, je vous envoie le dossier complet dès ce soir.</p>
-                    <div class="heure-receveur">{{ heureActuelle }}</div>
+                    <div :class="msg.expediteurId == session?.user?.id ? 'heure-receveur' : 'heure-destinataire'">
+                        {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+                    </div>
                 </div>
-                
+
             </div>
+
         </div>
         <div class="partie-envoie">
             <button class="btn-trombone">
                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
             
-            <input type="text" v-model="input" placeholder="Ecrivez votre texte ..." class="champ-texte"@keyup.enter="console.log('Envoyer le message')" />
+            <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte"@keyup.enter="envoyerMessages" />
             
-            <button class="btn-envoyer">Envoyer</button>
+            <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
         </div>
       </div>
     </div>
@@ -108,46 +127,29 @@ const fermerConversation = () => {
 </template>
 
 <style scoped>
-/* --- MISE EN PAGE GLOBALE --- */
 .page {
-    /* Hauteur totale moins la navbar */
     height: calc(100vh - 90px); 
     width: 100%;
-    
     background-image: url('/images/bg.png');
     background-size: cover;
     background-position: center;
-    
-    /* Flexbox pour centrer parfaitement la carte au milieu */
     display: flex;
-    justify-content: center; /* Centre horizontalement */
-    align-items: center;     /* Centre verticalement */
-    
-    /* Important : Un peu d'espace pour que la carte ne touche jamais les bords sur PC */
+    justify-content: center;
+    align-items: center;
     padding: 20px; 
     box-sizing: border-box;
 }
 
-/* 2. LA CARTE : Flottante et élégante */
 .carte {
     background-color: white;
-    
-    /* LARGEUR : Elle prend la place qu'elle peut, mais s'arrête à 1200px */
     width: 100%;
     max-width: 1200px; 
-    
-    /* HAUTEUR : C'est ici le secret pour qu'elle soit jolie */
-    /* Elle prendra 85% de la hauteur disponible, donc elle "flotte" */
     height: 85%; 
-    
     border-radius: 16px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    
     display: flex; 
     flex-direction: row; 
     overflow: hidden;
-    
-    /* Plus besoin de margin ou transform car le Flexbox de .page gère le centrage */
 }
 
 /* --- COLONNE GAUCHE --- */

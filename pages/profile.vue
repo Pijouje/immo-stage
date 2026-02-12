@@ -1,10 +1,12 @@
 <script setup>
 definePageMeta({
+
   pageTransition: {
     name: 'auth',
     mode: 'out-in'
   }
 })
+
 
 import { ref } from 'vue'
 
@@ -33,13 +35,14 @@ const handleEditPassword = () => {
 const handleAddDocument = () => {
     console.log("Ouvrir l'explorateur de fichiers")
 }
+
 </script>
 
 <template>
   <div class="profile-page">
     <div class="Carte">
         <div class="Haut_carte">
-            <h1>Mon espace</h1>
+            <h1>Test Utilisateur</h1>
         </div>
 
         <div class="Contenu_Profil">
