@@ -1,39 +1,79 @@
 <script setup>
-/*definePageMeta({ middleware: 'auth'})
-const { data: session } = useAuth()*/
 
-const session = ref({ user: { id: 1 } }) 
+import { nextTick, onMounted, ref } from 'vue'
+//definePageMeta({ middleware: 'auth'})
+const { data: session } = useAuth()
 
-const contactId = ref(2)
+const { data: contacts, error } = await useFetch('/api/users', { 
+    lazy: true 
+})
+
+if (error.value) {
+    console.error("Erreur API Users :", error.value)
+}
+
+const contactId = ref(null)
+const contactActuel = ref(null)
 const messages = ref([])
 const nouveauMessage = ref('')
+const conversationOuverte = ref(false)
+const boxConversation = ref(null)
+let intervalId = null
 
 const chargerMessages = async () => {
+    if (!contactId.value){
+        return
+    } 
     const data = await $fetch('/api/messages/get?contactId=' + contactId.value)
     messages.value = data
+    scrollToBottom()
+}
+
+const ouvrirConversation = async (user) =>{
+    contactId.value = user.id
+    contactActuel.value = user
+    conversationOuverte.value = true
+    await chargerMessages()
+}
+
+const fermerConversation = () => {
+    conversationOuverte.value = false
+    contactId.value = null
 }
 
 const envoyerMessages = async () => {
-    
-    if(!nouveauMessage.value){
-        return
+    if(!nouveauMessage.value || !contactId.value) return
+
+    try {
+        await $fetch('/api/messages/send', {
+            method: 'POST',
+            body: {
+                destinataireId: contactId.value,
+                contenu: nouveauMessage.value
+            }
+        })
+        nouveauMessage.value = ''
+        chargerMessages()
+    } catch (e) {
+        alert("Erreur d'envoi : " + e)
     }
+}
 
-    await $fetch('/api/messages/send', {
-        method: 'POST',
-        body: {
-            destinataireId: contactId.value,
-            contenu: nouveauMessage.value
-        }
-    })
-
-    nouveauMessage.value = ''
-    chargerMessages()
+const scrollToBottom = async () => {
+    await nextTick()
+    if (boxConversation.value) {
+        boxConversation.value.scrollTop = boxConversation.value.scrollHeight
+    }
 }
 
 onMounted(() => {
-    chargerMessages()
-    setInterval(chargerMessages, 3000)
+    intervalId = setInterval(() => {
+        if(contactId.value) chargerMessages()
+    }, 3000)
+})
+
+onUnmounted(() => {
+    if (intervalId) clearInterval(intervalId)
 })
 
 const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -45,82 +85,85 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
       <div class="partie-gauche">
         <h2>Mes Messages</h2>
         
-        <div class="contact active" @click="ouvrirConversation">
-          
-          <div class="avatar"></div>
-          
-          <div class="info-text">
+        <div v-if="contacts && contacts.length > 0">
+            <div 
+                v-for="user in contacts" 
+                :key="user.id" 
+                class="contact" 
+                :class="{ active: contactId === user.id }"
+                @click="ouvrirConversation(user)"
+            >
+              <div class="avatar"></div>
               
-              <div class="top-line">
-                  <strong>Maitre le Gims {{ nom }}</strong>
-                  <span class="date-message">{{ heureActuelle }}</span>
+              <div class="info-text">
+                  <div class="top-line">
+                      <strong>{{ user.prenom }} {{ user.nom }}</strong>
+                      <span class="date-message">{{ heureActuelle }}</span>
+                  </div>
+                  <p class="preview-message">Cliquez pour discuter...</p>
               </div>
-
-              <p class="preview-message">{{ message }}</p>
-          </div>
+            </div>
+        </div>
+        <div v-else class="aucun-utilisateur">
+            Aucun autre utilisateur trouvé.
         </div>
 
-        <div class="contact inactive">
-          
-          <div class="avatar"></div>
-          
-          <div class="info-text">
-              
-              <div class="top-line">
-                  <strong>Maitre le Gims {{ nom }}</strong>
-                  <span class="date-message">{{ heureActuelle }}</span>
-              </div>
-
-              <p class="preview-message">{{ message }}</p>
-          </div>
-        </div>
       </div>
       <div class="zone-chat">
+        
         <div class="haut-contact">
-            <button class="btn-retour" @click="fermerConversation">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-            </button>
-          <div class="avatar-chat"></div>
-          <div class="chat-info">
-            <h3>Maitre le Gims</h3>
-          
-            <div class="status-container">
-                <span class="pastille-verte"></span>
-                <span class="status-text">En ligne</span>
-            </div>
-          </div>
-
-          <div class="concernant">
-            <div class="Logo_Cercle">🏠</div>
-            <p>Concernant : T2 Meublé - Saint-Leu</p>
-          </div>
-        </div>
-        <div class="conversation">
-            <div v-for="msg in messages" :key="msg.id" 
-                :class="msg.expediteurId == session?.user?.id ? 'receveur' : 'destinataire'">
-                <div :class="msg.expediteurId == session?.user?.id ? 'message-envoye' : 'message-recu'">
-                    <p>{{ msg.contenu }}</p>
-                
-                    <div :class="msg.expediteurId == session?.user?.id ? 'heure-receveur' : 'heure-destinataire'">
-                        {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+            <template v-if="contactActuel">
+                <button class="btn-retour" @click="fermerConversation">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <div class="avatar-chat"></div>
+                <div class="chat-info">
+                    <h3>{{ contactActuel.prenom }} {{ contactActuel.nom }}</h3>
+                    <div class="status-container">
+                        <span class="pastille-verte"></span>
+                        <span class="status-text">En ligne</span>
                     </div>
                 </div>
+                <div class="concernant">
+                    <div class="Logo_Cercle">🏠</div>
+                    <p>Immo-Stage</p>
+                </div>
+            </template>
 
+            <template v-else>
+                <div class="chat-info">
+                    <h3>Nom du Contact</h3>
+                </div>
+            </template>
+        </div>
+
+        <div class="conversation" ref="boxConversation">
+            
+            <template v-if="contactId">
+                <div v-for="msg in messages" :key="msg.id" 
+                    :class="msg.expediteurId == session?.user?.id ? 'receveur' : 'destinataire'">
+                    
+                    <div :class="msg.expediteurId == session?.user?.id ? 'message-envoye' : 'message-recu'">
+                        <p>{{ msg.contenu }}</p>
+                        <div :class="msg.expediteurId == session?.user?.id ? 'heure-receveur' : 'heure-destinataire'">
+                            {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <div v-else class="message-attente">
+                <p>👈 Veuillez une conversation à gauche</p>
             </div>
 
         </div>
-        <div class="partie-envoie">
-            <button class="btn-trombone">
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            </button>
-            
-            <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte"@keyup.enter="envoyerMessages" />
-            
+
+        <div class="partie-envoie" v-if="contactId">
+            <button class="btn-trombone">📎</button>
+            <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte" @keyup.enter="envoyerMessages" />
             <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
         </div>
+
       </div>
     </div>
   </div>
@@ -453,6 +496,12 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
 
 .btn-retour:hover {
     background-color: #f1f5f9; 
+}
+
+.aucun-utilisateur { 
+    padding: 20px;
+    text-align: center;
+    color: gray;
 }
 
 @media (max-width: 768px) {
