@@ -1,75 +1,109 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
-const user = ref({
-    prenom: 'Alexis',
-    nom: 'Dupont'
-});
+// Récupération de l'état d'authentification
+const { data: session, status, signOut } = useAuth()
 
-const userInitial = computed(() => {
-    return user.value.prenom.charAt(0).toUpperCase();
-});
+// États pour le menu burger
+const menuOuvert = ref(false)
+const refMenu = ref(null)
+const refBurger = ref(null)
 
-const menuOuvert = ref(false);
-const refMenu = ref(null);
-const refBurger = ref(null);
 const toggleMenu = () => {
-    menuOuvert.value = !menuOuvert.value;
-};
+    menuOuvert.value = !menuOuvert.value
+}
 
+// Calculer l'initiale de l'utilisateur
+const userInitial = computed(() => {
+  if (!session.value?.user?.name) return 'U'
+  const names = session.value.user.name.split(' ')
+  return names[0]?.charAt(0)?.toUpperCase() || 'U'
+})
+
+// Vérifier si l'utilisateur est connecté
+const isAuthenticated = computed(() => status.value === 'authenticated')
+
+// Gestion de la déconnexion
+const handleLogout = async () => {
+  await signOut({ callbackUrl: '/' })
+}
+
+// Fermer le menu si on clique en dehors
 const fermerMenuSiClicDehors = (event) => {
-    if (!menuOuvert.value){
-        return;
-    }
+    if (!menuOuvert.value) return
     if (
-        refMenu.value && refMenu.value.contains(event.target) || 
-        refBurger.value && refBurger.value.contains(event.target)
+        (refMenu.value && refMenu.value.contains(event.target)) || 
+        (refBurger.value && refBurger.value.contains(event.target))
     ) {
-        return;
+        return
     }
-    menuOuvert.value = false;
-};
+    menuOuvert.value = false
+}
+
 onMounted(() => {
-    window.addEventListener('click', fermerMenuSiClicDehors);
-});
+    window.addEventListener('click', fermerMenuSiClicDehors)
+})
 
 onUnmounted(() => {
-    window.removeEventListener('click', fermerMenuSiClicDehors);
-});
-
+    window.removeEventListener('click', fermerMenuSiClicDehors)
+})
 </script>
 
 <template>
     <header>
         <div class="Bandeau_haut">
-        <div class="Conteneur_Logo">
-            <div class="Logo_Cercle"><NuxtLink to="/"><span>🏠</span></NuxtLink></div>
-            <div class="Nom_site">
-                <NuxtLink to="/"><h2>NOM DU<br>SITE (AMIENS)</h2></NuxtLink>
+            <div class="Conteneur_Logo">
+                <div class="Logo_Cercle">
+                    <NuxtLink to="/">
+                        <span>🏠</span>
+                    </NuxtLink>
+                </div>
+                <div class="Nom_site">
+                    <NuxtLink to="/">
+                        <h2>NOM DU<br>SITE (AMIENS)</h2>
+                    </NuxtLink>
+                </div>
+            </div>
+
+            <button class="bouton-burger" @click="toggleMenu" ref="refBurger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
+                <NuxtLink to="/offres" @click="menuOuvert = false">OFFRES</NuxtLink>
+                <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
+                
+                <!-- Afficher UNIQUEMENT si NON connecté -->
+                <template v-if="!isAuthenticated">
+                    <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
+                    <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
+                </template>
+
+                <!-- Afficher UNIQUEMENT si connecté -->
+                <template v-if="isAuthenticated">
+                    <NuxtLink to="/profile" @click="menuOuvert = false" class="lien-profile">
+                        <div class="avatar-cercle">
+                            {{ userInitial }}
+                        </div>
+                        <span class="texte-profile">MON ESPACE</span>
+                    </NuxtLink>
+
+                    <!-- Bouton déconnexion (uniquement visible en mobile) -->
+                    <button @click="handleLogout" class="btn-logout-mobile">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Déconnexion
+                    </button>
+                </template>
             </div>
         </div>
-
-        <button class="bouton-burger" @click="toggleMenu" ref="refBurger">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
-            <NuxtLink to="/offres" @click="menuOuvert = false">OFFRES</NuxtLink>
-            <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
-            <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
-            <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
-            <NuxtLink to="/profile" @click="menuOuvert = false" class="lien-profile">
-                <div class="avatar-cercle">
-                    {{ userInitial }}
-                </div>
-                <span class="texte-profile">MON ESPACE</span>
-            </NuxtLink>
-        </div>
-    </div>
     </header>
 </template>
 
@@ -153,10 +187,12 @@ onUnmounted(() => {
         padding: 5px;
     }
 
+    /* AVATAR UTILISATEUR */
     .lien-profile{
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 10px;
     }
 
     .avatar-cercle {
@@ -171,7 +207,7 @@ onUnmounted(() => {
         font-weight: 600;
         font-size: 1.2rem;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: transform 0.2s;
+        transition: transform 0.2s, background-color 0.2s;
     }
 
     .lien-profile:hover .avatar-cercle {
@@ -182,6 +218,11 @@ onUnmounted(() => {
 
     .texte-profile {
         display: none; 
+    }
+
+    /* Bouton déconnexion mobile (caché par défaut) */
+    .btn-logout-mobile {
+        display: none;
     }
 
     @media (max-width: 768px) {
@@ -207,7 +248,7 @@ onUnmounted(() => {
         }
 
         .Menu_navigation.actif {
-            max-height: 500px;
+            max-height: 600px;
             opacity: 1;
             padding: 20px 0;
         }
@@ -218,7 +259,7 @@ onUnmounted(() => {
 
         .texte-profile {
             display: block; 
-            margin-left: 15px;
+            margin-left: 0;
             font-weight: 600;
             font-size: 0.9rem;
             letter-spacing: 1px;
@@ -231,11 +272,42 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
             margin-top: 10px;
-            padding-right: 15px;
         }
 
         .avatar-cercle {
-            display: none;
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Bouton déconnexion visible uniquement en mobile */
+        .btn-logout-mobile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 15px auto 5px auto;
+            width: 80%;
+            max-width: 250px;
+            transition: all 0.3s;
+        }
+
+        .btn-logout-mobile:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        .btn-logout-mobile svg {
+            flex-shrink: 0;
         }
     }
 </style>

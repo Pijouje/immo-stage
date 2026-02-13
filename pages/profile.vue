@@ -10,7 +10,14 @@ definePageMeta({
 import { ref, computed } from 'vue'
 
 // Vérification de la session
-const { data: session, status } = useAuth()
+const { data: session, status, signOut } = useAuth()
+
+// Fonction de déconnexion
+const handleLogout = async () => {
+  if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+    await signOut({ callbackUrl: '/' })
+  }
+}
 
 // Récupération des données utilisateur
 const { data: userData, pending, error, refresh } = await useFetch('/api/profile/me')
@@ -196,6 +203,14 @@ const isPasswordValid = computed(() =>
     <div v-else class="Carte">
         <div class="Haut_carte">
             <h1>Mon Profil</h1>
+            <button @click="handleLogout" class="btn-logout-desktop" title="Se déconnecter">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Déconnexion
+            </button>
         </div>
 
         <!-- Messages de succès/erreur globaux -->
@@ -466,6 +481,10 @@ const isPasswordValid = computed(() =>
 .Haut_carte {
     text-align: center;
     margin-bottom: 40px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .Haut_carte h1 {
@@ -473,6 +492,36 @@ const isPasswordValid = computed(() =>
     font-size: 2.2rem;
     font-weight: 900;
     color: #000;
+}
+
+/* Bouton de déconnexion desktop */
+.btn-logout-desktop {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-logout-desktop:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    transform: translateY(-50%) scale(1.05);
+}
+
+.btn-logout-desktop svg {
+    flex-shrink: 0;
 }
 
 .Contenu_Profil {
@@ -836,8 +885,26 @@ label {
         padding: 30px 20px; 
     }
 
+    .Haut_carte {
+        flex-direction: column;
+        gap: 15px;
+    }
+
     .Haut_carte h1 {
         font-size: 1.8rem;
+    }
+
+    /* Bouton déconnexion en dessous du titre sur mobile */
+    .btn-logout-desktop {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+    }
+
+    .btn-logout-desktop:hover {
+        transform: scale(1.05);
     }
 
     .Profil_Header {
