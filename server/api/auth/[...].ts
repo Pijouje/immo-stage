@@ -38,7 +38,7 @@ export default NuxtAuthHandler({
                 }
 
                 return {
-                    id: user.id.toString,
+                    id: user.id.toString(),
                     name: user.nom + ' ' + user.prenom,
                     email: user.email,
                     role: user.role  

@@ -24,7 +24,7 @@ const chargerMessages = async () => {
     if (!contactId.value){
         return
     } 
-    const data = await $fetch('/api/messages/get?contactId=' + contactId.value)
+    const data = await $fetch('/api/messages/get?userId=' + contactId.value)
     messages.value = data
     scrollToBottom()
 }
@@ -153,7 +153,7 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             </template>
 
             <div v-else class="message-attente">
-                <p>👈 Veuillez une conversation à gauche</p>
+                <p>👈 Sélectionnez une conversation à gauche</p>
             </div>
 
         </div>
