@@ -67,11 +67,7 @@ export default NuxtAuthHandler({
                 // 4. Retourner l'utilisateur (sera stocké dans le token JWT)
                 return {
                     id: user.id.toString(),
-<<<<<<< HEAD
-                    name: user.nom + ' ' + user.prenom,
-=======
                     name: `${user.prenom || ''} ${user.nom}`.trim(),
->>>>>>> b7865e2482d86204ee28672e9811e2e32665cd66
                     email: user.email,
                     role: user.role
                 } as any

@@ -1,12 +1,10 @@
 <script setup>
 
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, reactive } from 'vue'
 //definePageMeta({ middleware: 'auth'})
 const { data: session } = useAuth()
 
-const { data: contacts, error } = await useFetch('/api/users', { 
-    lazy: true 
-})
+const { data: contacts, error } = await useFetch('/api/users')
 
 if (error.value) {
     console.error("Erreur API Users :", error.value)
@@ -18,22 +16,73 @@ const messages = ref([])
 const nouveauMessage = ref('')
 const conversationOuverte = ref(false)
 const boxConversation = ref(null)
+const totalParContact = reactive({})
+const vusParContact = reactive({})  
 let intervalId = null
 
-const chargerMessages = async () => {
-    if (!contactId.value){
-        return
-    } 
-    const data = await $fetch('/api/messages/get?userId=' + contactId.value)
-    messages.value = data
-    scrollToBottom()
+const getNonLus = (userId) => {
+    const total = totalParContact[userId] ?? 0
+    const vus = vusParContact[userId] ?? total
+    return Math.max(0, total - vus)
 }
 
-const ouvrirConversation = async (user) =>{
+const chargerMessages = async (forceScroll = false) => {
+    if (!contactId.value) return
+    const data = await $fetch('/api/messages/get?userId=' + contactId.value)
+    messages.value = data
+    
+    if (forceScroll) {
+        scrollToBottom()
+    }
+}
+
+const verifierTousLesMessages = async () => {
+    if (!contacts.value) return
+
+    for (const user of contacts.value) {
+        const data = await $fetch('/api/messages/get?userId=' + user.id)
+        const totalReel = data.length
+        totalParContact[user.id] = totalReel
+        if (contactId.value === user.id) {
+            vusParContact[user.id] = totalReel
+            sauvegarderVus()
+        }
+        if (vusParContact[user.id] === undefined) {
+             vusParContact[user.id] = totalReel
+        }
+    }
+}
+
+const chargerMemoireVus = () => {
+    if (import.meta.client) { // Sécurité pour Nuxt
+        const memoire = localStorage.getItem('messagerie_vus')
+        if (memoire) {
+            Object.assign(vusParContact, JSON.parse(memoire))
+        }
+    }
+}
+
+// Sauvegarde quand on lit un message
+const sauvegarderVus = () => {
+    if (import.meta.client) {
+        localStorage.setItem('messagerie_vus', JSON.stringify(vusParContact))
+    }
+}
+
+const ouvrirConversation = async (user) => {
     contactId.value = user.id
     contactActuel.value = user
     conversationOuverte.value = true
-    await chargerMessages()
+    vusParContact[user.id] = totalParContact[user.id] ?? 0
+    sauvegarderVus()
+
+    try {
+        await $fetch('/api/messages/read', {
+            method: 'POST',
+            body: { contactId: user.id }
+        })
+    } catch (e) { console.error(e) }
+    await chargerMessages(true) 
 }
 
 const fermerConversation = () => {
@@ -53,23 +102,28 @@ const envoyerMessages = async () => {
             }
         })
         nouveauMessage.value = ''
-        chargerMessages()
+        chargerMessages(true)
     } catch (e) {
-        alert("Erreur d'envoi : " + e)
+        alert("Erreur : " + e)
     }
 }
 
 const scrollToBottom = async () => {
     await nextTick()
     if (boxConversation.value) {
-        boxConversation.value.scrollTop = boxConversation.value.scrollHeight
+        setTimeout(() => {
+             boxConversation.value.scrollTop = boxConversation.value.scrollHeight
+        }, 50)
     }
 }
 
 onMounted(() => {
+    chargerMemoireVus()
+    verifierTousLesMessages()
     intervalId = setInterval(() => {
-        if(contactId.value) chargerMessages()
-    }, 3000)
+        if (contactId.value) chargerMessages(false)
+        verifierTousLesMessages()
+    }, 2000)
 })
 
 onUnmounted(() => {
@@ -97,8 +151,11 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
               
               <div class="info-text">
                   <div class="top-line">
-                      <strong>{{ user.prenom }} {{ user.nom }}</strong>
-                      <span class="date-message">{{ heureActuelle }}</span>
+                    <strong>{{ user.prenom }} {{ user.nom }}</strong>
+                    <span v-if="getNonLus(user.id) > 0" class="badge">
+                        {{ getNonLus(user.id) }}
+                    </span>
+                    <span class="date-message">{{ heureActuelle }}</span>
                   </div>
                   <p class="preview-message">Cliquez pour discuter...</p>
               </div>
@@ -126,7 +183,7 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
                 </div>
                 <div class="concernant">
                     <div class="Logo_Cercle">🏠</div>
-                    <p>Immo-Stage</p>
+                    <p>Concernant : T2 Meublé - Saint-Leu</p>
                 </div>
             </template>
 
@@ -141,11 +198,11 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             
             <template v-if="contactId">
                 <div v-for="msg in messages" :key="msg.id" 
-                    :class="msg.expediteurId == session?.user?.id ? 'receveur' : 'destinataire'">
+                    :class="msg.expediteurId == Number(session?.user?.id) ? 'receveur' : 'destinataire'">
                     
-                    <div :class="msg.expediteurId == session?.user?.id ? 'message-envoye' : 'message-recu'">
+                    <div :class="msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu'">
                         <p>{{ msg.contenu }}</p>
-                        <div :class="msg.expediteurId == session?.user?.id ? 'heure-receveur' : 'heure-destinataire'">
+                        <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
                             {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
                         </div>
                     </div>
@@ -153,7 +210,7 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             </template>
 
             <div v-else class="message-attente">
-                <p>👈 Sélectionnez une conversation à gauche</p>
+                <p>👈 Sélectionner la conversation pour plus d'infos</p>
             </div>
 
         </div>
@@ -442,6 +499,7 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
     align-items: center;
     justify-content: center;
     transition: color 0.2s;
+    font-size: 1.4rem; /* ← Ajoute ça */
 }
 
 .btn-trombone:hover {
@@ -504,17 +562,53 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
     color: gray;
 }
 
+.badge {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 50%;
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
+    
+    .concernant {
+        display: none;
+    }
     
     .page {
         padding: 0;
         height: calc(100vh - 90px);
+        max-height: calc(100vh - 90px);
+        overflow: hidden;
     }
     
     .carte {
         height: 100%;
         border-radius: 0;
         max-width: 100%;
+    }
+
+    .partie-envoie {
+        padding: 0 10px;
+        gap: 8px;
+    }
+
+    .btn-envoyer {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .champ-texte {
+        min-width: 0;
     }
 
     .partie-gauche {

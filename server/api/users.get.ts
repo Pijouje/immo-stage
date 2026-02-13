@@ -10,18 +10,17 @@ export default defineEventHandler(async (event) => {
 
     const emailUser = session.user?.email
 
+    const currentUser = await prisma.user.findUnique({
+        where: { email: emailUser },
+        select: { id: true, role: true }
+    })
+
     const user = await prisma.user.findMany({
-        where: {
-            NOT: {
-                email: emailUser
-            }
-        },
-        select: {
-            id: true,
-            prenom: true,
-            nom: true,
-            avatar:true,
-        }
+        where: currentUser?.role === ('ADMIN' as any) || currentUser?.role === ('PROPRIETAIRE' as any)
+            ? {NOT : {email : emailUser}}
+            : {role: { in : ['PROPRIETAIRE', 'ADMIN'] as any[] }},
+        select: { id: true, nom: true, prenom: true, avatar: true, email: true, role: true }
+
     })
     return user
 })
