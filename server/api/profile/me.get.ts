@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. Récupérer l'ID de l'utilisateur depuis la session
-  const userId = parseInt((session.user as any).id)
+  const userId = parseInt(session.user.id)
 
   // 3. Récupérer les données complètes de l'utilisateur depuis la base
   const user = await prisma.user.findUnique({
