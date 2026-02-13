@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const userId = parseInt((session.user as any).id)
+  const userId = parseInt(session.user.id)
   const body = await readBody(event)
 
   // 2. Validation des champs

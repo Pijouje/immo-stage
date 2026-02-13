@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({
-  middleware: 'sidebase-auth', // Protection de la page
+  middleware: 'auth', // Utilise notre middleware personnalisé
   pageTransition: {
     name: 'auth',
     mode: 'out-in'
@@ -11,11 +11,6 @@ import { ref, computed } from 'vue'
 
 // Vérification de la session
 const { data: session, status } = useAuth()
-
-// Rediriger si pas connecté
-if (status.value === 'unauthenticated') {
-  navigateTo('/connexion')
-}
 
 // Récupération des données utilisateur
 const { data: userData, pending, error, refresh } = await useFetch('/api/profile/me')
