@@ -7,14 +7,20 @@ definePageMeta({
   }
 })
 
+// Vérification des permissions
+const { data: session } = useAuth()
+
+const canCreateOffre = computed(() => {
+  const role = session.value?.user?.role
+  return role === 'ADMIN' || role === 'PROPRIETAIRE'
+})
+
 const { data: offres, pending, error, refresh } = await useFetch('/api/offres', {
   lazy: true
 })
 
 const retryFetch = async () => {
-  // 2. On "nettoie" l'erreur manuellement pour forcer l'affichage du loader
   error.value = undefined
-  // On attend que le refresh se termine
   await refresh()
 }
 </script>
@@ -22,6 +28,20 @@ const retryFetch = async () => {
 <template>
   <div class="offres-page">
     <div class="container">
+
+      <!-- Bouton flottant "Créer une offre" (visible uniquement pour admin/proprio) -->
+      <NuxtLink 
+        v-if="canCreateOffre" 
+        to="/offres/create" 
+        class="btn-floating-create"
+        title="Créer une nouvelle offre"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span class="btn-text">Créer une offre</span>
+      </NuxtLink>
 
       <div v-if="error" class="state-box error-box">
         <div class="icon">⚠️</div>
@@ -39,6 +59,11 @@ const retryFetch = async () => {
         <div class="icon">📭</div>
         <h3>Aucune annonce pour le moment</h3>
         <p>Revenez un peu plus tard, nos propriétaires postent régulièrement !</p>
+        
+        <!-- Bouton de création si admin/proprio -->
+        <NuxtLink v-if="canCreateOffre" to="/offres/create" class="btn-create-first">
+          + Créer la première offre
+        </NuxtLink>
       </div>
 
       <div v-else class="offres-grid">
@@ -82,6 +107,82 @@ const retryFetch = async () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
+}
+
+/* Bouton flottant "Créer une offre" */
+.btn-floating-create {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 50px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.btn-floating-create:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+}
+
+.btn-floating-create svg {
+  flex-shrink: 0;
+}
+
+.btn-text {
+  white-space: nowrap;
+}
+
+/* Responsive : Bouton plus compact sur mobile */
+@media (max-width: 768px) {
+  .btn-floating-create {
+    bottom: 20px;
+    right: 20px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-text {
+    display: none; /* Masquer le texte sur mobile, garder juste l'icône */
+  }
+  
+  .btn-floating-create {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}
+
+/* Bouton de création pour l'état vide */
+.btn-create-first {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 30px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-create-first:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .state-box {
@@ -91,7 +192,7 @@ const retryFetch = async () => {
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   max-width: 600px;
-  margin: 0 auto; /* Centré horizontalement */
+  margin: 0 auto;
 }
 
 .state-box .icon {
@@ -133,7 +234,7 @@ const retryFetch = async () => {
   transform: scale(1.05);
 }
 
-/* Style Chargement (petit spinner css simple) */
+/* Style Chargement */
 .loader {
   border: 4px solid #f3f3f3;
   border-top: 4px solid #3498db;
@@ -148,8 +249,6 @@ const retryFetch = async () => {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-
 
 .offres-grid {
   display: grid;
@@ -210,7 +309,6 @@ const retryFetch = async () => {
   font-size: 1.3rem;
   color: #01111d;
 }
-
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
