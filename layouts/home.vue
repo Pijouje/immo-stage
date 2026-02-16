@@ -26,6 +26,17 @@
 
         <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
           <NuxtLink to="/offres" @click="menuOuvert = false">OFFRES</NuxtLink>
+          
+          <!-- Bouton "Créer une offre" pour ADMIN et PROPRIETAIRE -->
+          <NuxtLink 
+            v-if="canCreateOffre" 
+            to="/offres/create" 
+            @click="menuOuvert = false"
+            class="btn-create-offre"
+          >
+            + CRÉER UNE OFFRE
+          </NuxtLink>
+          
           <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
           
           <!-- Afficher UNIQUEMENT si NON connecté -->
@@ -88,6 +99,12 @@ const userInitial = computed(() => {
 
 // Vérifier si l'utilisateur est connecté
 const isAuthenticated = computed(() => status.value === 'authenticated')
+
+// Vérifier si l'utilisateur peut créer des offres
+const canCreateOffre = computed(() => {
+  const role = session.value?.user?.role
+  return role === 'ADMIN' || role === 'PROPRIETAIRE'
+})
 
 // Gestion de la déconnexion
 const handleLogout = async () => {
@@ -217,6 +234,21 @@ onUnmounted(() => {
 .Menu_navigation a:hover,
 .Menu_navigation button:hover {
   opacity: 0.7;
+}
+
+/* Bouton "Créer une offre" mis en avant */
+.btn-create-offre {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-create-offre:hover {
+  opacity: 1 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
 /* BOUTON BURGER */
