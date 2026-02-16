@@ -4,7 +4,7 @@ import { nextTick, onMounted, onUnmounted, ref, reactive } from 'vue'
 //definePageMeta({ middleware: 'auth'})
 const { data: session } = useAuth()
 
-const { data: contacts, error } = await useFetch('/api/users')
+const { data: contacts, error, refresh: refreshContacts } = await useFetch('/api/users')
 
 if (error.value) {
     console.error("Erreur API Users :", error.value)
@@ -19,6 +19,19 @@ const boxConversation = ref(null)
 const totalParContact = reactive({})
 const vusParContact = reactive({})  
 let intervalId = null
+
+const estDernierMsgLu = (index) => {
+    for (let i = index + 1; i < messages.value.length; i++) {
+        const msg = messages.value[i]
+        if (msg.expediteurId == Number(session.value?.user?.id) && msg.lu) {
+            return false
+        }
+        if (msg.expediteurId != Number(session.value?.user?.id)) {
+            return false
+        }
+    }
+    return true
+}
 
 const getNonLus = (userId) => {
     const total = totalParContact[userId] ?? 0
@@ -91,18 +104,17 @@ const fermerConversation = () => {
 }
 
 const envoyerMessages = async () => {
-    if(!nouveauMessage.value || !contactId.value) return
-
+    if (!nouveauMessage.value || !contactId.value){
+        return
+    }
     try {
         await $fetch('/api/messages/send', {
             method: 'POST',
-            body: {
-                destinataireId: contactId.value,
-                contenu: nouveauMessage.value
-            }
+            body: { destinataireId: contactId.value, contenu: nouveauMessage.value }
         })
         nouveauMessage.value = ''
         chargerMessages(true)
+        refreshContacts()
     } catch (e) {
         alert("Erreur : " + e)
     }
@@ -120,6 +132,7 @@ const scrollToBottom = async () => {
 onMounted(() => {
     chargerMemoireVus()
     verifierTousLesMessages()
+    refreshContacts()
     intervalId = setInterval(() => {
         if (contactId.value) chargerMessages(false)
         verifierTousLesMessages()
@@ -130,7 +143,23 @@ onUnmounted(() => {
     if (intervalId) clearInterval(intervalId)
 })
 
-const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+const formatDate = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    const aujourd = new Date()
+    
+    const memeJour = d.toDateString() === aujourd.toDateString()
+    if (memeJour) {
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    }
+    
+    const hier = new Date(aujourd)
+    hier.setDate(hier.getDate() - 1)
+    if (d.toDateString() === hier.toDateString()) return 'Hier'
+    
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
 </script>
 
 <template>
@@ -149,16 +178,23 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             >
               <div class="avatar"></div>
               
-              <div class="info-text">
-                  <div class="top-line">
-                    <strong>{{ user.prenom }} {{ user.nom }}</strong>
-                    <span v-if="getNonLus(user.id) > 0" class="badge">
-                        {{ getNonLus(user.id) }}
-                    </span>
-                    <span class="date-message">{{ heureActuelle }}</span>
-                  </div>
-                  <p class="preview-message">Cliquez pour discuter...</p>
-              </div>
+                <div class="info-text">
+                    <div class="top-line">
+                        <strong>{{ user.prenom }} {{ user.nom }}</strong>
+                        <span class="date-message">{{ formatDate(user.dernierMessage) }}</span>
+                    </div>
+                    <div class="preview-line">
+                        <p class="preview-message" :class="{ 'non-lu': getNonLus(user.id) > 0 }">
+                            {{ user.dernierContenu ?? 'Cliquez pour discuter...' }}
+                        </p>
+                        <span v-if="getNonLus(user.id) > 0" class="badge">
+                            {{ getNonLus(user.id) }}
+                        </span>
+                        <span v-else-if="user.dernierContenu" class="vu-contact">
+                            Vu
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-else class="aucun-utilisateur">
@@ -194,17 +230,24 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
             </template>
         </div>
 
+        
+        
         <div class="conversation" ref="boxConversation">
             
             <template v-if="contactId">
-                <div v-for="msg in messages" :key="msg.id" 
+                <div v-for="(msg, index) in messages" :key="msg.id" 
                     :class="msg.expediteurId == Number(session?.user?.id) ? 'receveur' : 'destinataire'">
                     
-                    <div :class="msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu'">
-                        <p>{{ msg.contenu }}</p>
-                        <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
-                            {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+                    <div class="message-wrapper">
+                        <div :class="msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu'">
+                            <p>{{ msg.contenu }}</p>
+                            <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
+                                {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+                            </div>
                         </div>
+                        <span v-if="msg.expediteurId == Number(session?.user?.id) && msg.lu && estDernierMsgLu(index)"class="vu-texte">
+                            Vu
+                        </span>
                     </div>
                 </div>
             </template>
@@ -311,13 +354,17 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
 .top-line {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 4px;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
 .contact strong {
     font-size: 15px;
     color: #0f172a;
+    flex: 1; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .date-message {
@@ -332,6 +379,19 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+}
+
+.preview-message.non-lu {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.preview-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .haut-contact {
@@ -462,6 +522,8 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
 .message-recu p, .message-envoye p {
     margin: 0;
     line-height: 1.4;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .heure-destinataire {
@@ -573,9 +635,38 @@ const heureActuelle = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', 
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
+    padding: 0 3px;
     flex-shrink: 0;
 }
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 60%;
+}
+
+.receveur .message-wrapper {
+    align-items: flex-end;
+}
+
+.destinataire .message-wrapper {
+    align-items: flex-start;
+}
+
+.vu-texte {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 7px;
+    align-self: flex-end;
+    padding-right: 2px;
+}
+
+.vu-contact {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
 
 @media (max-width: 768px) {
     
