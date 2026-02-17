@@ -19,6 +19,9 @@ const boxConversation = ref(null)
 const totalParContact = reactive({})
 const vusParContact = reactive({})  
 let intervalId = null
+const inputFichier = ref(null)
+const imageAgrandie = ref(null)
+
 
 const estDernierMsgLu = (index) => {
     for (let i = index + 1; i < messages.value.length; i++) {
@@ -132,15 +135,10 @@ const scrollToBottom = async () => {
 onMounted(() => {
     chargerMemoireVus()
     verifierTousLesMessages()
-    refreshContacts()
     intervalId = setInterval(() => {
         if (contactId.value) chargerMessages(false)
         verifierTousLesMessages()
     }, 2000)
-})
-
-onUnmounted(() => {
-    if (intervalId) clearInterval(intervalId)
 })
 
 const formatDate = (date) => {
@@ -158,6 +156,36 @@ const formatDate = (date) => {
     if (d.toDateString() === hier.toDateString()) return 'Hier'
     
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
+const envoyerFichier = async (event) => {
+    const fichier = event.target.files[0]
+    if (!fichier || !contactId.value) return
+
+    const formData = new FormData()
+    formData.append('fichier', fichier)
+    formData.append('destinataireId', contactId.value)
+
+    try {
+        await $fetch('/api/messages/upload', {
+            method: 'POST',
+            body: formData
+        })
+        chargerMessages(true)
+        refreshContacts()
+    } catch (e) {
+        alert("Erreur upload : " + e)
+    } finally {
+        event.target.value = ''
+    }
+}
+
+const ouvrirImage = (url) => {
+    imageAgrandie.value = url
+}
+
+const fermerImage = () => {
+    imageAgrandie.value = null
 }
 
 </script>
@@ -190,7 +218,7 @@ const formatDate = (date) => {
                         <span v-if="getNonLus(user.id) > 0" class="badge">
                             {{ getNonLus(user.id) }}
                         </span>
-                        <span v-else-if="user.dernierContenu" class="vu-contact">
+                        <span v-else-if="user.monDernierMessageLu" class="vu-contact">
                             Vu
                         </span>
                     </div>
@@ -239,8 +267,12 @@ const formatDate = (date) => {
                     :class="msg.expediteurId == Number(session?.user?.id) ? 'receveur' : 'destinataire'">
                     
                     <div class="message-wrapper">
-                        <div :class="msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu'">
-                            <p>{{ msg.contenu }}</p>
+                        <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
+                            <img v-if="msg.type === 'image'" :src="msg.contenu" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
+                            <a v-else-if="msg.type === 'fichier'" :href="msg.contenu" target="_blank" class="msg-fichier">
+                                📄 {{ msg.contenu.split('/').pop() }}
+                            </a>
+                            <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
                                 {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
                             </div>
@@ -259,13 +291,33 @@ const formatDate = (date) => {
         </div>
 
         <div class="partie-envoie" v-if="contactId">
-            <button class="btn-trombone">📎</button>
+            <input 
+                type="file" 
+                ref="inputFichier" 
+                @change="envoyerFichier" 
+                style="display: none"
+                accept="image/*,.pdf,.doc,.docx"
+            />
+            <button class="btn-trombone" @click="inputFichier.click()">📎</button>
             <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte" @keyup.enter="envoyerMessages" />
             <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
         </div>
 
       </div>
     </div>
+    <Transition name="fade">
+        <div v-if="imageAgrandie" class="lightbox-img-overlay" @click="fermerImage">
+            <img :src="imageAgrandie" class="lightbox-img-grande" @click.stop />
+            <a 
+                :href="imageAgrandie" 
+                :download="imageAgrandie.split('/').pop()"
+                class="btn-telecharger"
+                @click.stop
+            >
+                ⬇ Télécharger l'image
+            </a>
+        </div>
+    </Transition>
   </div>
 </template>
 
@@ -667,7 +719,95 @@ const formatDate = (date) => {
     flex-shrink: 0;
 }
 
+.lightbox-img-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
 
+.lightbox-img-grande {
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+}
+
+.msg-image {
+    display: block;
+    max-width: 220px;
+    max-height: 220px;
+    width: 100%;
+    border-radius: 12px;
+    cursor: pointer;
+    object-fit: cover;
+    transition: opacity 0.2s;
+}
+
+.msg-image:hover {
+    opacity: 0.85;
+}
+
+.message-image {
+    padding: 4px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.message-image .heure-receveur,
+.message-image .heure-destinataire {
+    padding: 0 4px;
+    color: #94a3b8;
+}
+
+.msg-fichier {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    padding: 4px 0;
+}
+
+
+.message-attente {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.btn-telecharger {
+    position: absolute;
+    bottom: 30px;
+    background: white;
+    color: #01111d;
+    padding: 10px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: opacity 0.2s;
+}
+
+.btn-telecharger:hover {
+    opacity: 0.85;
+}
 @media (max-width: 768px) {
     
     .concernant {

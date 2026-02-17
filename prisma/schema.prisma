@@ -118,6 +118,7 @@ model Avis {
 model Message {
   id          Int      @id @default(autoincrement())
   contenu     String   @db.Text
+  type        String   @default("texte")
   createdAt   DateTime @default(now())
   lu          Boolean  @default(false)
 

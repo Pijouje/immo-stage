@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
                     where :{ expediteurId : currentUser?.id,},
                     orderBy : { createdAt : 'desc' },
                     take : 1,
-                    select : { createdAt: true , contenu: true}
+                    select : { createdAt: true , contenu: true, lu: true }
                 }
          }
 
@@ -54,7 +54,10 @@ export default defineEventHandler(async (event) => {
             email: user.email,
             role: user.role,
             dernierMessage,
-            dernierContenu
+            dernierContenu,
+            monDernierMessageLu: user.messagesRecu.length > 0 
+                && (user.messagesRecu[0] as any).lu 
+                && dernierMessage === dernierMessageRecu 
         }
     })
 
