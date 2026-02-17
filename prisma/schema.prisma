@@ -21,21 +21,23 @@ model User {
   prenom    String?
   email     String   @unique
   password  String
-  avatar    String?  // Pour la photo de profil (le rond avec l'initiale)
+  avatar    String?
   role      Role     @default(ETUDIANT)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  offres      Offre[]       @relation("ProprietaireOffres") // Les offres qu'il a postées (si proprio)
-  avisDonnes  Avis[]        @relation("AvisAuteur")         // Les avis qu'il a écrits
-  documents   Document[]                                    // Ses pièces justificatives (Profile.vue)
-  messagesEnvoi Message[]   @relation("Expediteur")
-  messagesRecu  Message[]   @relation("Destinataire")
+  offres                   Offre[]            @relation("ProprietaireOffres")
+  avis                     Avis[]             @relation("AvisAuteur")
+  documents                Document[]
+  messagesEnvoi            Message[]          @relation("Expediteur")
+  messagesRecu             Message[]          @relation("Destinataire")
+  reviewPermissions        ReviewPermission[] @relation("PermissionUser")
+  reviewPermissionsGranted ReviewPermission[] @relation("GrantedPermissions")
 }
 
 // --------------------------------------
-// 2. GESTION DOCUMENTS (Profile.vue)
+// 2. GESTION DOCUMENTS
 // --------------------------------------
 
 enum DocStatus {
@@ -45,18 +47,18 @@ enum DocStatus {
 }
 
 model Document {
-  id        Int       @id @default(autoincrement())
-  nom       String    // Ex: "Carte d'identité"
-  url       String    // Lien vers le fichier PDF/JPG
-  type      String    // "identite", "garant", etc.
-  status    DocStatus @default(EN_ATTENTE)
-  
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     Int       @id @default(autoincrement())
+  nom    String
+  url    String
+  type   String
+  status DocStatus @default(EN_ATTENTE)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // --------------------------------------
-// 3. GESTION DES OFFRES (Immo)
+// 3. GESTION DES OFFRES
 // --------------------------------------
 
 model Offre {
@@ -64,55 +66,68 @@ model Offre {
   titre       String
   description String   @db.Text
   prix        Int
-  charges     Int?     @default(0) // Nouveau: Charges comprises ou non
+  charges     Int?     @default(0)
   caution     Int?
-  surface     Int?     // Utile pour l'immo
+  surface     Int?
   lieu        String
-  coloc       Int      @default(0) // Nombre de places dispos
-  
-  // Equipements (Tags) - On garde JSON pour la simplicité, c'est très bien ici
-  tags        Json?    // ['Fibre', 'Lave-linge', 'Proche Gare']
+  coloc       Int      @default(0)
+  tags        Json?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
   proprietaireId Int
-  proprietaire   User          @relation("ProprietaireOffres", fields: [proprietaireId], references: [id])
-  
-  images         OffreImage[]  // Galerie d'images ([id].vue)
-  avis           Avis[]        // Liste des avis liés à cette offre
+  proprietaire   User @relation("ProprietaireOffres", fields: [proprietaireId], references: [id])
+
+  images            OffreImage[]
+  avis              Avis[]
+  reviewPermissions ReviewPermission[]
 }
 
-// Table dédiée pour avoir plusieurs images par offre
 model OffreImage {
-  id       Int    @id @default(autoincrement())
-  url      String
-  offreId  Int
-  offre    Offre  @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  id      Int    @id @default(autoincrement())
+  url     String
+  offreId Int
+  offre   Offre  @relation(fields: [offreId], references: [id], onDelete: Cascade)
 }
 
 // --------------------------------------
-// 4. GESTION DES AVIS (Avis.vue)
+// 4. GESTION DES AVIS
 // --------------------------------------
+
+model ReviewPermission {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation("PermissionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  offreId Int
+  offre   Offre @relation(fields: [offreId], references: [id], onDelete: Cascade)
+
+  grantedBy     Int
+  grantedByUser User @relation("GrantedPermissions", fields: [grantedBy], references: [id])
+
+  @@unique([userId, offreId])
+}
 
 model Avis {
   id          Int      @id @default(autoincrement())
-  note        Int      // 1 à 5
+  note        Int
   commentaire String   @db.Text
   createdAt   DateTime @default(now())
 
-  // Qui a écrit l'avis ?
-  auteurId    Int
-  auteur      User     @relation("AvisAuteur", fields: [auteurId], references: [id])
+  auteurId Int
+  auteur   User  @relation("AvisAuteur", fields: [auteurId], references: [id], onDelete: Cascade)
 
-  // Sur quelle offre ?
-  offreId     Int
-  offre       Offre    @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId Int
+  offre   Offre @relation(fields: [offreId], references: [id], onDelete: Cascade)
+
+  @@unique([auteurId, offreId])
 }
 
 // --------------------------------------
-// 5. MESSAGERIE (Contact.vue)
+// 5. MESSAGERIE
 // --------------------------------------
 
 model Message {
@@ -123,8 +138,8 @@ model Message {
   lu          Boolean  @default(false)
 
   expediteurId Int
-  expediteur   User    @relation("Expediteur", fields: [expediteurId], references: [id])
+  expediteur   User @relation("Expediteur", fields: [expediteurId], references: [id])
 
   destinataireId Int
-  destinataire   User    @relation("Destinataire", fields: [destinataireId], references: [id])
+  destinataire   User @relation("Destinataire", fields: [destinataireId], references: [id])
 }
