@@ -45,13 +45,23 @@ const canManage = computed(() => isAdmin.value || isProprietaire.value)
 // On récupère toutes les offres pour le sélecteur
 const { data: offres } = await useFetch<Offre[]>('/api/offres')
 
+const route = useRoute()
 const offreSelectionnee = ref<number | null>(null)
 
-// Sélectionner la première offre par défaut
-if (offres.value && offres.value.length > 0) {
-  offreSelectionnee.value = offres.value[0].id
-}
+// Priorité 1 : offreId passé en paramètre URL (?offreId=3)
+// Priorité 2 : première offre de la liste
+const queryParam = route.query.offreId
+const offreIdDepuisUrl: number | null = typeof queryParam === 'string'
+  ? (parseInt(queryParam) || null)
+  : null
 
+const offreIds = offres.value?.map(o => o.id) ?? []
+
+if (offreIdDepuisUrl !== null && offreIds.includes(offreIdDepuisUrl)) {
+  offreSelectionnee.value = offreIdDepuisUrl
+} else {
+  offreSelectionnee.value = offres.value?.[0]?.id ?? null
+}
 // ─── CHARGEMENT DES AVIS ─────────────────────────────────────────────────────
 
 const avisData = ref<AvisResponse | null>(null)
@@ -885,7 +895,11 @@ const labelNote = (note: number) => {
 }
 
 /* ─── LISTE DES AVIS ─────────────────────────────────────────── */
-.avis-section {}
+.avis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .section-heading {
   font-size: 1.2rem;
