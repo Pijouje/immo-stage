@@ -135,7 +135,9 @@ const prevImage = () => {
            <div class="rating-block">
              <Etoile :note="offre.rating" />
     
-            <NuxtLink to="/avis" class="avis-link">{{ offre.avisCount }} avis</NuxtLink>
+            <NuxtLink :to="`/avis?offreId=${offre.id}`" class="avis-link">
+              {{ offre.avisCount }} avis
+            </NuxtLink>
           </div>
         </div>
           <p class="location">📍 {{ offre.lieu }}</p>
