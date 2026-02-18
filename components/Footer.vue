@@ -4,13 +4,12 @@
       
       <div class="footer-col brand-col">
         <h3>NOM DU SITE</h3>
-        <p>Petit texte sympa</p>
+        <p>Location de logements étudiants à Amiens.<br>Trouvez votre futur chez-vous en toute confiance.</p>
       </div>
 
       <div class="footer-col">
         <h3>AIDE</h3>
         <ul>
-          <li><NuxtLink to="/plan-du-site">Plan du site</NuxtLink></li>
           <li><NuxtLink to="/contact">Nous contacter</NuxtLink></li>
         </ul>
       </div>
@@ -18,10 +17,9 @@
       <div class="footer-col">
         <h3>LEGAL</h3>
         <ul>
-          <li><NuxtLink to="/mentions-legales">Mentions Légales</NuxtLink></li>
-          <li><NuxtLink to="/politique-confidentialite">Politique de confidentialité</NuxtLink></li>
-          <li><NuxtLink to="/cgu">CGU / CGV</NuxtLink></li>
-          <li><button class="link-btn">Gestion des cookies</button></li>
+          <li><NuxtLink to="/legal/mentions">Mentions Légales</NuxtLink></li>
+          <li><NuxtLink to="/legal/privacy">Politique de confidentialité</NuxtLink></li>
+          <li><NuxtLink to="/legal/cgu">CGU / CGV</NuxtLink></li>
         </ul>
       </div>
 
@@ -29,7 +27,8 @@
 
     <div class="footer-bottom">
       <div class="separator"></div>
-      <p>BY M&A</p>
+      <p>© {{ new Date().getFullYear() }} NOM DU SITE - Tous droits réservés</p>
+      <p class="signature">BY M&A</p>
     </div>
   </footer>
 </template>
@@ -73,6 +72,7 @@
   font-size: 0.9rem;
   font-weight: 400;
   opacity: 0.8;
+  line-height: 1.5;
 }
 
 /* --- LIENS --- */
@@ -126,6 +126,12 @@ a:hover, .link-btn:hover {
   letter-spacing: 1px;
   text-transform: uppercase;
   opacity: 0.6;
+  margin: 8px 0;
+}
+
+.signature {
+  opacity: 0.4;
+  margin-top: 5px;
 }
 
 /* --- RESPONSIVE MOBILE --- */
