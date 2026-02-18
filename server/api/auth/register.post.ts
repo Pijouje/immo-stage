@@ -23,10 +23,10 @@ export default defineEventHandler(async (event) => {
     })
 
     if (EmailExists) {
-        return {
-            status: 400,
-            message: 'Email déjà utilisé'
-        }
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Email déjà utilisé'
+        })
     }
 
     const pwdCrypt = await hash(body.password, 10)
