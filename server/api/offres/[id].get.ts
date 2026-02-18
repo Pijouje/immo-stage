@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
     include: {
       images: true, // Toutes les images pour la galerie
       avis: true,   // Pour calculer la note et le nombre d'avis
-      proprietaire: { // Optionnel: si tu veux afficher le nom du proprio plus tard
-        select: { nom: true, prenom: true, email: true }
+      proprietaire: {
+        select: { nom: true, prenom: true }
       }
     }
   })

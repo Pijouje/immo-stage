@@ -24,16 +24,14 @@ export default defineNuxtConfig({
     globalAppMiddleware: {
       isEnabled: false // Important : on désactive le middleware global
     },
-    // Configuration pour que la session soit accessible partout
     session: {
-      enableRefreshPeriodically: 5000, // Rafraîchit la session toutes les 5 secondes
+      enableRefreshPeriodically: 60000, // Rafraîchit la session toutes les 60 secondes
       enableRefreshOnWindowFocus: true
     }
   },
 
-  // Configuration des runtime pour que les variables d'environnement soient accessibles
   runtimeConfig: {
-    authSecret: process.env.AUTH_SECRET || 'ma-cle-secrete-super-longue-et-aleatoire-minimum-32-caracteres',
+    authSecret: process.env.AUTH_SECRET,
     public: {
       authOrigin: process.env.AUTH_ORIGIN ?? 'http://localhost:3000'
     }
