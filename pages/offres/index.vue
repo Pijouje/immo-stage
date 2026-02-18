@@ -7,7 +7,6 @@ definePageMeta({
   }
 })
 
-// Vérification des permissions
 const { data: session } = useAuth()
 
 const canCreateOffre = computed(() => {
@@ -15,9 +14,16 @@ const canCreateOffre = computed(() => {
   return role === 'ADMIN' || role === 'PROPRIETAIRE'
 })
 
-const { data: offres, pending, error, refresh } = await useFetch('/api/offres', {
-  lazy: true
+const page = ref(1)
+
+const { data, pending, error, refresh } = await useFetch('/api/offres', {
+  query: { page },
+  lazy: true,
+  watch: [page]
 })
+
+const offres = computed(() => data.value?.offres ?? [])
+const totalPages = computed(() => data.value?.totalPages ?? 1)
 
 const retryFetch = async () => {
   error.value = undefined
@@ -84,6 +90,12 @@ const retryFetch = async () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-if="totalPages > 1" class="pagination">
+        <button :disabled="page <= 1" @click="page--" class="page-btn">← Précédent</button>
+        <span class="page-info">Page {{ page }} / {{ totalPages }}</span>
+        <button :disabled="page >= totalPages" @click="page++" class="page-btn">Suivant →</button>
       </div>
 
     </div>
@@ -313,5 +325,42 @@ const retryFetch = async () => {
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .offres-grid { grid-template-columns: 1fr; }
+}
+
+/* PAGINATION */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 50px;
+}
+
+.page-btn {
+  background: white;
+  border: 2px solid #2563eb;
+  color: #2563eb;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 700;
+  color: #01111d;
+  font-size: 0.95rem;
 }
 </style>

@@ -1,22 +1,33 @@
 import { prisma } from '../../utils/prisma'
 
-export default defineEventHandler(async () => {
-  const offres = await prisma.offre.findMany({
-    orderBy: { createdAt: 'desc' }, // Les plus récentes en premier
-    include: {
-      images: {
-        take: 1 // On prend juste la 1ère image pour la miniature
-      }
-    }
-  })
+const LIMIT = 9
 
-  // On transforme un peu les données pour faciliter l'affichage côté Vue
-  // Vérifie que la fin de ton fichier server/api/offres.get.ts ressemble bien à ça :
-  return offres.map(offre => ({
-    id: offre.id,
-    titre: offre.titre,
-    lieu: offre.lieu,
-    prix: `${offre.prix}€`, 
-    image: offre.images[0]?.url || '/images/default.png' // C'est cette ligne qui compte
-  }))
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
+  const page = Math.max(1, parseInt(query.page as string) || 1)
+
+  const [offres, total] = await Promise.all([
+    prisma.offre.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * LIMIT,
+      take: LIMIT,
+      include: {
+        images: { take: 1 }
+      }
+    }),
+    prisma.offre.count()
+  ])
+
+  return {
+    offres: offres.map(offre => ({
+      id: offre.id,
+      titre: offre.titre,
+      lieu: offre.lieu,
+      prix: `${offre.prix}€`,
+      image: offre.images[0]?.url || '/images/default.png'
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / LIMIT)
+  }
 })
