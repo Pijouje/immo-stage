@@ -160,7 +160,22 @@ const formatDate = (date) => {
 
 const envoyerFichier = async (event) => {
     const fichier = event.target.files[0]
-    if (!fichier || !contactId.value) return
+    if (!fichier || !contactId.value){
+        return
+    }
+
+    const TAILLE_MAX = 5 * 1024 * 1024;
+    if (fichier.size > TAILLE_MAX) {
+        alert("⚠️ Le fichier est trop lourd ! (Max 5 Mo)");
+        event.target.value = ''
+        return;
+    }
+    const TYPES_AUTORISES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!TYPES_AUTORISES.includes(fichier.type)) {
+        alert("⛔ Type de fichier non autorisé.");
+        event.target.value = ''
+        return;
+    }
 
     const formData = new FormData()
     formData.append('fichier', fichier)
@@ -188,6 +203,35 @@ const fermerImage = () => {
     imageAgrandie.value = null
 }
 
+const fichiersPartages = computed(() => {
+    return messages.value.filter(msg => msg.type === 'image' || msg.type === 'fichier').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+})
+
+// DANS LE SCRIPT SETUP
+
+const supprimerFichier = async (fichier) => {
+    const monId = Number(session.value?.user?.id)
+    const expediteurId = Number(fichier.expediteurId)
+    if (monId !== expediteurId) {
+        alert("Erreur: Vous ne pouvez supprimer que vos propres fichiers.")
+        return
+    }
+
+    if (!confirm("Voulez-vous vraiment supprimer ce fichier ?")){ 
+        return 
+    }
+
+    try {
+        await $fetch('/api/messages/delete', {
+            method: 'POST',
+            body: { id: fichier.id }
+        })
+        messages.value = messages.value.filter(m => m.id !== fichier.id)
+        
+    } catch (e) {
+        alert("Erreur lors de la suppression : " + e)
+    }
+}
 </script>
 
 <template>
@@ -283,13 +327,11 @@ const fermerImage = () => {
                     </div>
                 </div>
             </template>
-
             <div v-else class="message-attente">
                 <p>👈 Sélectionner la conversation pour plus d'infos</p>
             </div>
 
         </div>
-
         <div class="partie-envoie" v-if="contactId">
             <input 
                 type="file" 
@@ -304,6 +346,39 @@ const fermerImage = () => {
         </div>
 
       </div>
+    </div>
+    <div v-if="contactId && fichiersPartages.length > 0" class="panneau-fichiers-externe">
+        <div class="fichiers-container">
+            <h3>📁 Fichiers partagés avec {{ contactActuel?.prenom }} {{ contactActuel?.nom }} ({{ fichiersPartages.length }})</h3>
+            
+            <div class="fichiers-liste">
+                <div v-for="fichier in fichiersPartages" :key="fichier.id" class="fichier-item-externe">
+                    <div 
+                        v-if="fichier.type === 'image'" 
+                        class="fichier-thumb-externe"
+                        :style="{ backgroundImage: `url(${fichier.contenu})` }"
+                        @click="ouvrirImage(fichier.contenu)"
+                    ></div>
+                    <div v-else class="fichier-thumb-externe fichier-doc-externe">📄</div>
+                    
+                    <div class="fichier-details">
+                        <div class="fichier-nom-externe">{{ fichier.contenu.split('/').pop() }}</div>
+                        <div class="fichier-date-externe">
+                            {{ new Date(fichier.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}
+                        </div>
+                    </div>
+                    
+                    <div class="fichier-actions-externe">
+                        <a :href="fichier.contenu" :download="fichier.contenu.split('/').pop()" class="btn-action-externe">
+                            ⬇ Télécharger
+                        </a>
+                        <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
+                            🗑️ Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <Transition name="fade">
         <div v-if="imageAgrandie" class="lightbox-img-overlay" @click="fermerImage">
@@ -323,28 +398,33 @@ const fermerImage = () => {
 
 <style scoped>
 .page {
-    height: calc(100vh - 90px); 
+    height: auto; 
     width: 100%;
     background-image: url('/images/bg.png');
     background-size: cover;
     background-position: center;
     display: flex;
     justify-content: center;
+    flex-direction: column;
     align-items: center;
     padding: 20px; 
     box-sizing: border-box;
+    gap: 20px;
+    overflow-y: auto;
 }
 
 .carte {
     background-color: white;
     width: 100%;
     max-width: 1200px; 
-    height: 85%; 
+    height: 600px; 
+    min-height: 600px;
     border-radius: 16px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     display: flex; 
     flex-direction: row; 
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 /* --- COLONNE GAUCHE --- */
@@ -808,6 +888,139 @@ const fermerImage = () => {
 .btn-telecharger:hover {
     opacity: 0.85;
 }
+
+.panneau-fichiers-externe {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.fichiers-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    padding: 25px 30px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fichiers-container h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.fichiers-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 10px;
+}
+
+.fichier-item-externe {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: box-shadow 0.2s;
+}
+
+.fichier-item-externe:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.fichier-thumb-externe {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid #e2e8f0;
+}
+
+.fichier-doc-externe {
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.fichier-details {
+    flex: 1;
+}
+
+.fichier-nom-externe {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.fichier-date-externe {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.fichier-actions-externe {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-action-externe {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #2563EB;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+}
+
+.btn-action-externe:hover {
+    background: #1d4ed8;
+}
+
+.btn-supprimer-externe {
+    background: #ef4444;
+}
+
+.btn-supprimer-externe:hover {
+    background: #dc2626;
+}
+
+.fichiers-liste::-webkit-scrollbar {
+    width: 8px;
+}
+
+.fichiers-liste::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.fichiers-liste::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.fichiers-liste::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 @media (max-width: 768px) {
     
     .concernant {
@@ -816,15 +1029,17 @@ const fermerImage = () => {
     
     .page {
         padding: 0;
-        height: calc(100vh - 90px);
-        max-height: calc(100vh - 90px);
-        overflow: hidden;
+        height: auto; 
+        max-height: none; 
+        overflow-y: auto; 
+        display: block;
     }
     
     .carte {
-        height: 100%;
+        height: calc(100vh - 90px);
         border-radius: 0;
         max-width: 100%;
+        margin-bottom: 20px;
     }
 
     .partie-envoie {
@@ -863,6 +1078,36 @@ const fermerImage = () => {
 
     .btn-retour {
         display: flex;
+    }
+
+    .panneau-fichiers-externe {
+        margin-top: 20px;
+        padding: 0 15px 20px 15px;
+        box-sizing: border-box;
+    }
+    
+    .fichiers-container {
+        border-radius: 16px;
+        height: auto;
+        max-height: 400px;
+    }
+    .fichier-item-externe {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .fichier-actions-externe {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .btn-action-externe {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 10px;
     }
 }
 
