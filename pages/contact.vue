@@ -1,7 +1,7 @@
 <script setup>
 
-import { nextTick, onMounted, onUnmounted, ref, reactive } from 'vue'
-//definePageMeta({ middleware: 'auth'})
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+definePageMeta({ middleware: 'auth' })
 const { data: session } = useAuth()
 
 const { data: contacts, error, refresh: refreshContacts } = await useFetch('/api/users')
@@ -16,89 +16,39 @@ const messages = ref([])
 const nouveauMessage = ref('')
 const conversationOuverte = ref(false)
 const boxConversation = ref(null)
-const totalParContact = reactive({})
-const vusParContact = reactive({})  
 let intervalId = null
 const inputFichier = ref(null)
 const imageAgrandie = ref(null)
 
-
 const estDernierMsgLu = (index) => {
     for (let i = index + 1; i < messages.value.length; i++) {
         const msg = messages.value[i]
-        if (msg.expediteurId == Number(session.value?.user?.id) && msg.lu) {
-            return false
-        }
-        if (msg.expediteurId != Number(session.value?.user?.id)) {
-            return false
-        }
+        if (msg.expediteurId == Number(session.value?.user?.id) && msg.lu) return false
+        if (msg.expediteurId != Number(session.value?.user?.id)) return false
     }
     return true
 }
 
-const getNonLus = (userId) => {
-    const total = totalParContact[userId] ?? 0
-    const vus = vusParContact[userId] ?? total
-    return Math.max(0, total - vus)
-}
-
 const chargerMessages = async (forceScroll = false) => {
     if (!contactId.value) return
-    const data = await $fetch('/api/messages/get?userId=' + contactId.value)
-    messages.value = data
-    
-    if (forceScroll) {
-        scrollToBottom()
-    }
-}
-
-const verifierTousLesMessages = async () => {
-    if (!contacts.value) return
-
-    for (const user of contacts.value) {
-        const data = await $fetch('/api/messages/get?userId=' + user.id)
-        const totalReel = data.length
-        totalParContact[user.id] = totalReel
-        if (contactId.value === user.id) {
-            vusParContact[user.id] = totalReel
-            sauvegarderVus()
-        }
-        if (vusParContact[user.id] === undefined) {
-             vusParContact[user.id] = totalReel
-        }
-    }
-}
-
-const chargerMemoireVus = () => {
-    if (import.meta.client) { // Sécurité pour Nuxt
-        const memoire = localStorage.getItem('messagerie_vus')
-        if (memoire) {
-            Object.assign(vusParContact, JSON.parse(memoire))
-        }
-    }
-}
-
-// Sauvegarde quand on lit un message
-const sauvegarderVus = () => {
-    if (import.meta.client) {
-        localStorage.setItem('messagerie_vus', JSON.stringify(vusParContact))
-    }
+    messages.value = await $fetch('/api/messages/get?userId=' + contactId.value)
+    if (forceScroll) scrollToBottom()
 }
 
 const ouvrirConversation = async (user) => {
     contactId.value = user.id
     contactActuel.value = user
     conversationOuverte.value = true
-    vusParContact[user.id] = totalParContact[user.id] ?? 0
-    sauvegarderVus()
 
     try {
         await $fetch('/api/messages/read', {
             method: 'POST',
             body: { contactId: user.id }
         })
+        refreshContacts()
     } catch (e) { console.error(e) }
-    await chargerMessages(true) 
+
+    await chargerMessages(true)
 }
 
 const fermerConversation = () => {
@@ -107,9 +57,7 @@ const fermerConversation = () => {
 }
 
 const envoyerMessages = async () => {
-    if (!nouveauMessage.value || !contactId.value){
-        return
-    }
+    if (!nouveauMessage.value || !contactId.value) return
     try {
         await $fetch('/api/messages/send', {
             method: 'POST',
@@ -127,18 +75,20 @@ const scrollToBottom = async () => {
     await nextTick()
     if (boxConversation.value) {
         setTimeout(() => {
-             boxConversation.value.scrollTop = boxConversation.value.scrollHeight
+            boxConversation.value.scrollTop = boxConversation.value.scrollHeight
         }, 50)
     }
 }
 
 onMounted(() => {
-    chargerMemoireVus()
-    verifierTousLesMessages()
     intervalId = setInterval(() => {
         if (contactId.value) chargerMessages(false)
-        verifierTousLesMessages()
-    }, 2000)
+        refreshContacts()
+    }, 3000)
+})
+
+onUnmounted(() => {
+    clearInterval(intervalId)
 })
 
 const formatDate = (date) => {
@@ -212,11 +162,11 @@ const fermerImage = () => {
                         <span class="date-message">{{ formatDate(user.dernierMessage) }}</span>
                     </div>
                     <div class="preview-line">
-                        <p class="preview-message" :class="{ 'non-lu': getNonLus(user.id) > 0 }">
+                        <p class="preview-message" :class="{ 'non-lu': user.nonLus > 0 }">
                             {{ user.dernierContenu ?? 'Cliquez pour discuter...' }}
                         </p>
-                        <span v-if="getNonLus(user.id) > 0" class="badge">
-                            {{ getNonLus(user.id) }}
+                        <span v-if="user.nonLus > 0" class="badge">
+                            {{ user.nonLus }}
                         </span>
                         <span v-else-if="user.monDernierMessageLu" class="vu-contact">
                             Vu

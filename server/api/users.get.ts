@@ -4,73 +4,81 @@ import { getServerSession } from '#auth'
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
 
-    if (!session || !session.user?.email) {
+    if (!session) {
         throw createError({ statusCode: 401, message: 'Non connecté' })
     }
 
-    const emailUser = session.user?.email
+    // L'id et le role sont déjà dans le token — pas besoin d'une requête DB supplémentaire
+    const userId = parseInt(session.user.id)
+    const role = session.user.role
 
-    const currentUser = await prisma.user.findUnique({
-        where: { email: emailUser },
-        select: { id: true, role: true }
-    })
+    const estPrivilegie = role === 'ADMIN' || role === 'PROPRIETAIRE'
 
-    const user = await prisma.user.findMany({
-        where: currentUser?.role === ('ADMIN' as any) || currentUser?.role === ('PROPRIETAIRE' as any)
-            ? {NOT : {email : emailUser}}
-            : {role: { in : ['PROPRIETAIRE', 'ADMIN'] as any[] }},
-        select: { id: true, nom: true, prenom: true, avatar: true, email: true, role: true,
-                messagesEnvoi:{
-                    where :{ destinataireId : currentUser?.id,},
-                    orderBy : { createdAt : 'desc' },
-                    take : 1,
-                    select : { createdAt: true , contenu: true}
-                },
-                messagesRecu:{
-                    where :{ expediteurId : currentUser?.id,},
-                    orderBy : { createdAt : 'desc' },
-                    take : 1,
-                    select : { createdAt: true , contenu: true, lu: true }
+    const users = await prisma.user.findMany({
+        where: estPrivilegie
+            ? { NOT: { id: userId } }
+            : { role: { in: ['PROPRIETAIRE', 'ADMIN'] } },
+        select: {
+            id: true,
+            nom: true,
+            prenom: true,
+            avatar: true,
+            email: true,
+            role: true,
+            messagesEnvoi: {
+                where: { destinataireId: userId },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+                select: { createdAt: true, contenu: true }
+            },
+            messagesRecu: {
+                where: { expediteurId: userId },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+                select: { createdAt: true, contenu: true, lu: true }
+            },
+            _count: {
+                select: {
+                    messagesEnvoi: {
+                        where: { destinataireId: userId, lu: false }
+                    }
                 }
-         }
-
+            }
+        }
     })
-    const usersAvecDate = user.map((user) => {
-        const dernierMessageEnvoi = user.messagesEnvoi[0]?.createdAt ?? null
-        const dernierMessageRecu = user.messagesRecu[0]?.createdAt ?? null
-        const dernierMessage = !dernierMessageEnvoi ? dernierMessageRecu
-            : !dernierMessageRecu ? dernierMessageEnvoi 
-            : dernierMessageEnvoi > dernierMessageRecu ? dernierMessageEnvoi : dernierMessageRecu
 
-        const dernierContenu = dernierMessage === dernierMessageEnvoi 
-            ? user.messagesEnvoi[0]?.contenu 
-            : user.messagesRecu[0]?.contenu
+    const usersAvecDate = users.map((u) => {
+        const dateEnvoi = u.messagesEnvoi[0]?.createdAt ?? null
+        const dateRecu = u.messagesRecu[0]?.createdAt ?? null
+        const dernierMessage = !dateEnvoi ? dateRecu
+            : !dateRecu ? dateEnvoi
+            : dateEnvoi > dateRecu ? dateEnvoi : dateRecu
+
+        const dernierContenu = dernierMessage === dateEnvoi
+            ? u.messagesEnvoi[0]?.contenu
+            : u.messagesRecu[0]?.contenu
 
         return {
-            id: user.id,
-            nom: user.nom,
-            prenom: user.prenom,
-            avatar: user.avatar,
-            email: user.email,
-            role: user.role,
+            id: u.id,
+            nom: u.nom,
+            prenom: u.prenom,
+            avatar: u.avatar,
+            email: u.email,
+            role: u.role,
             dernierMessage,
             dernierContenu,
-            monDernierMessageLu: user.messagesRecu.length > 0 
-                && (user.messagesRecu[0] as any).lu 
-                && dernierMessage === dernierMessageRecu 
+            nonLus: u._count.messagesEnvoi,
+            monDernierMessageLu: u.messagesRecu.length > 0
+                && u.messagesRecu[0].lu
+                && dernierMessage === dateRecu
         }
     })
 
     usersAvecDate.sort((a, b) => {
-        if (!a.dernierMessage && !b.dernierMessage){
-            return 0
-        }else if (!a.dernierMessage) {
-            return 1
-        } else if (!b.dernierMessage) {
-            return -1
-        }else {
-            return b.dernierMessage.getTime() - a.dernierMessage.getTime()
-        }
+        if (!a.dernierMessage && !b.dernierMessage) return 0
+        if (!a.dernierMessage) return 1
+        if (!b.dernierMessage) return -1
+        return b.dernierMessage.getTime() - a.dernierMessage.getTime()
     })
 
     return usersAvecDate
