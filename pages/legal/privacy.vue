@@ -89,12 +89,6 @@
                 <td class="exempt">✓ Technique</td>
               </tr>
               <tr>
-                <td><code>__stripe_mid</code></td>
-                <td>Prévention de la fraude lors des paiements (Stripe)</td>
-                <td>1 an</td>
-                <td class="exempt">✓ Sécurité</td>
-              </tr>
-              <tr>
                 <td><code>csrf_token</code></td>
                 <td>Protection contre les attaques CSRF</td>
                 <td>Session</td>
