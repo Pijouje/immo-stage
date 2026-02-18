@@ -40,7 +40,35 @@ body {
 }
 
 html {
-  overflow-y: scroll; /* Force la barre tout le temps */
+  overflow-y: scroll;
 }
 
+.layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.auth-enter-active {
+  animation: fadeUp 0.3s ease-out;
+}
+
+.auth-leave-active {
+  transition: opacity 0.3s ease-in;
+}
+
+.auth-leave-to {
+  opacity: 0;
+}
 </style>
