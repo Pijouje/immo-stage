@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
         return []
     }
 
-    const userId = parseInt((session.user as any).id)
+    const userId = parseInt(session.user.id)
 
     const messages = await prisma.message.findMany({
         where: {

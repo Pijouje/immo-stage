@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     await prisma.message.updateMany({
         where: {
             expediteurId: parseInt(body.contactId),
-            destinataireId: parseInt((session.user as any).id),
+            destinataireId: parseInt(session.user.id),
             lu: false
         },
         data: { lu: true }

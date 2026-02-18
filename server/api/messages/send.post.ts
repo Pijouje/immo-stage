@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     const message = await prisma.message.create({
         data: {
             contenu: body.contenu,
-            expediteurId: parseInt((session.user as any).id),
+            expediteurId: parseInt(session.user.id),
             destinataireId: parseInt(body.destinataireId)
         }
 
