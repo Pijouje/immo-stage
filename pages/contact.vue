@@ -323,7 +323,7 @@ const confirmerSuppressionFichier = async () => {
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
                             <img v-if="msg.type === 'image'" :src="msg.contenu" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
                             <a v-else-if="msg.type === 'fichier'" :href="msg.contenu" target="_blank" class="msg-fichier">
-                                📄 {{ msg.contenu.split('/').pop() }}
+                                📄 {{ msg.nom || msg.contenu.split('/').pop() }}
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
@@ -373,14 +373,14 @@ const confirmerSuppressionFichier = async () => {
                     <div v-else class="fichier-thumb-externe fichier-doc-externe">📄</div>
 
                     <div class="fichier-details">
-                        <div class="fichier-nom-externe">{{ fichier.contenu.split('/').pop() }}</div>
+                        <div class="fichier-nom-externe">{{ fichier.nom || fichier.contenu.split('/').pop() }}</div>
                         <div class="fichier-date-externe">
                             {{ new Date(fichier.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}
                         </div>
                     </div>
 
                     <div class="fichier-actions-externe">
-                        <a :href="fichier.contenu" :download="fichier.contenu.split('/').pop()" class="btn-action-externe">
+                        <a :href="fichier.contenu" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
                             ⬇ Télécharger
                         </a>
                         <button

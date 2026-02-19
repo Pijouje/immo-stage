@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Ce message ne contient pas de fichier' })
     }
 
-    const nom = message.contenu.split('/').pop() || 'fichier'
+    const nom = message.nom || message.contenu.split('/').pop() || 'fichier'
     const type = message.type === 'image' ? 'image/jpeg' : 'application/octet-stream'
 
     const document = await prisma.document.create({

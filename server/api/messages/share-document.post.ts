@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
     const message = await prisma.message.create({
         data: {
             contenu: document.url,
+            nom: document.nom,
             type: document.type.startsWith('image/') ? 'image' : 'fichier',
             expediteurId: parseInt(session.user.id),
             destinataireId: parseInt(destinataireId),

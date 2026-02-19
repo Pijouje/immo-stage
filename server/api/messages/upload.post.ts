@@ -50,8 +50,9 @@ export default defineEventHandler(async (event) => {
     const message = await prisma.message.create({
         data: {
             contenu: urlFichier,
+            nom: fichier.name,
             type: fichier.type.startsWith('image/') ? 'image' : 'fichier',
-            expediteurId: parseInt((session.user as any).id),
+            expediteurId: parseInt(session.user.id),
             destinataireId: parseInt(destinataireId),
             lu: false
         }
