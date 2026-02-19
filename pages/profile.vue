@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 definePageMeta({
   middleware: 'auth', // Utilise notre middleware personnalisé
   pageTransition: {
@@ -10,7 +10,7 @@ definePageMeta({
 import { ref, computed } from 'vue'
 
 // Vérification de la session
-const { data: session, status, signOut } = useAuth()
+const { signOut } = useAuth()
 
 // Fonction de déconnexion
 const handleLogout = async () => {
@@ -52,7 +52,7 @@ const successMessage = ref('')
 const loading = ref(false)
 
 // Fonction pour ouvrir l'édition du nom
-const handleEditProfile = (field) => {
+const handleEditProfile = (field: string) => {
   errorMessage.value = ''
   successMessage.value = ''
   
@@ -84,7 +84,7 @@ const saveNameChanges = async () => {
     successMessage.value = response.message
     isEditingName.value = false
     await refresh() // Recharger les données
-  } catch (error) {
+  } catch (error: any) {
     errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
   } finally {
     loading.value = false
@@ -108,7 +108,7 @@ const saveEmailChanges = async () => {
     successMessage.value = response.message
     isEditingEmail.value = false
     await refresh()
-  } catch (error) {
+  } catch (error: any) {
     errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
   } finally {
     loading.value = false
@@ -159,16 +159,60 @@ const savePasswordChanges = async () => {
     editForm.value.currentPassword = ''
     editForm.value.newPassword = ''
     editForm.value.confirmPassword = ''
-  } catch (error) {
+  } catch (error: any) {
     errorMessage.value = error.data?.statusMessage || 'Erreur lors de la modification du mot de passe'
   } finally {
     loading.value = false
   }
 }
 
+const inputDocument = ref<HTMLInputElement | null>(null)
+const uploadLoading = ref(false)
+const uploadError = ref('')
+const deletingId = ref<number | null>(null)
+const documentASupprimer = ref<number | null>(null)
+
+const supprimerDocument = (id: number) => {
+  documentASupprimer.value = id
+}
+
+const confirmerSuppression = async () => {
+  if (!documentASupprimer.value) return
+  deletingId.value = documentASupprimer.value
+  documentASupprimer.value = null
+  try {
+    await $fetch('/api/profile/documents/delete', { method: 'POST', body: { id: deletingId.value } })
+    await refresh()
+  } catch (err: any) {
+    uploadError.value = err.data?.message || 'Erreur lors de la suppression'
+  } finally {
+    deletingId.value = null
+  }
+}
+
 const handleAddDocument = () => {
-  console.log("Ouvrir l'explorateur de fichiers")
-  // TODO: Implémenter l'upload de documents
+  uploadError.value = ''
+  inputDocument.value?.click()
+}
+
+const onDocumentSelected = async (event: Event) => {
+  const fichier = (event.target as HTMLInputElement).files?.[0]
+  if (!fichier) return
+
+  uploadLoading.value = true
+  uploadError.value = ''
+
+  try {
+    const formData = new FormData()
+    formData.append('fichier', fichier)
+    await $fetch('/api/profile/documents/upload', { method: 'POST', body: formData })
+    await refresh()
+  } catch (err: any) {
+    uploadError.value = err.data?.message || 'Erreur lors de l\'upload'
+  } finally {
+    uploadLoading.value = false
+    ;(event.target as HTMLInputElement).value = ''
+  }
 }
 
 // Validation du mot de passe en temps réel
@@ -196,7 +240,7 @@ const isPasswordValid = computed(() =>
       <div class="icon">⚠️</div>
       <h3>Erreur de chargement</h3>
       <p>{{ error.message }}</p>
-      <button @click="refresh" class="btn-retry">Réessayer</button>
+      <button @click="() => refresh()" class="btn-retry">Réessayer</button>
     </div>
 
     <!-- Contenu principal -->
@@ -267,19 +311,29 @@ const isPasswordValid = computed(() =>
                         </div>
                         <div class="Doc_Info">
                           <span class="Doc_Nom">{{ doc.nom }}</span>
-                          <span class="Doc_Status" :class="`status-${doc.status}`">
-                            {{ doc.status === 'VALIDE' ? '✓ Validé' : doc.status === 'REFUSE' ? '✗ Refusé' : '⏳ En attente' }}
-                          </span>
                         </div>
+                        <button class="Doc_Supprimer" @click="supprimerDocument(doc.id)" :disabled="deletingId === doc.id" aria-label="Supprimer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
                     </div>
                 </div>
                 <div v-else class="empty-documents">
                   <p>Aucun document téléchargé pour le moment</p>
                 </div>
 
-                <Bouton @click="handleAddDocument" class="Btn_Ajout_Doc">
+                <div v-if="uploadError" class="error-message">{{ uploadError }}</div>
+
+                <input
+                  ref="inputDocument"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                  style="display: none"
+                  @change="onDocumentSelected"
+                >
+
+                <Bouton @click="handleAddDocument" class="Btn_Ajout_Doc" :disabled="uploadLoading">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Ajouter un document
+                    {{ uploadLoading ? 'Envoi en cours...' : 'Ajouter un document' }}
                 </Bouton>
             </div>
 
@@ -384,6 +438,20 @@ const isPasswordValid = computed(() =>
             <button @click="savePasswordChanges" :disabled="loading || !isPasswordValid" class="btn-save">
               {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
             </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION DOCUMENT -->
+    <Transition name="modal">
+      <div v-if="documentASupprimer !== null" class="modal-overlay" @click.self="documentASupprimer = null">
+        <div class="modal-content modal-delete">
+          <h3>Supprimer le document</h3>
+          <p>Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.</p>
+          <div class="modal-actions">
+            <button @click="documentASupprimer = null" class="btn-cancel">Annuler</button>
+            <button @click="confirmerSuppression" class="btn-delete">Supprimer</button>
           </div>
         </div>
       </div>
@@ -699,21 +767,28 @@ label {
     color: #334155;
 }
 
-.Doc_Status {
-  font-size: 0.8rem;
-  font-weight: 600;
+.Doc_Supprimer {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.status-VALIDE {
-  color: #16a34a;
-}
-
-.status-REFUSE {
+.Doc_Supprimer:hover:not(:disabled) {
   color: #dc2626;
+  background-color: #fee2e2;
 }
 
-.status-EN_ATTENTE {
-  color: #ca8a04;
+.Doc_Supprimer:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .empty-documents {
@@ -819,6 +894,27 @@ label {
 .btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-delete {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #dc2626;
+  border: none;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-delete:hover {
+  background: #b91c1c;
+}
+
+.modal-delete p {
+  color: #64748b;
+  margin: 0 0 25px 0;
+  line-height: 1.5;
 }
 
 /* Checklist mot de passe dans la modale */

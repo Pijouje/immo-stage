@@ -159,27 +159,86 @@ const fichiersPartages = computed(() => {
 
 // DANS LE SCRIPT SETUP
 
-const supprimerFichier = async (fichier) => {
+const fichierASupprimer = ref(null)
+const suppressionErreur = ref('')
+
+// --- Partage depuis mes documents ---
+const mesDocumentsModal = ref(false)
+const mesDocuments = ref([])
+const chargementDocuments = ref(false)
+const erreurPartage = ref('')
+
+const ouvrirModalDocuments = async () => {
+    erreurPartage.value = ''
+    mesDocumentsModal.value = true
+    chargementDocuments.value = true
+    try {
+        const data = await $fetch('/api/profile/me')
+        mesDocuments.value = data?.documents || []
+    } catch (e) {
+        mesDocuments.value = []
+    } finally {
+        chargementDocuments.value = false
+    }
+}
+
+const partagerDocument = async (document) => {
+    if (!contactId.value) return
+    erreurPartage.value = ''
+    try {
+        await $fetch('/api/messages/share-document', {
+            method: 'POST',
+            body: { documentId: document.id, destinataireId: contactId.value }
+        })
+        mesDocumentsModal.value = false
+        chargerMessages(true)
+        refreshContacts()
+    } catch (e) {
+        erreurPartage.value = 'Erreur lors du partage'
+    }
+}
+
+// --- Sauvegarder un fichier de conversation dans mes documents ---
+const sauvegardeEnCours = ref([])
+const sauvegardesFaites = ref([])
+const erreurSauvegarde = ref('')
+
+const sauvegarderFichier = async (fichier) => {
+    if (sauvegardeEnCours.value.includes(fichier.id) || sauvegardesFaites.value.includes(fichier.id)) return
+    erreurSauvegarde.value = ''
+    sauvegardeEnCours.value.push(fichier.id)
+    try {
+        await $fetch('/api/profile/documents/save-from-message', {
+            method: 'POST',
+            body: { messageId: fichier.id }
+        })
+        sauvegardesFaites.value.push(fichier.id)
+    } catch (e) {
+        erreurSauvegarde.value = 'Erreur lors de la sauvegarde'
+    } finally {
+        sauvegardeEnCours.value = sauvegardeEnCours.value.filter(id => id !== fichier.id)
+    }
+}
+
+const supprimerFichier = (fichier) => {
     const monId = Number(session.value?.user?.id)
-    const expediteurId = Number(fichier.expediteurId)
-    if (monId !== expediteurId) {
-        alert("Erreur: Vous ne pouvez supprimer que vos propres fichiers.")
-        return
-    }
+    if (monId !== Number(fichier.expediteurId)) return
+    fichierASupprimer.value = fichier
+}
 
-    if (!confirm("Voulez-vous vraiment supprimer ce fichier ?")){ 
-        return 
-    }
-
+const confirmerSuppressionFichier = async () => {
+    if (!fichierASupprimer.value) return
+    const fichier = fichierASupprimer.value
+    fichierASupprimer.value = null
+    suppressionErreur.value = ''
     try {
         await $fetch('/api/messages/delete', {
             method: 'POST',
             body: { id: fichier.id }
         })
         messages.value = messages.value.filter(m => m.id !== fichier.id)
-        
     } catch (e) {
-        alert("Erreur lors de la suppression : " + e)
+        suppressionErreur.value = 'Erreur lors de la suppression'
     }
 }
 
@@ -285,7 +344,7 @@ const formatHeureMessage = (date) => {
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
                             <img v-if="msg.type === 'image'" :src="msg.contenu" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
                             <a v-else-if="msg.type === 'fichier'" :href="msg.contenu" target="_blank" class="msg-fichier">
-                                📄 {{ msg.contenu.split('/').pop() }}
+                                📄 {{ msg.nom || msg.contenu.split('/').pop() }}
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
@@ -311,7 +370,8 @@ const formatHeureMessage = (date) => {
                 style="display: none"
                 accept="image/*,.pdf,.doc,.docx"
             />
-            <button class="btn-trombone" @click="inputFichier.click()">📎</button>
+            <button class="btn-trombone" @click="inputFichier.click()" title="Joindre un fichier">📎</button>
+            <button class="btn-trombone" @click="ouvrirModalDocuments" title="Partager depuis mes documents">📋</button>
             <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte" @keyup.enter="envoyerMessages" />
             <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
         </div>
@@ -322,27 +382,35 @@ const formatHeureMessage = (date) => {
         <div class="fichiers-container">
             <h3>📁 Fichiers partagés avec {{ contactActuel?.prenom }} {{ contactActuel?.nom }} ({{ fichiersPartages.length }})</h3>
             
+            <div v-if="erreurSauvegarde" class="sauvegarde-erreur">{{ erreurSauvegarde }}</div>
             <div class="fichiers-liste">
                 <div v-for="fichier in fichiersPartages" :key="fichier.id" class="fichier-item-externe">
-                    <div 
-                        v-if="fichier.type === 'image'" 
+                    <div
+                        v-if="fichier.type === 'image'"
                         class="fichier-thumb-externe"
                         :style="{ backgroundImage: `url(${fichier.contenu})` }"
                         @click="ouvrirImage(fichier.contenu)"
                     ></div>
                     <div v-else class="fichier-thumb-externe fichier-doc-externe">📄</div>
-                    
+
                     <div class="fichier-details">
-                        <div class="fichier-nom-externe">{{ fichier.contenu.split('/').pop() }}</div>
+                        <div class="fichier-nom-externe">{{ fichier.nom || fichier.contenu.split('/').pop() }}</div>
                         <div class="fichier-date-externe">
                             {{ new Date(fichier.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}
                         </div>
                     </div>
-                    
+
                     <div class="fichier-actions-externe">
-                        <a :href="fichier.contenu" :download="fichier.contenu.split('/').pop()" class="btn-action-externe">
+                        <a :href="fichier.contenu" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
                             ⬇ Télécharger
                         </a>
+                        <button
+                            class="btn-action-externe btn-sauvegarder-externe"
+                            @click="sauvegarderFichier(fichier)"
+                            :disabled="sauvegardeEnCours.includes(fichier.id) || sauvegardesFaites.includes(fichier.id)"
+                        >
+                            {{ sauvegardesFaites.includes(fichier.id) ? '✓ Sauvegardé' : sauvegardeEnCours.includes(fichier.id) ? '...' : '💾 Mes docs' }}
+                        </button>
                         <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
                             🗑️ Supprimer
                         </button>
@@ -363,6 +431,54 @@ const formatHeureMessage = (date) => {
                 ⬇ Télécharger l'image
             </a>
         </div>
+    </Transition>
+
+    <!-- MODALE PARTAGE DEPUIS MES DOCUMENTS -->
+    <Transition name="modal">
+      <div v-if="mesDocumentsModal" class="modal-overlay" @click.self="mesDocumentsModal = false">
+        <div class="modal-content modal-docs">
+          <h3>Partager depuis mes documents</h3>
+          <p>Sélectionnez un document à envoyer dans la conversation</p>
+
+          <div v-if="chargementDocuments" class="docs-loading">Chargement...</div>
+          <div v-else-if="mesDocuments.length === 0" class="docs-vide">
+            Aucun document dans votre profil.<br>
+            <small>Ajoutez-en depuis votre <a href="/profile" target="_blank">page profil</a>.</small>
+          </div>
+          <div v-else class="docs-liste">
+            <div
+              v-for="doc in mesDocuments"
+              :key="doc.id"
+              class="doc-item-modal"
+              @click="partagerDocument(doc)"
+            >
+              <span class="doc-icon-modal">📄</span>
+              <span class="doc-nom-modal">{{ doc.nom }}</span>
+              <span class="doc-partager-label">Partager →</span>
+            </div>
+          </div>
+
+          <div v-if="erreurPartage" class="modal-error">{{ erreurPartage }}</div>
+          <div class="modal-actions">
+            <button @click="mesDocumentsModal = false" class="btn-annuler">Fermer</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION FICHIER -->
+    <Transition name="modal">
+      <div v-if="fichierASupprimer" class="modal-overlay" @click.self="fichierASupprimer = null">
+        <div class="modal-content">
+          <h3>Supprimer le fichier</h3>
+          <p>Voulez-vous vraiment supprimer ce fichier ? Cette action est irréversible.</p>
+          <div v-if="suppressionErreur" class="modal-error">{{ suppressionErreur }}</div>
+          <div class="modal-actions">
+            <button @click="fichierASupprimer = null" class="btn-annuler">Annuler</button>
+            <button @click="confirmerSuppressionFichier" class="btn-supprimer">Supprimer</button>
+          </div>
+        </div>
+      </div>
     </Transition>
   </div>
 </template>
@@ -974,6 +1090,95 @@ const formatHeureMessage = (date) => {
     background: #dc2626;
 }
 
+.btn-sauvegarder-externe {
+    background: #0f766e;
+}
+
+.btn-sauvegarder-externe:hover:not(:disabled) {
+    background: #0d5f58;
+}
+
+.btn-sauvegarder-externe:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.sauvegarde-erreur {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+
+/* Modal docs */
+.modal-docs p {
+    color: #64748b;
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+}
+
+.docs-loading, .docs-vide {
+    text-align: center;
+    padding: 24px 0;
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.docs-vide a {
+    color: #2563EB;
+    text-decoration: underline;
+}
+
+.docs-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.doc-item-modal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.doc-item-modal:hover {
+    background: #f1f5f9;
+    border-color: #2563EB;
+}
+
+.doc-icon-modal {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.doc-nom-modal {
+    flex: 1;
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.doc-partager-label {
+    color: #2563EB;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
 .fichiers-liste::-webkit-scrollbar {
     width: 8px;
 }
@@ -990,6 +1195,104 @@ const formatHeureMessage = (date) => {
 
 .fichiers-liste::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* MODALE SUPPRESSION FICHIER */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modal-content p {
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modal-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-annuler {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  transition: background 0.2s;
+}
+
+.btn-annuler:hover {
+  background: #f8fafc;
+}
+
+.btn-supprimer {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #dc2626;
+  border: none;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-supprimer:hover {
+  background: #b91c1c;
+}
+
+.modal-enter-active, .modal-leave-active {
+  transition: opacity 0.25s;
+}
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: transform 0.25s;
+}
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.9);
 }
 
 @media (max-width: 768px) {
