@@ -159,27 +159,28 @@ const fichiersPartages = computed(() => {
 
 // DANS LE SCRIPT SETUP
 
-const supprimerFichier = async (fichier) => {
+const fichierASupprimer = ref(null)
+const suppressionErreur = ref('')
+
+const supprimerFichier = (fichier) => {
     const monId = Number(session.value?.user?.id)
-    const expediteurId = Number(fichier.expediteurId)
-    if (monId !== expediteurId) {
-        alert("Erreur: Vous ne pouvez supprimer que vos propres fichiers.")
-        return
-    }
+    if (monId !== Number(fichier.expediteurId)) return
+    fichierASupprimer.value = fichier
+}
 
-    if (!confirm("Voulez-vous vraiment supprimer ce fichier ?")){ 
-        return 
-    }
-
+const confirmerSuppressionFichier = async () => {
+    if (!fichierASupprimer.value) return
+    const fichier = fichierASupprimer.value
+    fichierASupprimer.value = null
+    suppressionErreur.value = ''
     try {
         await $fetch('/api/messages/delete', {
             method: 'POST',
             body: { id: fichier.id }
         })
         messages.value = messages.value.filter(m => m.id !== fichier.id)
-        
     } catch (e) {
-        alert("Erreur lors de la suppression : " + e)
+        suppressionErreur.value = 'Erreur lors de la suppression'
     }
 }
 </script>
@@ -342,6 +343,21 @@ const supprimerFichier = async (fichier) => {
                 ⬇ Télécharger l'image
             </a>
         </div>
+    </Transition>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION FICHIER -->
+    <Transition name="modal">
+      <div v-if="fichierASupprimer" class="modal-overlay" @click.self="fichierASupprimer = null">
+        <div class="modal-content">
+          <h3>Supprimer le fichier</h3>
+          <p>Voulez-vous vraiment supprimer ce fichier ? Cette action est irréversible.</p>
+          <div v-if="suppressionErreur" class="modal-error">{{ suppressionErreur }}</div>
+          <div class="modal-actions">
+            <button @click="fichierASupprimer = null" class="btn-annuler">Annuler</button>
+            <button @click="confirmerSuppressionFichier" class="btn-supprimer">Supprimer</button>
+          </div>
+        </div>
+      </div>
     </Transition>
   </div>
 </template>
@@ -969,6 +985,104 @@ const supprimerFichier = async (fichier) => {
 
 .fichiers-liste::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* MODALE SUPPRESSION FICHIER */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modal-content p {
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modal-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-annuler {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  transition: background 0.2s;
+}
+
+.btn-annuler:hover {
+  background: #f8fafc;
+}
+
+.btn-supprimer {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #dc2626;
+  border: none;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-supprimer:hover {
+  background: #b91c1c;
+}
+
+.modal-enter-active, .modal-leave-active {
+  transition: opacity 0.25s;
+}
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: transform 0.25s;
+}
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.9);
 }
 
 @media (max-width: 768px) {
