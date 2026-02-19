@@ -182,6 +182,27 @@ const supprimerFichier = async (fichier) => {
         alert("Erreur lors de la suppression : " + e)
     }
 }
+
+const formatHeureMessage = (date) => {
+    if (!date){
+        return ''
+    }
+    const d = new Date(date)
+    const aujourd = new Date()
+    
+    const memeJour = d.toDateString() === aujourd.toDateString()
+    if (memeJour) {
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    }
+    
+    const hier = new Date(aujourd)
+    hier.setDate(hier.getDate() - 1)
+    if (d.toDateString() === hier.toDateString()) {
+        return 'Hier'
+    }
+
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit'})
+}
 </script>
 
 <template>
@@ -268,7 +289,7 @@ const supprimerFichier = async (fichier) => {
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
-                                {{ new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}
+                                {{ formatHeureMessage(msg.createdAt) }}
                             </div>
                         </div>
                         <span v-if="msg.expediteurId == Number(session?.user?.id) && msg.lu && estDernierMsgLu(index)"class="vu-texte">

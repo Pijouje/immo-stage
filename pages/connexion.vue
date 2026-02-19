@@ -72,8 +72,12 @@ const handleLogin = async() => {
             </div>
 
             <div class="Groupe_Input">
-                <label for="password">Mot de passe</label>
-                <input v-model="password" type="password" id="password" placeholder="••••••••" class="Input_Style">
+                <PasswordInput 
+                    v-model="password"
+                    label="Mot de passe"
+                    id="password"
+                    :required="true"
+                />
             </div>
             <p v-if="errorMessage" class="error-text">
                 {{ errorMessage }}
@@ -81,7 +85,9 @@ const handleLogin = async() => {
 
             <Bouton>Accéder à mon espace</Bouton>
 
-            <NuxtLink to="/mot-de-passe-oublie" class="Lien_Oubli">J'ai oublié mon mot de passe</NuxtLink>
+            <NuxtLink to="/mot-de-passe-oublie" class="Lien_Oubli">
+                Mot de passe oublié ?
+            </NuxtLink>
 
         </form>
     </div>
@@ -218,6 +224,21 @@ label {
   margin-bottom: 0px;
   text-align: center;
   padding: 2px;
+}
+
+:deep(.password-wrapper input) {
+    padding: 18px 50px 18px 20px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: #334155;
+}
+
+:deep(.password-wrapper input:focus) {
+    border-color: #2563EB;
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 @media (max-width: 768px) {
