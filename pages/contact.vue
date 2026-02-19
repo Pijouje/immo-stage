@@ -162,6 +162,64 @@ const fichiersPartages = computed(() => {
 const fichierASupprimer = ref(null)
 const suppressionErreur = ref('')
 
+// --- Partage depuis mes documents ---
+const mesDocumentsModal = ref(false)
+const mesDocuments = ref([])
+const chargementDocuments = ref(false)
+const erreurPartage = ref('')
+
+const ouvrirModalDocuments = async () => {
+    erreurPartage.value = ''
+    mesDocumentsModal.value = true
+    chargementDocuments.value = true
+    try {
+        const data = await $fetch('/api/profile/me')
+        mesDocuments.value = data?.documents || []
+    } catch (e) {
+        mesDocuments.value = []
+    } finally {
+        chargementDocuments.value = false
+    }
+}
+
+const partagerDocument = async (document) => {
+    if (!contactId.value) return
+    erreurPartage.value = ''
+    try {
+        await $fetch('/api/messages/share-document', {
+            method: 'POST',
+            body: { documentId: document.id, destinataireId: contactId.value }
+        })
+        mesDocumentsModal.value = false
+        chargerMessages(true)
+        refreshContacts()
+    } catch (e) {
+        erreurPartage.value = 'Erreur lors du partage'
+    }
+}
+
+// --- Sauvegarder un fichier de conversation dans mes documents ---
+const sauvegardeEnCours = ref([])
+const sauvegardesFaites = ref([])
+const erreurSauvegarde = ref('')
+
+const sauvegarderFichier = async (fichier) => {
+    if (sauvegardeEnCours.value.includes(fichier.id) || sauvegardesFaites.value.includes(fichier.id)) return
+    erreurSauvegarde.value = ''
+    sauvegardeEnCours.value.push(fichier.id)
+    try {
+        await $fetch('/api/profile/documents/save-from-message', {
+            method: 'POST',
+            body: { messageId: fichier.id }
+        })
+        sauvegardesFaites.value.push(fichier.id)
+    } catch (e) {
+        erreurSauvegarde.value = 'Erreur lors de la sauvegarde'
+    } finally {
+        sauvegardeEnCours.value = sauvegardeEnCours.value.filter(id => id !== fichier.id)
+    }
+}
+
 const supprimerFichier = (fichier) => {
     const monId = Number(session.value?.user?.id)
     if (monId !== Number(fichier.expediteurId)) return
@@ -291,7 +349,8 @@ const confirmerSuppressionFichier = async () => {
                 style="display: none"
                 accept="image/*,.pdf,.doc,.docx"
             />
-            <button class="btn-trombone" @click="inputFichier.click()">📎</button>
+            <button class="btn-trombone" @click="inputFichier.click()" title="Joindre un fichier">📎</button>
+            <button class="btn-trombone" @click="ouvrirModalDocuments" title="Partager depuis mes documents">📋</button>
             <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte" @keyup.enter="envoyerMessages" />
             <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
         </div>
@@ -302,27 +361,35 @@ const confirmerSuppressionFichier = async () => {
         <div class="fichiers-container">
             <h3>📁 Fichiers partagés avec {{ contactActuel?.prenom }} {{ contactActuel?.nom }} ({{ fichiersPartages.length }})</h3>
             
+            <div v-if="erreurSauvegarde" class="sauvegarde-erreur">{{ erreurSauvegarde }}</div>
             <div class="fichiers-liste">
                 <div v-for="fichier in fichiersPartages" :key="fichier.id" class="fichier-item-externe">
-                    <div 
-                        v-if="fichier.type === 'image'" 
+                    <div
+                        v-if="fichier.type === 'image'"
                         class="fichier-thumb-externe"
                         :style="{ backgroundImage: `url(${fichier.contenu})` }"
                         @click="ouvrirImage(fichier.contenu)"
                     ></div>
                     <div v-else class="fichier-thumb-externe fichier-doc-externe">📄</div>
-                    
+
                     <div class="fichier-details">
                         <div class="fichier-nom-externe">{{ fichier.contenu.split('/').pop() }}</div>
                         <div class="fichier-date-externe">
                             {{ new Date(fichier.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}
                         </div>
                     </div>
-                    
+
                     <div class="fichier-actions-externe">
                         <a :href="fichier.contenu" :download="fichier.contenu.split('/').pop()" class="btn-action-externe">
                             ⬇ Télécharger
                         </a>
+                        <button
+                            class="btn-action-externe btn-sauvegarder-externe"
+                            @click="sauvegarderFichier(fichier)"
+                            :disabled="sauvegardeEnCours.includes(fichier.id) || sauvegardesFaites.includes(fichier.id)"
+                        >
+                            {{ sauvegardesFaites.includes(fichier.id) ? '✓ Sauvegardé' : sauvegardeEnCours.includes(fichier.id) ? '...' : '💾 Mes docs' }}
+                        </button>
                         <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
                             🗑️ Supprimer
                         </button>
@@ -343,6 +410,39 @@ const confirmerSuppressionFichier = async () => {
                 ⬇ Télécharger l'image
             </a>
         </div>
+    </Transition>
+
+    <!-- MODALE PARTAGE DEPUIS MES DOCUMENTS -->
+    <Transition name="modal">
+      <div v-if="mesDocumentsModal" class="modal-overlay" @click.self="mesDocumentsModal = false">
+        <div class="modal-content modal-docs">
+          <h3>Partager depuis mes documents</h3>
+          <p>Sélectionnez un document à envoyer dans la conversation</p>
+
+          <div v-if="chargementDocuments" class="docs-loading">Chargement...</div>
+          <div v-else-if="mesDocuments.length === 0" class="docs-vide">
+            Aucun document dans votre profil.<br>
+            <small>Ajoutez-en depuis votre <a href="/profile" target="_blank">page profil</a>.</small>
+          </div>
+          <div v-else class="docs-liste">
+            <div
+              v-for="doc in mesDocuments"
+              :key="doc.id"
+              class="doc-item-modal"
+              @click="partagerDocument(doc)"
+            >
+              <span class="doc-icon-modal">📄</span>
+              <span class="doc-nom-modal">{{ doc.nom }}</span>
+              <span class="doc-partager-label">Partager →</span>
+            </div>
+          </div>
+
+          <div v-if="erreurPartage" class="modal-error">{{ erreurPartage }}</div>
+          <div class="modal-actions">
+            <button @click="mesDocumentsModal = false" class="btn-annuler">Fermer</button>
+          </div>
+        </div>
+      </div>
     </Transition>
 
     <!-- MODALE CONFIRMATION SUPPRESSION FICHIER -->
@@ -967,6 +1067,95 @@ const confirmerSuppressionFichier = async () => {
 
 .btn-supprimer-externe:hover {
     background: #dc2626;
+}
+
+.btn-sauvegarder-externe {
+    background: #0f766e;
+}
+
+.btn-sauvegarder-externe:hover:not(:disabled) {
+    background: #0d5f58;
+}
+
+.btn-sauvegarder-externe:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.sauvegarde-erreur {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+
+/* Modal docs */
+.modal-docs p {
+    color: #64748b;
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+}
+
+.docs-loading, .docs-vide {
+    text-align: center;
+    padding: 24px 0;
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.docs-vide a {
+    color: #2563EB;
+    text-decoration: underline;
+}
+
+.docs-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.doc-item-modal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.doc-item-modal:hover {
+    background: #f1f5f9;
+    border-color: #2563EB;
+}
+
+.doc-icon-modal {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.doc-nom-modal {
+    flex: 1;
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.doc-partager-label {
+    color: #2563EB;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
 }
 
 .fichiers-liste::-webkit-scrollbar {
