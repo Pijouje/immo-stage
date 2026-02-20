@@ -2,10 +2,10 @@ import { prisma } from '../../utils/prisma'
 import { Resend } from 'resend'
 import { randomBytes } from 'crypto'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+
 
 export default defineEventHandler(async (event) => {
-
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const body = await readBody(event)
 
     if(!body.email) {
