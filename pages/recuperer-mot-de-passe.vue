@@ -15,24 +15,19 @@ const confirmPassword = ref('')
 const message = ref('')
 const error = ref('')
 const loading = ref(false)
-const tokenInvalid = ref(false)
-const tokenErreur = ref('')
 const verificationEnCours = ref(true)
 
 onMounted(async () => {
     if (!token.value) {
-        tokenInvalid.value = true
-        tokenErreur.value = 'Lien invalide. Aucun token trouvé.'
-        verificationEnCours.value = false
+        router.replace('/mot-de-passe-oublie?raison=' + encodeURIComponent('Lien invalide. Aucun token trouvé.'))
         return
     }
     try {
         await $fetch(`/api/auth/verify-reset-token?token=${token.value}`)
-    } catch (e) {
-        tokenInvalid.value = true
-        tokenErreur.value = e.data?.message || 'Lien invalide ou expiré'
-    } finally {
         verificationEnCours.value = false
+    } catch (e) {
+        const raison = e.data?.message || 'Lien invalide ou expiré'
+        router.replace('/mot-de-passe-oublie?raison=' + encodeURIComponent(raison))
     }
 })
 
@@ -89,14 +84,6 @@ const reinitialiser = async () => {
             <div v-if="verificationEnCours" class="etat-token">
                 <div class="spinner"></div>
                 <p>Vérification du lien...</p>
-            </div>
-
-            <!-- Lien invalide ou expiré -->
-            <div v-else-if="tokenInvalid" class="etat-token">
-                <div class="token-icon">✗</div>
-                <h1>Lien invalide</h1>
-                <p class="token-erreur">{{ tokenErreur }}</p>
-                <a href="/mot-de-passe-oublie" class="btn-nouveau-lien">Demander un nouveau lien</a>
             </div>
 
             <!-- Formulaire (token valide) -->
@@ -303,37 +290,4 @@ button:disabled {
     to { transform: rotate(360deg); }
 }
 
-.token-icon {
-    width: 56px;
-    height: 56px;
-    background: #fee2e2;
-    color: #dc2626;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 auto 16px;
-}
-
-.token-erreur {
-    color: #64748b;
-    margin-bottom: 24px;
-}
-
-.btn-nouveau-lien {
-    display: inline-block;
-    background: #2563EB;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.2s;
-}
-
-.btn-nouveau-lien:hover {
-    background: #1d4ed8;
-}
 </style>

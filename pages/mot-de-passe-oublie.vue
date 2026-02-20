@@ -1,7 +1,9 @@
 <script setup>
+const route = useRoute()
 const email = ref('')
 const message = ref('')
 const loading = ref(false)
+const raison = computed(() => route.query.raison?.toString() || '')
 
 const envoyerLien = async () => {
     if (!email.value) return
@@ -28,6 +30,8 @@ const envoyerLien = async () => {
         <div class="card-reset">
             <h1>Mot de passe oublié</h1>
             <p>Entrez votre email pour recevoir un lien de réinitialisation</p>
+
+            <div v-if="raison" class="message-raison">⚠ {{ raison }}</div>
 
             <form @submit.prevent="envoyerLien">
                 <input 
@@ -132,5 +136,15 @@ button:disabled {
 
 .back-link:hover {
     text-decoration: underline;
+}
+
+.message-raison {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    color: #854d0e;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
 }
 </style>
