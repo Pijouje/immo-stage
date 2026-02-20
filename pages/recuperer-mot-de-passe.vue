@@ -4,6 +4,8 @@ definePageMeta({
   middleware: []
 })
 
+import { onMounted } from 'vue'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -13,6 +15,26 @@ const confirmPassword = ref('')
 const message = ref('')
 const error = ref('')
 const loading = ref(false)
+const tokenInvalid = ref(false)
+const tokenErreur = ref('')
+const verificationEnCours = ref(true)
+
+onMounted(async () => {
+    if (!token.value) {
+        tokenInvalid.value = true
+        tokenErreur.value = 'Lien invalide. Aucun token trouvé.'
+        verificationEnCours.value = false
+        return
+    }
+    try {
+        await $fetch(`/api/auth/verify-reset-token?token=${token.value}`)
+    } catch (e) {
+        tokenInvalid.value = true
+        tokenErreur.value = e.data?.message || 'Lien invalide ou expiré'
+    } finally {
+        verificationEnCours.value = false
+    }
+})
 
 // Validations du mot de passe
 const hasMinLength = computed(() => newPassword.value.length >= 12)
@@ -62,6 +84,23 @@ const reinitialiser = async () => {
 <template>
     <div class="page-reset">
         <div class="card-reset">
+
+            <!-- Vérification en cours -->
+            <div v-if="verificationEnCours" class="etat-token">
+                <div class="spinner"></div>
+                <p>Vérification du lien...</p>
+            </div>
+
+            <!-- Lien invalide ou expiré -->
+            <div v-else-if="tokenInvalid" class="etat-token">
+                <div class="token-icon">✗</div>
+                <h1>Lien invalide</h1>
+                <p class="token-erreur">{{ tokenErreur }}</p>
+                <a href="/mot-de-passe-oublie" class="btn-nouveau-lien">Demander un nouveau lien</a>
+            </div>
+
+            <!-- Formulaire (token valide) -->
+            <template v-else>
             <h1>Nouveau mot de passe</h1>
             <p>Entrez votre nouveau mot de passe</p>
 
@@ -109,6 +148,8 @@ const reinitialiser = async () => {
 
             <p v-if="message" class="message success">{{ message }}</p>
             <p v-if="error" class="message error">{{ error }}</p>
+            </template>
+
         </div>
     </div>
 </template>
@@ -240,5 +281,58 @@ button:disabled {
     background: #fef2f2;
     border: 1px solid #fca5a5;
     color: #991b1b;
+}
+
+.etat-token {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #2563EB;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.token-icon {
+    width: 56px;
+    height: 56px;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 auto 16px;
+}
+
+.token-erreur {
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.btn-nouveau-lien {
+    display: inline-block;
+    background: #2563EB;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-nouveau-lien:hover {
+    background: #1d4ed8;
 }
 </style>
