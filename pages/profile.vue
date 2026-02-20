@@ -13,10 +13,13 @@ import { ref, computed } from 'vue'
 const { signOut } = useAuth()
 
 // Fonction de déconnexion
-const handleLogout = async () => {
-  if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-    await signOut({ callbackUrl: '/' })
-  }
+const handleLogout = () => {
+  confirmDeconnexion.value = true
+}
+
+const confirmerDeconnexion = async () => {
+  confirmDeconnexion.value = false
+  await signOut({ callbackUrl: '/' })
 }
 
 // Récupération des données utilisateur
@@ -171,6 +174,7 @@ const uploadLoading = ref(false)
 const uploadError = ref('')
 const deletingId = ref<number | null>(null)
 const documentASupprimer = ref<number | null>(null)
+const confirmDeconnexion = ref(false)
 
 const supprimerDocument = (id: number) => {
   documentASupprimer.value = id
@@ -452,6 +456,20 @@ const isPasswordValid = computed(() =>
           <div class="modal-actions">
             <button @click="documentASupprimer = null" class="btn-cancel">Annuler</button>
             <button @click="confirmerSuppression" class="btn-delete">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODALE CONFIRMATION DÉCONNEXION -->
+    <Transition name="modal">
+      <div v-if="confirmDeconnexion" class="modal-overlay" @click.self="confirmDeconnexion = false">
+        <div class="modal-content modal-delete">
+          <h3>Se déconnecter</h3>
+          <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+          <div class="modal-actions">
+            <button @click="confirmDeconnexion = false" class="btn-cancel">Annuler</button>
+            <button @click="confirmerDeconnexion" class="btn-logout-confirm">Se déconnecter</button>
           </div>
         </div>
       </div>
@@ -915,6 +933,21 @@ label {
   color: #64748b;
   margin: 0 0 25px 0;
   line-height: 1.5;
+}
+
+.btn-logout-confirm {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ef4444;
+  border: none;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-logout-confirm:hover {
+  background: #dc2626;
 }
 
 /* Checklist mot de passe dans la modale */
