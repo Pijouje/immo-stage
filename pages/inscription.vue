@@ -17,6 +17,8 @@ const loading = ref(false)
 const router = useRouter()
 const MessageError = ref('')
 const confirmPassword = ref('')
+const compteCreé = ref(false)
+const prenomCreé = ref('')
 
 const hasMinLength = computed(() => password.value.length >= 12)
 const hasUpper = computed(() => /[A-Z]/.test(password.value))
@@ -52,8 +54,8 @@ const handleInscription = async () => {
             }
         })
 
-        alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.')
-        router.push('/connexion')
+        prenomCreé.value = prenom.value
+        compteCreé.value = true
 
     } catch (error) {
         MessageError.value = error.statusMessage || 'Une erreur est survenue lors de l\'inscription.'
@@ -66,68 +68,85 @@ const handleInscription = async () => {
 <template>
   <div class="inscription-page">
     <div class="Carte">
-        <div class="Haut_carte">
-            <h1>STUD'LOC.</h1>
-            <div class="soustitre">Espace Étudiant</div>
+
+        <!-- ÉCRAN DE SUCCÈS -->
+        <div v-if="compteCreé" class="succes-container">
+            <div class="succes-icone">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h2>Bienvenue, {{ prenomCreé }} !</h2>
+            <p>Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter et accéder à votre espace.</p>
+            <button @click="router.push('/connexion')" class="btn-connexion">
+                Se connecter
+            </button>
         </div>
 
-        <div class="Zone_Onglets">
-            <NuxtLink to="/connexion" class="Onglet inactif">Se connecter</NuxtLink>
-            <NuxtLink to="/inscription" class="Onglet actif">Créer un compte</NuxtLink>
-        </div>
-
-        <form @submit.prevent="handleInscription" class="Formulaire">
-
-            <div class="Groupe_Input">
-                <label for="nom">Nom</label>
-                <input v-model="nom" type="text" id="nom" placeholder="LeDudu" class="Input_Style">
+        <!-- FORMULAIRE -->
+        <template v-else>
+            <div class="Haut_carte">
+                <h1>STUD'LOC.</h1>
+                <div class="soustitre">Espace Étudiant</div>
             </div>
 
-            <div class="Groupe_Input">
-                <label for="prenom">Prénom</label>
-                <input v-model="prenom" type="text" id="prenom" placeholder="Thomas" class="Input_Style">
+            <div class="Zone_Onglets">
+                <NuxtLink to="/connexion" class="Onglet inactif">Se connecter</NuxtLink>
+                <NuxtLink to="/inscription" class="Onglet actif">Créer un compte</NuxtLink>
             </div>
 
-            <div class="Groupe_Input">
-                <label for="email">Email</label>
-                <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
-            </div>
+            <form @submit.prevent="handleInscription" class="Formulaire">
 
-            <div class="Groupe_Input">
-                <PasswordInput 
-                    v-model="password"
-                    label="Mot de passe"
-                    id="password"
-                    :required="true"
-                />
-                <div v-if="password.length > 0" class="password-checklist">
-                    <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
-                        <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
-                    </div>
-                    <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
-                        <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
-                    </div>
-                    <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
-                        <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
-                    </div>
-                    <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
-                        <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
-                    </div>
-                    <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
-                        <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                <div class="Groupe_Input">
+                    <label for="nom">Nom</label>
+                    <input v-model="nom" type="text" id="nom" placeholder="LeDudu" class="Input_Style">
+                </div>
+
+                <div class="Groupe_Input">
+                    <label for="prenom">Prénom</label>
+                    <input v-model="prenom" type="text" id="prenom" placeholder="Thomas" class="Input_Style">
+                </div>
+
+                <div class="Groupe_Input">
+                    <label for="email">Email</label>
+                    <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
+                </div>
+
+                <div class="Groupe_Input">
+                    <PasswordInput
+                        v-model="password"
+                        label="Mot de passe"
+                        id="password"
+                        :required="true"
+                    />
+                    <div v-if="password.length > 0" class="password-checklist">
+                        <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
+                            <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
+                        </div>
+                        <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
+                            <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+                        </div>
+                        <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
+                            <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+                        </div>
+                        <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
+                            <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+                        </div>
+                        <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
+                            <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            
-            <p v-if="MessageError" class="error-text">
-                {{ MessageError }}
-            </p>
 
-            <Bouton>S'inscrire maintenant</Bouton>
-        </form>
+                <p v-if="MessageError" class="error-text">
+                    {{ MessageError }}
+                </p>
+
+                <Bouton>S'inscrire maintenant</Bouton>
+            </form>
+        </template>
+
     </div>
-
   </div>
 </template>
 
@@ -281,6 +300,59 @@ label {
   margin-bottom: 0px;
   text-align: center;
   padding: 2px;
+}
+
+/* ÉCRAN SUCCÈS */
+.succes-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+    gap: 20px;
+}
+
+.succes-icone {
+    width: 80px;
+    height: 80px;
+    background: #2563EB;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+}
+
+.succes-container h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.succes-container p {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 380px;
+    margin: 0;
+}
+
+.btn-connexion {
+    margin-top: 10px;
+    background: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 36px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-connexion:hover {
+    background: #1d4ed8;
 }
 
 :deep(.password-wrapper input) {
