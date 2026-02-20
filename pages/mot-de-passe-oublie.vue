@@ -68,6 +68,7 @@ const envoyerLien = async () => {
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     max-width: 450px;
     width: 100%;
+    margin-bottom: 90px;
 }
 
 h1 {
