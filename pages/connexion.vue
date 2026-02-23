@@ -9,7 +9,6 @@ definePageMeta({
 
 import { ref } from 'vue'
 const { signIn } = useAuth()
-const router = useRouter()
 
 const email = ref('')
 const password = ref('')
@@ -42,7 +41,7 @@ const handleLogin = async() => {
             errorMessage.value = 'Email ou mot de passe incorrect'
             loading.value = false
         } else {
-            router.push('/')
+            await navigateTo('/')
         }
     }catch (error) {
         errorMessage.value = 'Une erreur est survenue lors de la connexion.'

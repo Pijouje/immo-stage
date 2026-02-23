@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+
 // --- META ---
 definePageMeta({
   layout: 'home', // Utilise le layout home avec navbar transparente
@@ -11,6 +13,27 @@ definePageMeta({
 useHead({
   title: 'Accueil - NOM DU SITE'
 })
+
+// --- VIDEO AUTOPLAY ---
+const videoRef = ref<HTMLVideoElement | null>(null)
+const route = useRoute()
+
+const playVideo = () => {
+  const video = videoRef.value
+  if (video) {
+    video.currentTime = 0
+    video.play().catch(() => {})
+  }
+}
+
+onMounted(playVideo)
+
+// Relancer la vidéo si on revient sur la page sans remontage complet
+watch(() => route.fullPath, () => {
+  if (route.path === '/') {
+    playVideo()
+  }
+})
 </script>
 
 <template>
@@ -19,7 +42,7 @@ useHead({
     
     <!-- Vidéo de fond en plein écran -->
     <div class="video-bg">
-      <video autoplay loop muted playsinline>
+      <video ref="videoRef" autoplay loop muted playsinline>
         <source src="/videos/video_presentation_salon.mp4" type="video/mp4">
       </video>
       <div class="overlay"></div>
