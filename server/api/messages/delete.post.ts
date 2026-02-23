@@ -1,7 +1,7 @@
 import { prisma } from '../../utils/prisma'
 import { getServerSession } from '#auth'
 import { unlink } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve, basename } from 'node:path'
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -28,10 +28,16 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 403, message: 'Interdit de supprimer ce message' })
     }
 
+    // SECURITE : Protection path traversal - on utilise uniquement le basename du fichier
     if (['image', 'fichier'].includes(message.type) && message.contenu && message.contenu.startsWith('/uploads/')) {
         try {
-            const nomFichier = message.contenu.replace('/uploads/', '')
-            const cheminFichier = join(process.cwd(), 'public', 'uploads', nomFichier)
+            const nomFichier = basename(message.contenu)
+            const dossierUploads = resolve(process.cwd(), 'public', 'uploads')
+            const cheminFichier = resolve(dossierUploads, nomFichier)
+            // Vérifier que le chemin résolu reste dans le dossier uploads
+            if (!cheminFichier.startsWith(dossierUploads)) {
+                throw new Error('Chemin de fichier invalide')
+            }
             await unlink(cheminFichier)
         } catch (error) {
             console.warn("Fichier physique introuvable ou erreur :", error)

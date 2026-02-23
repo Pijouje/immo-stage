@@ -54,6 +54,36 @@ export default defineEventHandler(async (event) => {
     tags = body.tags.filter((tag: string) => tag && tag.trim() !== '')
   }
 
+  // SECURITE : Validation de la longueur des champs texte
+  if (body.titre.trim().length > 200) {
+    throw createError({ statusCode: 400, statusMessage: 'Le titre ne doit pas dépasser 200 caractères' })
+  }
+  if (body.description.trim().length > 5000) {
+    throw createError({ statusCode: 400, statusMessage: 'La description ne doit pas dépasser 5000 caractères' })
+  }
+  if (body.lieu.trim().length > 200) {
+    throw createError({ statusCode: 400, statusMessage: 'Le lieu ne doit pas dépasser 200 caractères' })
+  }
+
+  // SECURITE : Validation des URLs d'images (empêcher javascript:, data:, etc.)
+  let imagesValidees: { url: string }[] = []
+  if (body.images && body.images.length > 0) {
+    const urlsFiltrees = body.images
+      .filter((url: string) => url && url.trim() !== '')
+      .map((url: string) => url.trim())
+
+    for (const url of urlsFiltrees) {
+      const lower = url.toLowerCase()
+      if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('vbscript:')) {
+        throw createError({ statusCode: 400, statusMessage: 'URL d\'image invalide' })
+      }
+    }
+    imagesValidees = urlsFiltrees.map((url: string) => ({ url }))
+  }
+  if (imagesValidees.length === 0) {
+    imagesValidees = [{ url: '/images/default.png' }]
+  }
+
   try {
     // 7. Création de l'offre dans la base de données
     const nouvelleOffre = await prisma.offre.create({
@@ -67,17 +97,13 @@ export default defineEventHandler(async (event) => {
         coloc: body.coloc ? Number(body.coloc) : 0,
         surface: body.surface ? Number(body.surface) : null,
         tags: tags.length > 0 ? tags : undefined,
-        
+
         // Relation avec l'utilisateur connecté
         proprietaireId: parseInt(session.user.id),
-        
-        // Création des images (si fournies)
+
+        // Création des images validées
         images: {
-          create: (body.images && body.images.length > 0) 
-            ? body.images
-                .filter((url: string) => url && url.trim() !== '')
-                .map((url: string) => ({ url: url.trim() }))
-            : [{ url: '/images/default.png' }] // Image par défaut si aucune image
+          create: imagesValidees
         }
       },
       // Inclure les images dans la réponse

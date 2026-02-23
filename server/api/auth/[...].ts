@@ -5,9 +5,14 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '../../utils/prisma'
 import { compare } from 'bcrypt'
 
+// SECURITE : AUTH_SECRET doit être défini (pas de fallback en dur)
+const authSecret = process.env.AUTH_SECRET
+if (!authSecret) {
+    throw new Error('AUTH_SECRET manquant. Générez-en un avec: openssl rand -base64 32')
+}
+
 export default NuxtAuthHandler({
-    // La clé secrète pour signer les tokens JWT
-    secret: process.env.AUTH_SECRET || 'ma-cle-secrete-super-longue-et-aleatoire-minimum-32-caracteres',
+    secret: authSecret,
 
     pages: {
         signIn: '/connexion',
@@ -53,15 +58,16 @@ export default NuxtAuthHandler({
                     }
                 })
 
+                // SECURITE : message générique pour empêcher l'énumération d'utilisateurs
                 if (!user) {
-                    throw new Error('Cette email n\'existe pas')
+                    throw new Error('Email ou mot de passe incorrect')
                 }
 
                 // 3. Vérifier le mot de passe
                 const isPwdValid = await compare(credentials.password, user.password)
 
                 if (!isPwdValid) {
-                    throw new Error('Mot de passe incorrect')
+                    throw new Error('Email ou mot de passe incorrect')
                 }
 
                 // 4. Retourner l'utilisateur (sera stocké dans le token JWT)

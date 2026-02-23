@@ -1,11 +1,39 @@
 import { prisma } from '../../utils/prisma'
 import { hash } from 'bcrypt'
 
-
-
 export default defineEventHandler(async (event) => {
 
     const body = await readBody(event)
+
+    // SECURITE : Validation des champs requis
+    if (!body.nom || !body.prenom || !body.email || !body.password) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Tous les champs sont requis (nom, prénom, email, mot de passe)'
+        })
+    }
+
+    // SECURITE : Nettoyage des inputs (trim + normalisation email en minuscules)
+    const nom = String(body.nom).trim()
+    const prenom = String(body.prenom).trim()
+    const email = String(body.email).trim().toLowerCase()
+
+    // SECURITE : Validation longueur des champs
+    if (nom.length > 100 || prenom.length > 100) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Le nom et prénom ne doivent pas dépasser 100 caractères'
+        })
+    }
+
+    // SECURITE : Validation format email côté serveur
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Format d\'email invalide'
+        })
+    }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{12,}$/;
 
@@ -18,7 +46,7 @@ export default defineEventHandler(async (event) => {
 
     const EmailExists = await prisma.user.findUnique({
         where: {
-            email: body.email
+            email: email
         }
     })
 
@@ -33,13 +61,13 @@ export default defineEventHandler(async (event) => {
 
     const user = await prisma.user.create({
         data: {
-            nom: body.nom,
-            prenom: body.prenom,
-            email: body.email,
+            nom: nom,
+            prenom: prenom,
+            email: email,
             password: pwdCrypt,
             role: 'ETUDIANT'
         }
-    })  
+    })
 
     return {
         id: user.id,

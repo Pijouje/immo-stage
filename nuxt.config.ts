@@ -35,7 +35,19 @@ export default defineNuxtConfig({
     public: {
       authOrigin: process.env.AUTH_ORIGIN ?? 'http://localhost:3000'
     }
-  }
+  },
 
+  // SECURITE : Headers de sécurité HTTP
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+      }
+    }
+  }
 
 })

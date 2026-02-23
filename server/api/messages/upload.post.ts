@@ -1,15 +1,25 @@
 import { getServerSession } from '#auth'
 import { prisma } from '../../utils/prisma'
 import { writeFile, mkdir } from 'fs/promises'
-import { join, extname } from 'path'
+import { join } from 'path'
 import { randomUUID } from 'crypto'
 
-const TAILLE_MAX = 5 * 1024 * 1024 
+const TAILLE_MAX = 5 * 1024 * 1024
 const TYPES_AUTORISES = [
-    'image/jpeg', 'image/png', 'image/webp', 
+    'image/jpeg', 'image/png', 'image/webp',
     'application/pdf', 'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ]
+
+// SECURITE : Dériver l'extension du type MIME validé (pas du nom de fichier client)
+const MIME_TO_EXT: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/pdf': '.pdf',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+}
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -23,6 +33,19 @@ export default defineEventHandler(async (event) => {
 
     if(!destinataireId || !fichier || !fichier.size){
         throw createError({ statusCode: 400, message: 'Fichier ou destinataire manquant' })
+    }
+
+    // SECURITE : Empêcher l'auto-envoi
+    const expediteurId = parseInt(session.user.id)
+    const destId = parseInt(destinataireId)
+    if (expediteurId === destId) {
+        throw createError({ statusCode: 400, message: 'Vous ne pouvez pas vous envoyer un fichier' })
+    }
+
+    // SECURITE : Vérifier que le destinataire existe
+    const destinataire = await prisma.user.findUnique({ where: { id: destId } })
+    if (!destinataire) {
+        throw createError({ statusCode: 404, message: 'Destinataire introuvable' })
     }
 
     if (fichier.size > TAILLE_MAX) {
@@ -39,7 +62,8 @@ export default defineEventHandler(async (event) => {
     const dossier = join(process.cwd(), 'public', 'uploads')
     await mkdir(dossier, { recursive: true })
 
-    const extension = extname(fichier.name).toLowerCase() || '.bin'
+    // SECURITE : Extension dérivée du MIME validé, pas du nom de fichier client
+    const extension = MIME_TO_EXT[fichier.type] || '.bin'
     const nomFichier = `${randomUUID()}${extension}`
     
     await writeFile(join(dossier, nomFichier), buffer)
@@ -52,8 +76,8 @@ export default defineEventHandler(async (event) => {
             contenu: urlFichier,
             nom: fichier.name,
             type: fichier.type.startsWith('image/') ? 'image' : 'fichier',
-            expediteurId: parseInt(session.user.id),
-            destinataireId: parseInt(destinataireId),
+            expediteurId: expediteurId,
+            destinataireId: destId,
             lu: false
         }
     })

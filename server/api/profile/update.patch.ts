@@ -19,10 +19,10 @@ export default defineEventHandler(async (event) => {
   const allowedFields = ['nom', 'prenom', 'email']
   const updateData: any = {}
 
-  // On filtre pour n'accepter que les champs autorisés
+  // SECURITE : On filtre et on nettoie les champs autorisés
   for (const field of allowedFields) {
     if (body[field] !== undefined && body[field] !== '') {
-      updateData[field] = body[field]
+      updateData[field] = String(body[field]).trim()
     }
   }
 
@@ -34,12 +34,28 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 3. Si l'email est modifié, vérifier qu'il n'est pas déjà utilisé
+  // SECURITE : Validation de la longueur des champs
+  if (updateData.nom && updateData.nom.length > 100) {
+    throw createError({ statusCode: 400, statusMessage: 'Le nom ne doit pas dépasser 100 caractères' })
+  }
+  if (updateData.prenom && updateData.prenom.length > 100) {
+    throw createError({ statusCode: 400, statusMessage: 'Le prénom ne doit pas dépasser 100 caractères' })
+  }
+
+  // 3. Si l'email est modifié, valider le format et vérifier l'unicité
   if (updateData.email) {
+    // SECURITE : Normalisation de l'email
+    updateData.email = updateData.email.toLowerCase()
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(updateData.email)) {
+      throw createError({ statusCode: 400, statusMessage: 'Format d\'email invalide' })
+    }
+
     const emailExists = await prisma.user.findFirst({
       where: {
         email: updateData.email,
-        NOT: { id: userId } // Exclure l'utilisateur actuel
+        NOT: { id: userId }
       }
     })
 

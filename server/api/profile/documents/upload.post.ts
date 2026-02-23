@@ -1,7 +1,7 @@
 import { getServerSession } from '#auth'
 import { prisma } from '../../../utils/prisma'
 import { writeFile, mkdir } from 'fs/promises'
-import { join, extname } from 'path'
+import { join } from 'path'
 import { randomUUID } from 'crypto'
 
 const TAILLE_MAX = 5 * 1024 * 1024
@@ -10,6 +10,16 @@ const TYPES_AUTORISES = [
     'application/pdf', 'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ]
+
+// SECURITE : Dériver l'extension du type MIME validé (pas du nom de fichier client)
+const MIME_TO_EXT: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/pdf': '.pdf',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+}
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -36,7 +46,8 @@ export default defineEventHandler(async (event) => {
     const dossier = join(process.cwd(), 'public', 'uploads', 'documents')
     await mkdir(dossier, { recursive: true })
 
-    const extension = extname(fichier.name).toLowerCase() || '.bin'
+    // SECURITE : Extension dérivée du MIME validé, pas du nom de fichier client
+    const extension = MIME_TO_EXT[fichier.type] || '.bin'
     const nomFichier = `${randomUUID()}${extension}`
     await writeFile(join(dossier, nomFichier), buffer)
 

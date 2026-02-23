@@ -20,6 +20,16 @@ let intervalId = null
 const inputFichier = ref(null)
 const imageAgrandie = ref(null)
 
+// SECURITE : Empêcher les URLs javascript: / data: dans les liens de fichiers (protection XSS)
+const sanitizeUrl = (url) => {
+    if (!url || typeof url !== 'string') return '#'
+    const trimmed = url.trim().toLowerCase()
+    if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+        return '#'
+    }
+    return url
+}
+
 const estDernierMsgLu = (index) => {
     for (let i = index + 1; i < messages.value.length; i++) {
         const msg = messages.value[i]
@@ -342,8 +352,8 @@ const formatHeureMessage = (date) => {
                     
                     <div class="message-wrapper">
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
-                            <img v-if="msg.type === 'image'" :src="msg.contenu" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
-                            <a v-else-if="msg.type === 'fichier'" :href="msg.contenu" target="_blank" class="msg-fichier">
+                            <img v-if="msg.type === 'image'" :src="sanitizeUrl(msg.contenu)" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
+                            <a v-else-if="msg.type === 'fichier'" :href="sanitizeUrl(msg.contenu)" target="_blank" rel="noopener noreferrer" class="msg-fichier">
                                 📄 {{ msg.nom || msg.contenu.split('/').pop() }}
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
@@ -401,7 +411,7 @@ const formatHeureMessage = (date) => {
                     </div>
 
                     <div class="fichier-actions-externe">
-                        <a :href="fichier.contenu" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
+                        <a :href="sanitizeUrl(fichier.contenu)" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
                             ⬇ Télécharger
                         </a>
                         <button
@@ -421,9 +431,9 @@ const formatHeureMessage = (date) => {
     </div>
     <Transition name="fade">
         <div v-if="imageAgrandie" class="lightbox-img-overlay" @click="fermerImage">
-            <img :src="imageAgrandie" class="lightbox-img-grande" @click.stop />
-            <a 
-                :href="imageAgrandie" 
+            <img :src="sanitizeUrl(imageAgrandie)" class="lightbox-img-grande" @click.stop />
+            <a
+                :href="sanitizeUrl(imageAgrandie)"
                 :download="imageAgrandie.split('/').pop()"
                 class="btn-telecharger"
                 @click.stop
