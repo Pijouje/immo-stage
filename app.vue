@@ -71,4 +71,18 @@ html {
 .auth-leave-to {
   opacity: 0;
 }
+
+/* Transition de layout (changement home <-> default) */
+.layout-fade-enter-active {
+  transition: opacity 0.3s ease-out;
+}
+
+.layout-fade-leave-active {
+  transition: opacity 0.3s ease-in;
+}
+
+.layout-fade-enter-from,
+.layout-fade-leave-to {
+  opacity: 0;
+}
 </style>

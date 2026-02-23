@@ -13,7 +13,7 @@ export default defineNuxtConfig({
 
   app: {
     pageTransition: { name: 'hero-flow', mode: 'out-in' },
-    layoutTransition: false
+    layoutTransition: { name: 'layout-fade', mode: 'out-in' }
   },
 
   auth: {
