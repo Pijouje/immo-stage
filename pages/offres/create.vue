@@ -30,10 +30,15 @@ const form = ref({
   charges: '',
   caution: '',
   coloc: '',
+  chambresDisponibles: '',
   surface: '',
-  images: [''],
   tags: []
 })
+
+// --- GESTION DES IMAGES (Upload fichiers) ---
+const imageFiles = ref([])       // { file: File, preview: string, url: string, uploading: boolean }
+const isDragging = ref(false)
+const uploadError = ref('')
 
 // Liste des équipements disponibles
 const equipementsDisponibles = [
@@ -58,16 +63,72 @@ const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-// Ajouter un champ d'image
-const ajouterImage = () => {
-  form.value.images.push('')
+// Upload d'une image vers le serveur
+const uploadImage = async (file) => {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const result = await $fetch('/api/offres/upload', {
+    method: 'POST',
+    body: formData
+  })
+  return result.url
 }
 
-// Supprimer un champ d'image
-const supprimerImage = (index) => {
-  if (form.value.images.length > 1) {
-    form.value.images.splice(index, 1)
+// Ajouter des fichiers images (depuis input ou drag & drop)
+const ajouterImages = async (files) => {
+  uploadError.value = ''
+  const typesAutorises = ['image/jpeg', 'image/png', 'image/webp']
+  const tailleMax = 5 * 1024 * 1024
+
+  for (const file of files) {
+    if (!typesAutorises.includes(file.type)) {
+      uploadError.value = `"${file.name}" : format non autorisé (JPG, PNG ou WebP)`
+      continue
+    }
+    if (file.size > tailleMax) {
+      uploadError.value = `"${file.name}" : trop lourd (max 5 Mo)`
+      continue
+    }
+
+    // Créer la preview locale
+    const preview = URL.createObjectURL(file)
+    const imageEntry = { file, preview, url: '', uploading: true }
+    imageFiles.value.push(imageEntry)
+
+    // Upload vers le serveur
+    try {
+      imageEntry.url = await uploadImage(file)
+    } catch (e) {
+      uploadError.value = `Erreur lors de l'upload de "${file.name}"`
+      console.error(e)
+    } finally {
+      imageEntry.uploading = false
+    }
   }
+}
+
+// Input file change
+const onFileSelect = (event) => {
+  const files = event.target.files
+  if (files.length > 0) ajouterImages(Array.from(files))
+  event.target.value = '' // Reset pour permettre de re-sélectionner le même fichier
+}
+
+// Drag & Drop
+const onDragOver = (e) => { e.preventDefault(); isDragging.value = true }
+const onDragLeave = () => { isDragging.value = false }
+const onDrop = (e) => {
+  e.preventDefault()
+  isDragging.value = false
+  const files = e.dataTransfer.files
+  if (files.length > 0) ajouterImages(Array.from(files))
+}
+
+// Supprimer une image
+const supprimerImage = (index) => {
+  URL.revokeObjectURL(imageFiles.value[index].preview)
+  imageFiles.value.splice(index, 1)
 }
 
 // Toggle équipement
@@ -106,8 +167,10 @@ const soumettreOffre = async () => {
   successMessage.value = ''
 
   try {
-    // Filtrer les images vides
-    const imagesValides = form.value.images.filter(url => url && url.trim() !== '')
+    // Récupérer les URLs des images uploadées
+    const imagesValides = imageFiles.value
+      .filter(img => img.url && !img.uploading)
+      .map(img => img.url)
 
     const response = await $fetch('/api/offres/create', {
       method: 'POST',
@@ -119,6 +182,7 @@ const soumettreOffre = async () => {
         charges: form.value.charges ? Number(form.value.charges) : 0,
         caution: form.value.caution ? Number(form.value.caution) : null,
         coloc: form.value.coloc ? Number(form.value.coloc) : 0,
+        chambresDisponibles: form.value.chambresDisponibles ? Number(form.value.chambresDisponibles) : null,
         surface: form.value.surface ? Number(form.value.surface) : null,
         images: imagesValides,
         tags: form.value.tags
@@ -150,10 +214,14 @@ const reinitialiserFormulaire = () => {
     charges: '',
     caution: '',
     coloc: '',
+    chambresDisponibles: '',
     surface: '',
-    images: [''],
     tags: []
   }
+  // Libérer les previews
+  imageFiles.value.forEach(img => URL.revokeObjectURL(img.preview))
+  imageFiles.value = []
+  uploadError.value = ''
   errorMessage.value = ''
   successMessage.value = ''
 }
@@ -285,43 +353,79 @@ const reinitialiserFormulaire = () => {
 
               <div class="form-group">
                 <label for="coloc">Nombre de colocataires</label>
-                <input 
-                  v-model="form.coloc" 
-                  type="number" 
-                  id="coloc" 
+                <input
+                  v-model="form.coloc"
+                  type="number"
+                  id="coloc"
                   placeholder="0"
                   class="input"
                   min="0"
                 >
               </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="chambresDisponibles">Chambres disponibles</label>
+                <input
+                  v-model="form.chambresDisponibles"
+                  type="number"
+                  id="chambresDisponibles"
+                  placeholder="Nombre de chambres restantes"
+                  class="input"
+                  min="0"
+                >
+                <small class="help-text">Laissez vide pour utiliser le nombre de colocataires</small>
+              </div>
+              <div class="form-group"></div>
+            </div>
           </div>
 
-          <!-- Images -->
+          <!-- Images (Upload fichiers) -->
           <div class="section">
             <h2 class="section-title">Images du logement</h2>
-            <p class="section-description">Ajoutez des URLs d'images (hébergées en ligne)</p>
+            <p class="section-description">Glissez-déposez vos images ou cliquez pour les sélectionner (JPG, PNG, WebP - max 5 Mo)</p>
 
-            <div v-for="(image, index) in form.images" :key="index" class="image-input-group">
-              <input 
-                v-model="form.images[index]" 
-                type="url" 
-                :placeholder="`URL de l'image ${index + 1}`"
-                class="input"
+            <!-- Zone de drop -->
+            <div
+              class="drop-zone"
+              :class="{ 'dragging': isDragging }"
+              @dragover="onDragOver"
+              @dragleave="onDragLeave"
+              @drop="onDrop"
+              @click="$refs.fileInput.click()"
+            >
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                hidden
+                @change="onFileSelect"
               >
-              <button 
-                v-if="form.images.length > 1"
-                @click.prevent="supprimerImage(index)" 
-                class="btn-remove"
-                type="button"
-              >
-                ✕
-              </button>
+              <div class="drop-content">
+                <span class="drop-icon">📷</span>
+                <span class="drop-text">
+                  {{ isDragging ? 'Déposez vos images ici' : 'Cliquez ou glissez vos images ici' }}
+                </span>
+                <span class="drop-hint">JPG, PNG ou WebP (max 5 Mo par image)</span>
+              </div>
             </div>
 
-            <button @click.prevent="ajouterImage" class="btn-add-image" type="button">
-              + Ajouter une image
-            </button>
+            <!-- Erreur upload -->
+            <div v-if="uploadError" class="upload-error">⚠ {{ uploadError }}</div>
+
+            <!-- Previews -->
+            <div v-if="imageFiles.length > 0" class="image-previews">
+              <div v-for="(img, index) in imageFiles" :key="index" class="image-preview">
+                <img :src="img.preview" alt="Preview" class="preview-img">
+                <div v-if="img.uploading" class="upload-overlay">
+                  <span class="spinner"></span>
+                </div>
+                <div v-else-if="img.url" class="upload-success">✓</div>
+                <button @click.prevent="supprimerImage(index)" class="btn-remove-img" type="button">✕</button>
+              </div>
+            </div>
           </div>
 
           <!-- Équipements -->
@@ -529,48 +633,106 @@ label {
   color: #64748b;
 }
 
-/* Images */
-.image-input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.image-input-group .input {
-  flex: 1;
-}
-
-.btn-remove {
-  background: #ef4444;
-  color: white;
-  border: none;
-  width: 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: background 0.2s;
-}
-
-.btn-remove:hover {
-  background: #dc2626;
-}
-
-.btn-add-image {
-  background: none;
+/* Images Upload */
+.drop-zone {
   border: 2px dashed #cbd5e1;
-  color: #64748b;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
   cursor: pointer;
-  font-weight: 600;
-  width: 100%;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  background: #fafbfc;
 }
 
-.btn-add-image:hover {
+.drop-zone:hover {
   border-color: #2563eb;
-  color: #2563eb;
+  background: #f0f9ff;
 }
+
+.drop-zone.dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+  transform: scale(1.01);
+}
+
+.drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.drop-icon { font-size: 2.5rem; }
+.drop-text { font-weight: 700; font-size: 1rem; color: #334155; }
+.drop-hint { font-size: 0.85rem; color: #94a3b8; }
+
+.upload-error {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.image-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.image-preview {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.upload-success {
+  position: absolute; bottom: 6px; right: 6px;
+  background: #16a34a; color: white;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+}
+
+.btn-remove-img {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(239, 68, 68, 0.9); color: white;
+  border: none; border-radius: 50%;
+  width: 24px; height: 24px;
+  cursor: pointer; font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+
+.image-preview:hover .btn-remove-img { opacity: 1; }
 
 /* Équipements */
 .equipements-grid {
