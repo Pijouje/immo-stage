@@ -92,6 +92,7 @@ onUnmounted(() => {
                 </NuxtLink>
 
                 <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
+                <AutoTranslate />
 
                 <template v-if="!isAuthenticated">
                     <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
