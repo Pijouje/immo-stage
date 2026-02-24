@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-// 1. On définit la forme de nos données (Interface)
+// 1. Interface des données
 interface Offre {
   id: number;
   titre: string;
@@ -11,71 +11,210 @@ interface Offre {
   charges: number;
   caution: number;
   coloc: number;
-  tags: string[] | string; // Parfois prisma renvoie du JSON, parfois un tableau
+  surface: number | null;
+  chambresDisponibles: number | null;
+  proprietaireId: number;
+  tags: string[] | string;
   images: { url: string }[];
   avis: { note: number }[];
 }
 
 const route = useRoute()
+const { data: session } = useAuth()
 
-// 2. On dit à useFetch d'utiliser cette interface <Offre>
-const { data: offreRaw, error } = await useFetch<Offre>(`/api/offres/${route.params.id}`)
+// 2. Fetch des données
+const { data: offreRaw, error, refresh } = await useFetch<Offre>(`/api/offres/${route.params.id}`)
 
 if (error.value || !offreRaw.value) {
   throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée', fatal: true })
 }
 
 useHead({
-  // Le ? permet d'éviter le crash si le titre n'est pas encore chargé
   title: `${offreRaw.value?.titre || 'Offre'} - Location Amiens`
 })
 
-// --- ADAPTATION DES DONNÉES (Mapping) ---
+// --- ADAPTATION DES DONNÉES ---
 const offre = computed(() => {
   const o = offreRaw.value
-
-  // SÉCURITÉ (Objet vide par défaut)
   if (!o) {
     return {
-      id: 0,
-      titre: 'Chargement...',
-      lieu: '',
-      prix: 0,
-      desc: '',
-      imgs: [],
-      charges: '',
-      rating: 0,
-      avisCount: 0,
-      tags: [] as string[],
-      caution: 0,
-      coloc: 0
+      id: 0, titre: 'Chargement...', lieu: '', prix: 0, desc: '', imgs: [],
+      chargesRaw: 0, chargesText: '', rating: 0, avisCount: 0, tags: [] as string[],
+      caution: 0, coloc: 0, surface: null as number | null,
+      chambresDisponibles: null as number | null, proprietaireId: 0
     }
   }
 
-  // TypeScript sait maintenant que o.avis est un tableau grâce à l'interface
-  const noteMoyenne = o.avis && o.avis.length > 0 
-    ? o.avis.reduce((acc: number, curr: any) => acc + curr.note, 0) / o.avis.length 
+  const noteMoyenne = o.avis && o.avis.length > 0
+    ? o.avis.reduce((acc: number, curr: any) => acc + curr.note, 0) / o.avis.length
     : 0
 
   return {
-    ...o, // Copie toutes les propriétés de base
+    ...o,
     desc: o.description || '',
-    imgs: o.images ? o.images.map((img: any) => img.url) : [], 
-    charges: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
+    imgs: o.images ? o.images.map((img: any) => img.url) : [],
+    chargesRaw: o.charges || 0,
+    chargesText: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
     rating: Number(noteMoyenne.toFixed(1)),
     avisCount: o.avis ? o.avis.length : 0,
-    
-    // Gestion sécurisée des tags
-    tags: Array.isArray(o.tags) ? o.tags : [] 
+    tags: Array.isArray(o.tags) ? o.tags : []
   }
 })
-// --- LOGIQUE LIGHTBOX (Rien ne change ici) ---
+
+// --- MAPPING EMOJIS ---
+const tagEmojis: Record<string, string> = {
+  'WiFi / Fibre': '📶', 'Cuisine équipée': '🍳', 'Lave-linge': '👕',
+  'Sèche-linge': '💨', 'Lave-vaisselle': '🍽️', 'Parking': '🅿️',
+  'Balcon': '🌿', 'Terrasse': '☀️', 'Ascenseur': '🛗',
+  'Meublé': '🛋️', 'Cave': '📦', 'Gardien': '🔒',
+  'Proche transports': '🚇', 'Proche commerces': '🛒'
+}
+const getTagEmoji = (tag: string): string => tagEmojis[tag] || '✨'
+
+const equipementsDisponibles = [
+  'WiFi / Fibre', 'Cuisine équipée', 'Lave-linge', 'Sèche-linge',
+  'Lave-vaisselle', 'Parking', 'Balcon', 'Terrasse', 'Ascenseur',
+  'Meublé', 'Cave', 'Gardien', 'Proche transports', 'Proche commerces'
+]
+
+// --- PERMISSIONS ---
+const canEdit = computed(() => {
+  if (!session.value?.user) return false
+  const role = (session.value.user as any).role
+  const userId = parseInt((session.value.user as any).id)
+  return role === 'ADMIN' || userId === offre.value.proprietaireId
+})
+
+// =============================================
+// MODE ÉDITION
+// =============================================
+const editMode = ref(false)
+const saving = ref(false)
+const saveMessage = ref('')
+const saveError = ref('')
+
+// Formulaire d'édition (copie des données actuelles)
+const editForm = ref({
+  titre: '',
+  description: '',
+  lieu: '',
+  prix: 0,
+  charges: 0,
+  caution: 0,
+  coloc: 0,
+  chambresDisponibles: 0,
+  surface: 0 as number | null,
+  tags: [] as string[],
+  images: [] as string[]
+})
+
+// Active/Désactive le mode édition
+const toggleEditMode = () => {
+  if (!editMode.value) {
+    // Copier les données actuelles dans le formulaire
+    editForm.value = {
+      titre: offre.value.titre,
+      description: offre.value.desc,
+      lieu: offre.value.lieu,
+      prix: offre.value.prix,
+      charges: offre.value.chargesRaw,
+      caution: offre.value.caution || 0,
+      coloc: offre.value.coloc,
+      chambresDisponibles: offre.value.chambresDisponibles ?? offre.value.coloc,
+      surface: offre.value.surface,
+      tags: [...offre.value.tags],
+      images: [...offre.value.imgs]
+    }
+    saveMessage.value = ''
+    saveError.value = ''
+  }
+  editMode.value = !editMode.value
+}
+
+// Toggle un tag dans le formulaire
+const toggleTag = (tag: string) => {
+  const idx = editForm.value.tags.indexOf(tag)
+  if (idx > -1) {
+    editForm.value.tags.splice(idx, 1)
+  } else {
+    editForm.value.tags.push(tag)
+  }
+}
+
+// --- GESTION IMAGES EN ÉDITION ---
+const uploadingImage = ref(false)
+
+const addImageFile = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  uploadingImage.value = true
+  try {
+    for (const file of Array.from(input.files)) {
+      const formData = new FormData()
+      formData.append('image', file)
+      const result = await $fetch<{ url: string }>('/api/offres/upload', {
+        method: 'POST',
+        body: formData
+      })
+      editForm.value.images.push(result.url)
+    }
+  } catch (e) {
+    saveError.value = 'Erreur lors de l\'upload de l\'image'
+    console.error(e)
+  } finally {
+    uploadingImage.value = false
+    input.value = ''
+  }
+}
+
+const removeImage = (index: number) => {
+  editForm.value.images.splice(index, 1)
+}
+
+// --- SAUVEGARDE ---
+const saveAll = async () => {
+  saving.value = true
+  saveMessage.value = ''
+  saveError.value = ''
+
+  try {
+    await $fetch(`/api/offres/${route.params.id}`, {
+      method: 'PATCH',
+      body: {
+        titre: editForm.value.titre,
+        description: editForm.value.description,
+        lieu: editForm.value.lieu,
+        prix: editForm.value.prix,
+        charges: editForm.value.charges,
+        caution: editForm.value.caution,
+        coloc: editForm.value.coloc,
+        chambresDisponibles: editForm.value.chambresDisponibles,
+        surface: editForm.value.surface,
+        tags: editForm.value.tags,
+        images: editForm.value.images
+      }
+    })
+    saveMessage.value = 'Modifications enregistrées !'
+    await refresh()
+    // Rester en mode édition pour continuer à modifier si besoin
+    // Mettre à jour le formulaire avec les nouvelles données
+    setTimeout(() => { saveMessage.value = '' }, 3000)
+  } catch (e: any) {
+    saveError.value = e.data?.statusMessage || 'Erreur lors de la sauvegarde'
+    console.error(e)
+  } finally {
+    saving.value = false
+  }
+}
+
+// --- LIGHTBOX ---
 const isGalleryOpen = ref(false)
 const currentImageIndex = ref(0)
 
 const openGallery = (index: number) => {
-  // Petite sécurité si pas d'images
-  if (!offre.value.imgs || offre.value.imgs.length === 0) return 
+  if (editMode.value) return // Pas de lightbox en mode édition
+  if (!offre.value.imgs || offre.value.imgs.length === 0) return
   currentImageIndex.value = index
   isGalleryOpen.value = true
   document.body.style.overflow = 'hidden'
@@ -106,14 +245,30 @@ const prevImage = () => {
 <template>
   <div class="detail-page">
     <div class="container">
-      
-      <div class="gallery-grid">
-        
+
+      <!-- BOUTON TOGGLE ÉDITION -->
+      <div v-if="canEdit" class="edit-toolbar">
+        <button @click="toggleEditMode" class="btn-toggle-edit" :class="{ active: editMode }">
+          <span v-if="editMode">👁️ Vue visiteur</span>
+          <span v-else>✏️ Mode édition</span>
+        </button>
+
+        <template v-if="editMode">
+          <button @click="saveAll" :disabled="saving" class="btn-save-all">
+            {{ saving ? 'Enregistrement...' : '💾 Enregistrer tout' }}
+          </button>
+        </template>
+
+        <span v-if="saveMessage" class="save-msg success">{{ saveMessage }}</span>
+        <span v-if="saveError" class="save-msg error">{{ saveError }}</span>
+      </div>
+
+      <!-- ============ GALERIE ============ -->
+      <div v-if="!editMode" class="gallery-grid">
         <div class="main-photo" @click="openGallery(0)" :style="{ backgroundImage: `url(${offre.imgs[0]})` }">
           <button class="btn-see-photos">📷 Voir les {{ offre.imgs.length }} photos</button>
           <div class="photo-counter">1/{{ offre.imgs.length }}</div>
         </div>
-
         <div class="sub-photos">
           <div class="sub-photo" @click="openGallery(1)" :style="{ backgroundImage: `url(${offre.imgs[1] || offre.imgs[0]})` }"></div>
           <div class="sub-photo" @click="openGallery(2)" :style="{ backgroundImage: `url(${offre.imgs[2] || offre.imgs[0]})` }">
@@ -122,84 +277,170 @@ const prevImage = () => {
             </div>
           </div>
         </div>
-
       </div>
 
+      <!-- GALERIE EN MODE ÉDITION -->
+      <div v-else class="edit-images-section">
+        <h3>📷 Images du logement</h3>
+        <div class="edit-images-grid">
+          <div v-for="(img, index) in editForm.images" :key="index" class="edit-image-card">
+            <img :src="img" alt="Image offre" class="edit-image-thumb">
+            <button @click="removeImage(index)" class="btn-remove-img" type="button">✕</button>
+          </div>
+          <!-- Bouton ajouter -->
+          <label class="add-image-card">
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden @change="addImageFile">
+            <span v-if="uploadingImage" class="spinner"></span>
+            <span v-else class="add-icon">+</span>
+            <span class="add-text">Ajouter</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ============ CONTENU ============ -->
       <div class="content-split">
 
+        <!-- COLONNE GAUCHE -->
         <div class="left-content">
-          
-          <div class="header-line">
-           <h1>{{ offre.titre }}</h1>
-  
-           <div class="rating-block">
-             <Etoile :note="offre.rating" />
-    
-            <NuxtLink :to="`/avis?offreId=${offre.id}`" class="avis-link">
-              {{ offre.avisCount }} avis
-            </NuxtLink>
-          </div>
-        </div>
-          <p class="location">📍 {{ offre.lieu }}</p>
 
-          <div class="tags">
-              <span v-for="tag in offre.tags" :key="tag" class="tag">⚡ {{ tag }}</span>
-          </div>
-
-          <div class="separator"></div>
-
-          <h2>À propos de ce logement</h2>
-          <p class="description">{{ offre.desc }}</p>
-
-          <div class="equipments">
-            <h2>Equipement inclus</h2>
-              <div class="equip-list">
-                <div class="equip">💻 Espace travail</div>
-                <div class="equip">🍳 Cuisine équipée</div>
-                <div class="equip">🚿 Salle de bain</div>
-                <div class="equip">🗄️ Rangements</div>
+          <!-- MODE VISITEUR -->
+          <template v-if="!editMode">
+            <div class="header-line">
+              <h1>{{ offre.titre }}</h1>
+              <div class="rating-block">
+                <Etoile :note="offre.rating" />
+                <NuxtLink :to="`/avis?offreId=${offre.id}`" class="avis-link">
+                  {{ offre.avisCount }} avis
+                </NuxtLink>
               </div>
-          </div>
+            </div>
+            <p class="location">📍 {{ offre.lieu }}</p>
+
+            <div class="tags">
+              <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ tag }}</span>
+            </div>
+
+            <div class="separator"></div>
+
+            <h2>À propos de ce logement</h2>
+            <p class="description">{{ offre.desc }}</p>
+          </template>
+
+          <!-- MODE ÉDITION -->
+          <template v-else>
+            <div class="edit-group">
+              <label class="edit-label">Titre</label>
+              <input v-model="editForm.titre" type="text" class="edit-input" placeholder="Titre de l'annonce">
+            </div>
+
+            <div class="edit-group">
+              <label class="edit-label">Lieu / Quartier</label>
+              <input v-model="editForm.lieu" type="text" class="edit-input" placeholder="Amiens, Quartier...">
+            </div>
+
+            <div class="edit-group">
+              <label class="edit-label">Équipements</label>
+              <div class="edit-tags-grid">
+                <button
+                  v-for="equip in equipementsDisponibles"
+                  :key="equip"
+                  @click="toggleTag(equip)"
+                  class="edit-tag-btn"
+                  :class="{ selected: editForm.tags.includes(equip) }"
+                  type="button"
+                >
+                  {{ getTagEmoji(equip) }} {{ equip }}
+                </button>
+              </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="edit-group">
+              <label class="edit-label">Description</label>
+              <textarea v-model="editForm.description" class="edit-textarea" rows="8" placeholder="Décrivez le logement..."></textarea>
+              <small class="edit-hint">{{ editForm.description.length }} / 5000 caractères</small>
+            </div>
+          </template>
+
         </div>
 
+        <!-- COLONNE DROITE (Carte prix) -->
         <div class="right-sidebar">
           <div class="price-card static-card">
-            <div class="card-header">
-              <span class="price">{{ offre.prix }}€</span>
-              <span class="sub-price">/ mois charges comprises</span>
-            </div>
-            
-            <div class="divider"></div>
 
-            <div class="details-list">
-              <div class="row">
-                <span>Caution :</span>
-                <strong>{{ offre.caution || 1000 }}€</strong>
+            <!-- MODE VISITEUR -->
+            <template v-if="!editMode">
+              <div class="card-header">
+                <span class="price">{{ offre.prix }}€</span>
+                <span class="sub-price">/ mois charges comprises</span>
               </div>
-              <div class="row">
-                <span>Colocation :</span>
-                <strong>{{ offre.coloc || 3 }} personnes</strong>
+              <div class="divider"></div>
+              <div class="details-list">
+                <div class="row">
+                  <span>Caution :</span>
+                  <strong>{{ offre.caution || 1000 }}€</strong>
+                </div>
+                <div class="row">
+                  <span>Colocation :</span>
+                  <strong>{{ offre.coloc || 3 }} personnes</strong>
+                </div>
+                <div class="row">
+                  <span>Chambres dispo :</span>
+                  <strong :class="{ 'text-red': (offre.chambresDisponibles ?? offre.coloc) === 0 }">
+                    {{ offre.chambresDisponibles ?? offre.coloc }} / {{ offre.coloc || 3 }}
+                  </strong>
+                </div>
               </div>
-            </div>
+              <OffreBouton to="/contact">
+                Contacter le propriétaire
+              </OffreBouton>
+            </template>
 
-            <OffreBouton to="/contact">
-              Contacter le propriétaire
-            </OffreBouton>
+            <!-- MODE ÉDITION -->
+            <template v-else>
+              <div class="edit-card-group">
+                <label class="edit-label">Loyer (€/mois)</label>
+                <input v-model.number="editForm.prix" type="number" min="0" class="edit-input-sm">
+              </div>
+              <div class="edit-card-group">
+                <label class="edit-label">Charges (€)</label>
+                <input v-model.number="editForm.charges" type="number" min="0" class="edit-input-sm">
+              </div>
+              <div class="divider"></div>
+              <div class="edit-card-group">
+                <label class="edit-label">Caution (€)</label>
+                <input v-model.number="editForm.caution" type="number" min="0" class="edit-input-sm">
+              </div>
+              <div class="edit-card-group">
+                <label class="edit-label">Surface (m²)</label>
+                <input v-model.number="editForm.surface" type="number" min="0" class="edit-input-sm">
+              </div>
+              <div class="divider"></div>
+              <div class="edit-card-group">
+                <label class="edit-label">Nb colocataires</label>
+                <input v-model.number="editForm.coloc" type="number" min="0" class="edit-input-sm">
+              </div>
+              <div class="edit-card-group">
+                <label class="edit-label">Chambres disponibles</label>
+                <input v-model.number="editForm.chambresDisponibles" type="number" min="0" class="edit-input-sm">
+              </div>
+            </template>
+
           </div>
         </div>
       </div>
     </div>
 
+    <!-- LIGHTBOX -->
     <Transition name="fade">
       <div v-if="isGalleryOpen" class="lightbox" @click="closeGallery">
         <button class="close-btn" @click.stop="closeGallery">✕</button>
         <button class="nav-btn prev" @click.stop="prevImage">❮</button>
         <button class="nav-btn next" @click.stop="nextImage">❯</button>
-        
         <div class="lightbox-content" @click.stop>
           <img :src="offre.imgs[currentImageIndex]" class="lightbox-img" alt="Vue agrandie">
         </div>
-
         <div class="lightbox-footer">
           {{ currentImageIndex + 1 }} / {{ offre.imgs.length }} : {{ offre.titre }}
         </div>
@@ -227,7 +468,62 @@ const prevImage = () => {
   padding: 0 20px;
 }
 
-/* --- GALERIE (Au dessus du reste) --- */
+/* =============================================
+   BARRE D'ÉDITION (Toggle + Save)
+   ============================================= */
+.edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-toggle-edit {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #334155;
+}
+
+.btn-toggle-edit:hover { border-color: #2563eb; color: #2563eb; }
+.btn-toggle-edit.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.btn-save-all {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  background: #16a34a;
+  color: white;
+  transition: all 0.2s;
+}
+.btn-save-all:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
+.btn-save-all:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.save-msg {
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+.save-msg.success { background: #dcfce7; color: #166534; }
+.save-msg.error { background: #fee2e2; color: #991b1b; }
+
+/* =============================================
+   GALERIE (Mode visiteur)
+   ============================================= */
 .gallery-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -235,7 +531,7 @@ const prevImage = () => {
   height: 450px;
   border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 40px; /* Espace avant le texte */
+  margin-bottom: 40px;
   cursor: pointer;
 }
 
@@ -262,7 +558,6 @@ const prevImage = () => {
 
 .main-photo:hover, .sub-photo:hover { opacity: 0.9; }
 
-/* BOUTONS PHOTO */
 .btn-see-photos {
   position: absolute; bottom: 20px; left: 20px;
   background: white; border: none; padding: 8px 16px; border-radius: 8px;
@@ -274,57 +569,210 @@ const prevImage = () => {
   background: rgba(0,0,0,0.6); color: white; padding: 5px 12px;
   border-radius: 20px; font-size: 0.8rem; font-weight: 600;
 }
-
-/* --- CONTENU SPLIT (Texte vs Static Card) --- */
-.content-split {
-  display: grid;
-  grid-template-columns: 2fr 1fr; /* 2/3 texte, 1/3 carte */
-  gap: 50px; /* Espace entre texte et carte */
-  align-items: start; /* CRUCIAL pour le static */
+.more-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700;
 }
 
-/* --- TEXTE --- */
-.header-line { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  flex-wrap: wrap; /* Pour le mobile */
+/* =============================================
+   GALERIE EN MODE ÉDITION
+   ============================================= */
+.edit-images-section {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  border: 2px dashed #cbd5e1;
+}
+
+.edit-images-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: #334155;
+}
+
+.edit-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.edit-image-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+
+.edit-image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-img {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(239, 68, 68, 0.9); color: white;
+  border: none; border-radius: 50%;
+  width: 28px; height: 28px;
+  cursor: pointer; font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+.edit-image-card:hover .btn-remove-img { opacity: 1; }
+
+.add-image-card {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafbfc;
+}
+.add-image-card:hover { border-color: #2563eb; background: #f0f9ff; }
+
+.add-icon { font-size: 2rem; color: #94a3b8; }
+.add-text { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid #2563eb;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* =============================================
+   CONTENU SPLIT
+   ============================================= */
+.content-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 50px;
+  align-items: start;
+}
+
+/* --- MODE VISITEUR (Texte) --- */
+.header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 
-.rating-block {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Espace entre les étoiles et le texte */
-}
-
-.avis-link { 
-  color: #2563eb; 
-  text-decoration: underline; 
-  font-weight: 600; 
-  font-size: 0.9rem;
-  /* Petit ajustement pour aligner le texte parfaitement avec les étoiles */
-  padding-top: 3px; 
+.rating-block { display: flex; align-items: center; gap: 8px; }
+.avis-link {
+  color: #2563eb; text-decoration: underline; font-weight: 600;
+  font-size: 0.9rem; padding-top: 3px;
 }
 
 .location { color: #64748b; font-size: 1.1rem; margin: 10px 0 20px 0; font-weight: 500; }
 .tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
 .tag { background: white; padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; border: 1px solid #e2e8f0; }
 .separator { height: 1px; background: #cbd5e1; margin: 30px 0; width: 100%; }
-.description { line-height: 1.6; color: #334155; margin-bottom: 30px; }
-.equip-list { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.equip { background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; font-weight: 600; }
+.description { line-height: 1.6; color: #334155; margin-bottom: 30px; white-space: pre-wrap; }
 
-/* --- RIGHT SIDEBAR (STATIC) --- */
-.right-sidebar {
-  /* Le conteneur doit avoir la hauteur naturelle du contenu */
-  height: 100%; 
+/* =============================================
+   MODE ÉDITION (Formulaire inline)
+   ============================================= */
+.edit-group {
+  margin-bottom: 20px;
 }
+
+.edit-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
+}
+.edit-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.edit-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #334155;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
+}
+.edit-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.edit-hint { display: block; margin-top: 5px; font-size: 0.85rem; color: #94a3b8; }
+
+/* Tags en édition */
+.edit-tags-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.edit-tag-btn {
+  padding: 8px 14px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #334155;
+}
+.edit-tag-btn:hover { border-color: #2563eb; background: #f0f9ff; }
+.edit-tag-btn.selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+/* =============================================
+   CARTE PRIX (Sidebar)
+   ============================================= */
+.right-sidebar { height: 100%; }
 
 .static-card {
   position: static;
-  top: 110px; /* Décale par rapport au haut de l'écran */
+  top: 110px;
   background: white;
   padding: 30px;
   border-radius: 20px;
@@ -335,9 +783,35 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .price { font-size: 2.5rem; font-weight: 800; color: #2563eb; display: block; }
 .sub-price { color: #64748b; font-size: 0.9rem; font-weight: 600; }
 .divider { height: 1px; background: #e2e8f0; margin: 20px 0; }
-.details-list .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #334155; }
+.details-list .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.95rem; color: #334155; }
+.text-red { color: #ef4444; }
 
-/* --- LIGHTBOX (Fixe) --- */
+/* Carte en mode édition */
+.edit-card-group {
+  margin-bottom: 14px;
+}
+
+.edit-input-sm {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
+}
+.edit-input-sm:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* =============================================
+   LIGHTBOX
+   ============================================= */
 .lightbox {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.95); z-index: 9999;
@@ -349,7 +823,6 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 }
 .lightbox-img { max-width: 100%; max-height: 100%; border-radius: 5px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 
-/* BOUTONS NAV FIXES */
 .nav-btn {
   position: absolute; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: white; font-size: 3rem;
@@ -361,7 +834,13 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .close-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 2rem; cursor: pointer; z-index: 10001; }
 .lightbox-footer { margin-top: 20px; color: white; font-size: 1.1rem; }
 
-/* --- MOBILE --- */
+/* Transition */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* =============================================
+   MOBILE
+   ============================================= */
 @media (max-width: 900px) {
   .content-split { grid-template-columns: 1fr; }
   .gallery-grid { height: 300px; grid-template-columns: 1fr; }
@@ -370,5 +849,7 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
   .nav-btn { font-size: 2rem; padding: 10px; }
   .nav-btn.prev { left: 5px; }
   .nav-btn.next { right: 5px; }
+  .edit-toolbar { flex-direction: column; align-items: stretch; }
+  .edit-images-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
 </style>
