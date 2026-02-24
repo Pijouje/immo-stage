@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/i18n": "^10.2.3",
     "@prisma/client": "^5.22.0",
     "@sidebase/nuxt-auth": "^1.1.1",
     "@vueuse/core": "^14.2.1",

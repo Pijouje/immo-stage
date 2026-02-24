@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "offers": "OFFRES",
+    "contact": "CONTACT",
+    "profile": "Mon Profil",
+    "logout": "Déconnexion",
+    "createOffer": "+ CRÉER UNE OFFRE"
+  },
+  "home": {
+    "title1": "LOUEZ VOTRE FUTUR",
+    "title2": "CHEZ-VOUS EN",
+    "title3": "TOUTE CONFIANCE.",
+    "viewOffers1": "VOIR",
+    "viewOffers2": " LES OFFRES"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "signupNow": "S'inscrire maintenant",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "name": "Nom",
+    "firstname": "Prénom",
+    "studentSpace": "Espace Étudiant",
+    "alreadyAccount": "Déjà un compte ?"
+  },
+  "messages": {
+    "title": "Mes Messages",
+    "noUsers": "Aucun autre utilisateur trouvé",
+    "selectConversation": "Sélectionner la conversation pour plus d'infos",
+    "typeMessage": "Écrivez votre texte...",
+    "send": "Envoyer",
+    "sharedFiles": "Fichiers partagés avec {name}",
+    "download": "Télécharger",
+    "delete": "Supprimer",
+    "online": "En ligne"
+  },
+  "password": {
+    "minLength": "12 Caractères",
+    "uppercase": "1 Majuscule",
+    "lowercase": "1 Minuscule",
+    "number": "1 Chiffre",
+    "special": "1 Symbole ({'@'}$!%*?&_)",
+    "reset": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre email pour recevoir un lien",
+      "sendLink": "Envoyer le lien",
+      "sending": "Envoi en cours...",
+      "backToLogin": "Retour à la connexion",
+      "newPasswordTitle": "Nouveau mot de passe",
+      "enterNew": "Entrez votre nouveau mot de passe",
+      "confirm": "Confirmez le mot de passe",
+      "resetButton": "Réinitialiser",
+      "resetting": "Réinitialisation..."
+    }
+  }
+}

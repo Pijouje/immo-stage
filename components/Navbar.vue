@@ -80,7 +80,7 @@ onUnmounted(() => {
             </button>
 
             <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
-                <NuxtLink to="/offres" @click="menuOuvert = false">OFFRES</NuxtLink>
+                <NuxtLink to="/offres" @click="menuOuvert = false">{{ $t('nav.offers') }}</NuxtLink>
 
                 <NuxtLink
                   v-if="canCreateOffre"
@@ -88,11 +88,10 @@ onUnmounted(() => {
                   @click="menuOuvert = false"
                   class="btn-create-offre"
                 >
-                  + CRÉER UNE OFFRE
+                  {{ $t('nav.createOffer') }}
                 </NuxtLink>
 
-                <NuxtLink to="/contact" @click="menuOuvert = false">CONTACT</NuxtLink>
-                <AutoTranslate />
+                <NuxtLink to="/contact" @click="menuOuvert = false">{{ $t('nav.contact') }}</NuxtLink>
 
                 <template v-if="!isAuthenticated">
                     <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>

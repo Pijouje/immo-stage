@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "offers": "OFFERS",
+    "contact": "CONTACT",
+    "profile": "My Profile",
+    "logout": "Logout",
+    "createOffer": "+ CREATE OFFER"
+  },
+  "home": {
+    "title1": "RENT YOUR FUTURE",
+    "title2": "HOME WITH",
+    "title3": "COMPLETE CONFIDENCE.",
+    "viewOffers1": "VIEW",
+    "viewOffers2": "OFFERSS"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "signupNow": "Sign up now",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "name": "Last name",
+    "firstname": "First name",
+    "studentSpace": "Student Area",
+    "alreadyAccount": "Already have an account?"
+  },
+  "messages": {
+    "title": "My Messages",
+    "noUsers": "No other users found",
+    "selectConversation": "Select conversation for more info",
+    "typeMessage": "Type your message...",
+    "send": "Send",
+    "sharedFiles": "Files shared with {name}",
+    "download": "Download",
+    "delete": "Delete",
+    "online": "Online"
+  },
+  "password": {
+    "minLength": "12 Characters",
+    "uppercase": "1 Uppercase",
+    "lowercase": "1 Lowercase",
+    "number": "1 Number",
+    "special": "1 Symbol ({'@'}$!%*?&_)",
+    "reset": {
+      "title": "Forgot password",
+      "subtitle": "Enter your email to receive a reset link",
+      "sendLink": "Send link",
+      "sending": "Sending...",
+      "backToLogin": "Back to login",
+      "newPasswordTitle": "New password",
+      "enterNew": "Enter your new password",
+      "confirm": "Confirm password",
+      "resetButton": "Reset",
+      "resetting": "Resetting..."
+    }
+  }
+}

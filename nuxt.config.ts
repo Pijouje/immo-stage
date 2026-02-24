@@ -1,8 +1,6 @@
-
 export default defineNuxtConfig({
-
   compatibilityDate: '2026-02-05',
-  modules: ['@sidebase/nuxt-auth', '@nuxtjs/seo'],
+  modules: ['@sidebase/nuxt-auth', '@nuxtjs/seo', '@nuxtjs/i18n'],
 
   site: {
     url: 'https://ton-site-stage.com',
@@ -19,22 +17,9 @@ export default defineNuxtConfig({
   auth: {
     baseURL: process.env.AUTH_ORIGIN ?? 'http://localhost:3000/api/auth',
     provider: {
-        type: 'authjs'
+      type: 'authjs'
     },
-    globalAppMiddleware: {
-      isEnabled: false // Important : on désactive le middleware global
-    },
-    session: {
-      enableRefreshPeriodically: 60000, // Rafraîchit la session toutes les 60 secondes
-      enableRefreshOnWindowFocus: true
-    }
-  },
-
-  runtimeConfig: {
-    authSecret: process.env.AUTH_SECRET,
-    public: {
-      authOrigin: process.env.AUTH_ORIGIN ?? 'http://localhost:3000'
-    }
+    globalAppMiddleware: false // ← Simplifié
   },
 
   // SECURITE : Headers de sécurité HTTP
@@ -48,6 +33,38 @@ export default defineNuxtConfig({
         'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
       }
     }
-  }
+  },
 
+  i18n: {
+    locales: [
+      {
+        code: 'fr',
+        iso: 'fr-FR',
+        name: 'Français',
+        file: 'fr.json'
+      },
+      {
+        code: 'en',
+        iso: 'en-US',
+        name: 'English',
+        file: 'en.json'
+      }
+    ],
+    lazy: true,
+    langDir: 'locales',
+    defaultLocale: 'fr',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_locale',
+      redirectOn: 'root',
+      alwaysRedirect: true,
+      fallbackLocale: 'fr'
+    }
+  },
+
+  sitemap: {
+    xsl: false,
+    i18n: true
+  }
 })

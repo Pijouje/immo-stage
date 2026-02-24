@@ -51,13 +51,14 @@ watch(() => route.fullPath, () => {
     <!-- Contenu Hero par-dessus la vidéo -->
     <div class="hero-content">
       <h1 class="main-title">
-        LOUEZ VOTRE FUTUR<br>
-        CHEZ-VOUS EN<br>
-        TOUTE CONFIANCE.
+        {{ $t('home.title1') }}<br>
+        {{ $t('home.title2') }}<br>
+        {{ $t('home.title3') }}
       </h1>
 
       <NuxtLink to="/offres" class="cta-button">
-        VOIR LES<br>OFFRES
+        {{ $t('home.viewOffers1') }} <br>
+         {{ $t('home.viewOffers2') }}
       </NuxtLink>
     </div>
 

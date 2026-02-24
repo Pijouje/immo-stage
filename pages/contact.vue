@@ -278,7 +278,7 @@ const formatHeureMessage = (date) => {
   <div class="page">
     <div class="carte" :class="{ 'mode-chat': conversationOuverte }">
       <div class="partie-gauche">
-        <h2>Mes Messages</h2>
+        <h2>{{ $t('messages.title') }}</h2>
         
         <div v-if="contacts && contacts.length > 0">
             <div 
@@ -310,7 +310,7 @@ const formatHeureMessage = (date) => {
             </div>
         </div>
         <div v-else class="aucun-utilisateur">
-            Aucun autre utilisateur trouvé.
+            {{ $t('messages.noUsers') }}
         </div>
 
       </div>
@@ -368,7 +368,7 @@ const formatHeureMessage = (date) => {
                 </div>
             </template>
             <div v-else class="message-attente">
-                <p>👈 Sélectionner la conversation pour plus d'infos</p>
+                <p>👈 {{ $t('messages.selectConversation') }}</p>
             </div>
 
         </div>
@@ -382,15 +382,15 @@ const formatHeureMessage = (date) => {
             />
             <button class="btn-trombone" @click="inputFichier.click()" title="Joindre un fichier">📎</button>
             <button class="btn-trombone" @click="ouvrirModalDocuments" title="Partager depuis mes documents">📋</button>
-            <input type="text" v-model="nouveauMessage" placeholder="Ecrivez votre texte ..." class="champ-texte" @keyup.enter="envoyerMessages" />
-            <button class="btn-envoyer" @click="envoyerMessages">Envoyer</button>
+            <input type="text" v-model="nouveauMessage" :placeholder="$t('messages.typeMessage')" class="champ-texte" @keyup.enter="envoyerMessages" />
+            <button class="btn-envoyer" @click="envoyerMessages">{{ $t('messages.send') }}</button>
         </div>
 
       </div>
     </div>
     <div v-if="contactId && fichiersPartages.length > 0" class="panneau-fichiers-externe">
         <div class="fichiers-container">
-            <h3>📁 Fichiers partagés avec {{ contactActuel?.prenom }} {{ contactActuel?.nom }} ({{ fichiersPartages.length }})</h3>
+            <h3>📁 {{ $t('messages.sharedFiles', { name: contactActuel?.prenom + ' ' + contactActuel?.nom }) }} ({{ fichiersPartages.length }})</h3>
             
             <div v-if="erreurSauvegarde" class="sauvegarde-erreur">{{ erreurSauvegarde }}</div>
             <div class="fichiers-liste">
@@ -412,7 +412,7 @@ const formatHeureMessage = (date) => {
 
                     <div class="fichier-actions-externe">
                         <a :href="sanitizeUrl(fichier.contenu)" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
-                            ⬇ Télécharger
+                            ⬇ {{ $t('messages.download') }}
                         </a>
                         <button
                             class="btn-action-externe btn-sauvegarder-externe"
@@ -422,7 +422,7 @@ const formatHeureMessage = (date) => {
                             {{ sauvegardesFaites.includes(fichier.id) ? '✓ Sauvegardé' : sauvegardeEnCours.includes(fichier.id) ? '...' : '💾 Mes docs' }}
                         </button>
                         <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
-                            🗑️ Supprimer
+                            🗑️ {{ $t('messages.delete') }}
                         </button>
                     </div>
                 </div>
