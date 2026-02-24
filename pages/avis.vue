@@ -42,8 +42,16 @@ const canManage = computed(() => isAdmin.value || isProprietaire.value)
 
 // ─── SÉLECTION DE L'OFFRE ────────────────────────────────────────────────────
 
-// On récupère toutes les offres pour le sélecteur
-const { data: offres } = await useFetch<Offre[]>('/api/offres')
+// L'API /api/offres retourne un objet paginé { offres: [...], total, page, totalPages }
+interface OffresResponse {
+  offres: Offre[]
+  total: number
+  page: number
+  totalPages: number
+}
+
+const { data: offresData } = await useFetch<OffresResponse>('/api/offres')
+const offres = computed(() => offresData.value?.offres ?? [])
 
 const route = useRoute()
 const offreSelectionnee = ref<number | null>(null)
