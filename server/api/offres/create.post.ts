@@ -95,6 +95,7 @@ export default defineEventHandler(async (event) => {
         charges: body.charges ? Number(body.charges) : 0,
         caution: body.caution ? Number(body.caution) : null,
         coloc: body.coloc ? Number(body.coloc) : 0,
+        chambresDisponibles: body.chambresDisponibles ? Number(body.chambresDisponibles) : null,
         surface: body.surface ? Number(body.surface) : null,
         tags: tags.length > 0 ? tags : undefined,
 
