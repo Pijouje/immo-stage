@@ -4,14 +4,32 @@ export default defineNuxtConfig({
 
   site: {
     url: 'https://ton-site-stage.com',
-    name: 'Agence Immo',
-    description: 'Location appartement étudiant et jeune actif.',
+    name: 'Agence Immo - Location Étudiante Amiens',
+    description: 'Trouvez votre logement étudiant à Amiens : appartements meublés, colocations, studios. Location vérifiée avec avis de locataires.',
     defaultLocale: 'fr',
   },
 
   app: {
     pageTransition: { name: 'hero-flow', mode: 'out-in' },
-    layoutTransition: { name: 'layout-fade', mode: 'out-in' }
+    layoutTransition: { name: 'layout-fade', mode: 'out-in' },
+
+    head: {
+      htmlAttrs: { lang: 'fr' },
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
+      ],
+      meta: [
+        { name: 'theme-color', content: '#01111d' },
+        { name: 'format-detection', content: 'telephone=no' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:locale', content: 'fr_FR' },
+        { property: 'og:site_name', content: 'Agence Immo Amiens' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+      ],
+    },
   },
 
   auth: {
@@ -19,10 +37,10 @@ export default defineNuxtConfig({
     provider: {
       type: 'authjs'
     },
-    globalAppMiddleware: false // ← Simplifié
+    globalAppMiddleware: false
   },
 
-  // SECURITE : Headers de sécurité HTTP
+  // SECURITE + PERFORMANCE : Headers HTTP
   routeRules: {
     '/**': {
       headers: {
@@ -30,9 +48,16 @@ export default defineNuxtConfig({
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
       }
-    }
+    },
+    // Cache statique long pour les assets
+    '/images/**': {
+      headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
+    },
+    '/videos/**': {
+      headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
+    },
   },
 
   i18n: {
@@ -66,5 +91,10 @@ export default defineNuxtConfig({
   sitemap: {
     xsl: false,
     i18n: true
-  }
+  },
+
+  // SEO : Configuration du module
+  seo: {
+    redirectToCanonicalSiteUrl: true,
+  },
 })
