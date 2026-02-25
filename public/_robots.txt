@@ -1,2 +1,30 @@
+# Robots.txt - Agence Immo Amiens
 User-Agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+Disallow: /profile
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /mot-de-passe-oublie
+Disallow: /recuperer-mot-de-passe
+
+# Sitemap
+Sitemap: https://ton-site-stage.com/sitemap.xml
+
+# Crawl-delay pour bots respectueux
+User-Agent: GPTBot
+Allow: /
+Allow: /offres/
+Allow: /avis
+
+User-Agent: Google-Extended
+Allow: /
+
+User-Agent: ChatGPT-User
+Allow: /
+
+User-Agent: PerplexityBot
+Allow: /
+
+User-Agent: ClaudeBot
+Allow: /
