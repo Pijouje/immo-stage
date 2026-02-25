@@ -102,28 +102,28 @@ const retryFetch = async () => {
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <span class="btn-text">Créer une offre</span>
+        <span class="btn-text">{{ $t('offers.createOffer') }}</span>
       </NuxtLink>
 
       <div v-if="error" class="state-box error-box" role="alert">
         <div class="icon" aria-hidden="true">⚠️</div>
-        <h2>Oups, petit problème technique</h2>
-        <p>Impossible de contacter le serveur.</p>
-        <button @click="retryFetch" class="btn-retry">Réessayer la connexion</button>
+        <h2>{{ $t('offers.errorTitle') }}</h2>
+        <p>{{ $t('offers.errorMessage') }}</p>
+        <button @click="retryFetch" class="btn-retry">{{ $t('offers.retry') }}</button>
       </div>
 
       <div v-else-if="pending" class="state-box loading-box" aria-live="polite">
         <div class="loader" aria-hidden="true"></div>
-        <p>Recherche des meilleures offres...</p>
+        <p>{{ $t('offers.loading') }}</p>
       </div>
 
       <div v-else-if="!offres || offres.length === 0" class="state-box empty-box">
         <div class="icon" aria-hidden="true">📭</div>
-        <h2>Aucune annonce pour le moment</h2>
-        <p>Revenez un peu plus tard, nos propriétaires postent régulièrement !</p>
+        <h2>{{ $t('offers.noOffers') }}</h2>
+        <p>{{ $t('offers.noOffersMessage') }}</p>
 
         <NuxtLink v-if="canCreateOffre" to="/offres/create" class="btn-create-first">
-          + Créer la première offre
+          {{ $t('offers.createFirst') }}
         </NuxtLink>
       </div>
 
@@ -146,7 +146,7 @@ const retryFetch = async () => {
             <p class="price"><strong>{{ offre.prix }}€</strong> /mois</p>
             <div class="card-action">
              <OffreBouton :to="`/offres/${offre.id}`">
-               Voir l'annonce
+               {{ $t('offers.viewOffer') }}
              </OffreBouton>
             </div>
           </div>
@@ -154,9 +154,9 @@ const retryFetch = async () => {
       </div>
 
       <nav v-if="totalPages > 1" class="pagination" aria-label="Pagination des offres">
-        <button :disabled="page <= 1" @click="page--" class="page-btn" aria-label="Page précédente">← Précédent</button>
-        <span class="page-info" aria-current="page">Page {{ page }} / {{ totalPages }}</span>
-        <button :disabled="page >= totalPages" @click="page++" class="page-btn" aria-label="Page suivante">Suivant →</button>
+        <button :disabled="page <= 1" @click="page--" class="page-btn" aria-label="Page précédente">{{ $t('common.prev') }}</button>
+        <span class="page-info" aria-current="page">{{ $t('common.page', { page: page, total: totalPages }) }}</span>
+        <button :disabled="page >= totalPages" @click="page++" class="page-btn" aria-label="Page suivante">{{ $t('common.next') }}</button>
       </nav>
 
     </div>

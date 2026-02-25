@@ -9,6 +9,7 @@ definePageMeta({
 // Vérification des permissions
 const { data: session } = useAuth()
 const router = useRouter()
+const { t } = useI18n()
 
 // Vérifier que l'utilisateur a le bon rôle
 const hasPermission = computed(() => {
@@ -83,11 +84,11 @@ const ajouterImages = async (files) => {
 
   for (const file of files) {
     if (!typesAutorises.includes(file.type)) {
-      uploadError.value = `"${file.name}" : format non autorisé (JPG, PNG ou WebP)`
+      uploadError.value = t('errors.formatNotAllowed', { name: file.name })
       continue
     }
     if (file.size > tailleMax) {
-      uploadError.value = `"${file.name}" : trop lourd (max 5 Mo)`
+      uploadError.value = t('errors.fileSizeTooLarge', { name: file.name })
       continue
     }
 
@@ -100,7 +101,7 @@ const ajouterImages = async (files) => {
     try {
       imageEntry.url = await uploadImage(file)
     } catch (e) {
-      uploadError.value = `Erreur lors de l'upload de "${file.name}"`
+      uploadError.value = t('errors.imageUploadFailed', { name: file.name })
       console.error(e)
     } finally {
       imageEntry.uploading = false
@@ -146,12 +147,12 @@ const validerFormulaire = () => {
   errorMessage.value = ''
 
   if (!form.value.titre || !form.value.description || !form.value.prix || !form.value.lieu) {
-    errorMessage.value = 'Veuillez remplir tous les champs obligatoires (titre, description, prix, lieu)'
+    errorMessage.value = t('errors.requiredFields')
     return false
   }
 
   if (isNaN(Number(form.value.prix)) || Number(form.value.prix) <= 0) {
-    errorMessage.value = 'Le prix doit être un nombre positif'
+    errorMessage.value = t('errors.positivePrice')
     return false
   }
 
@@ -189,7 +190,7 @@ const soumettreOffre = async () => {
       }
     })
 
-    successMessage.value = 'Offre créée avec succès ! Redirection...'
+    successMessage.value = t('offers.create.successMessage')
     
     // Rediriger vers la page de l'offre créée après 2 secondes
     setTimeout(() => {
@@ -198,7 +199,7 @@ const soumettreOffre = async () => {
 
   } catch (error) {
     console.error('Erreur:', error)
-    errorMessage.value = error.data?.statusMessage || 'Une erreur est survenue lors de la création de l\'offre'
+    errorMessage.value = error.data?.statusMessage || t('errors.createOfferError')
   } finally {
     loading.value = false
   }
@@ -234,16 +235,16 @@ const reinitialiserFormulaire = () => {
       <!-- Message si pas de permission -->
       <div v-if="!hasPermission" class="no-permission">
         <div class="icon">🔒</div>
-        <h2>Accès refusé</h2>
-        <p>Seuls les administrateurs et propriétaires peuvent créer des offres.</p>
-        <NuxtLink to="/" class="btn-back">Retour à l'accueil</NuxtLink>
+        <h2>{{ $t('offers.create.noPermissionTitle') }}</h2>
+        <p>{{ $t('offers.create.noPermissionMessage') }}</p>
+        <NuxtLink to="/" class="btn-back">{{ $t('offers.create.noPermissionBack') }}</NuxtLink>
       </div>
 
       <!-- Formulaire -->
       <div v-else class="form-card">
         <div class="header">
-          <h1>Créer une nouvelle offre</h1>
-          <p class="subtitle">Remplissez les informations de votre logement</p>
+          <h1>{{ $t('offers.create.pageTitle') }}</h1>
+          <p class="subtitle">{{ $t('offers.create.pageSubtitle') }}</p>
         </div>
 
         <!-- Messages -->
@@ -258,7 +259,7 @@ const reinitialiserFormulaire = () => {
 
           <!-- Informations principales -->
           <div class="section">
-            <h2 class="section-title">Informations principales</h2>
+            <h2 class="section-title">{{ $t('offers.create.sections.main') }}</h2>
 
             <div class="form-group">
               <label for="titre">{{ $t('offers.create.fields.titleLabel') }}</label>
@@ -273,26 +274,26 @@ const reinitialiserFormulaire = () => {
             </div>
 
             <div class="form-group">
-              <label for="description">Description *</label>
-              <textarea 
-                v-model="form.description" 
-                id="description" 
+              <label for="description">{{ $t('offers.create.fields.descriptionLabel') }}</label>
+              <textarea
+                v-model="form.description"
+                id="description"
                 rows="6"
-                placeholder="Décrivez votre logement en détail..."
+                :placeholder="$t('offers.create.fields.descriptionPlaceholder')"
                 class="input textarea"
                 required
               ></textarea>
-              <small class="help-text">{{ form.description.length }} caractères</small>
+              <small class="help-text">{{ $t('offers.create.fields.descChars', { n: form.description.length }) }}</small>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="prix">Loyer mensuel (€) *</label>
-                <input 
-                  v-model="form.prix" 
-                  type="number" 
-                  id="prix" 
-                  placeholder="500"
+                <label for="prix">{{ $t('offers.create.fields.rentLabel') }}</label>
+                <input
+                  v-model="form.prix"
+                  type="number"
+                  id="prix"
+                  :placeholder="$t('offers.create.fields.rentPlaceholder')"
                   class="input"
                   min="0"
                   required
@@ -300,12 +301,12 @@ const reinitialiserFormulaire = () => {
               </div>
 
               <div class="form-group">
-                <label for="charges">Charges (€)</label>
-                <input 
-                  v-model="form.charges" 
-                  type="number" 
-                  id="charges" 
-                  placeholder="50"
+                <label for="charges">{{ $t('offers.create.fields.chargesLabel') }}</label>
+                <input
+                  v-model="form.charges"
+                  type="number"
+                  id="charges"
+                  :placeholder="$t('offers.create.fields.chargesPlaceholder')"
                   class="input"
                   min="0"
                 >
@@ -314,24 +315,24 @@ const reinitialiserFormulaire = () => {
 
             <div class="form-row">
               <div class="form-group">
-                <label for="lieu">Ville / Quartier *</label>
-                <input 
-                  v-model="form.lieu" 
-                  type="text" 
-                  id="lieu" 
-                  placeholder="Amiens Centre"
+                <label for="lieu">{{ $t('offers.create.fields.locationLabel') }}</label>
+                <input
+                  v-model="form.lieu"
+                  type="text"
+                  id="lieu"
+                  :placeholder="$t('offers.create.fields.locationPlaceholder')"
                   class="input"
                   required
                 >
               </div>
 
               <div class="form-group">
-                <label for="surface">Surface (m²)</label>
-                <input 
-                  v-model="form.surface" 
-                  type="number" 
-                  id="surface" 
-                  placeholder="45"
+                <label for="surface">{{ $t('offers.create.fields.surfaceLabel') }}</label>
+                <input
+                  v-model="form.surface"
+                  type="number"
+                  id="surface"
+                  :placeholder="$t('offers.create.fields.surfacePlaceholder')"
                   class="input"
                   min="0"
                 >
@@ -340,24 +341,24 @@ const reinitialiserFormulaire = () => {
 
             <div class="form-row">
               <div class="form-group">
-                <label for="caution">Caution (€)</label>
-                <input 
-                  v-model="form.caution" 
-                  type="number" 
-                  id="caution" 
-                  placeholder="1000"
+                <label for="caution">{{ $t('offers.create.fields.depositLabel') }}</label>
+                <input
+                  v-model="form.caution"
+                  type="number"
+                  id="caution"
+                  :placeholder="$t('offers.create.fields.depositPlaceholder')"
                   class="input"
                   min="0"
                 >
               </div>
 
               <div class="form-group">
-                <label for="coloc">Nombre de colocataires</label>
+                <label for="coloc">{{ $t('offers.create.fields.roommatesLabel') }}</label>
                 <input
                   v-model="form.coloc"
                   type="number"
                   id="coloc"
-                  placeholder="0"
+                  :placeholder="$t('offers.create.fields.roomatesPlaceholder')"
                   class="input"
                   min="0"
                 >
@@ -366,16 +367,16 @@ const reinitialiserFormulaire = () => {
 
             <div class="form-row">
               <div class="form-group">
-                <label for="chambresDisponibles">Chambres disponibles</label>
+                <label for="chambresDisponibles">{{ $t('offers.create.fields.availableRoomsLabel') }}</label>
                 <input
                   v-model="form.chambresDisponibles"
                   type="number"
                   id="chambresDisponibles"
-                  placeholder="Nombre de chambres restantes"
+                  :placeholder="$t('offers.create.fields.availableRoomsPlaceholder')"
                   class="input"
                   min="0"
                 >
-                <small class="help-text">Laissez vide pour utiliser le nombre de colocataires</small>
+                <small class="help-text">{{ $t('offers.create.fields.availableRoomsHint') }}</small>
               </div>
               <div class="form-group"></div>
             </div>
@@ -383,8 +384,8 @@ const reinitialiserFormulaire = () => {
 
           <!-- Images (Upload fichiers) -->
           <div class="section">
-            <h2 class="section-title">Images du logement</h2>
-            <p class="section-description">Glissez-déposez vos images ou cliquez pour les sélectionner (JPG, PNG, WebP - max 5 Mo)</p>
+            <h2 class="section-title">{{ $t('offers.create.sections.images') }}</h2>
+            <p class="section-description">{{ $t('offers.create.images.description') }}</p>
 
             <!-- Zone de drop -->
             <div
@@ -406,9 +407,9 @@ const reinitialiserFormulaire = () => {
               <div class="drop-content">
                 <span class="drop-icon">📷</span>
                 <span class="drop-text">
-                  {{ isDragging ? 'Déposez vos images ici' : 'Cliquez ou glissez vos images ici' }}
+                  {{ isDragging ? $t('offers.create.images.dropHere') : $t('offers.create.images.clickOrDrop') }}
                 </span>
-                <span class="drop-hint">JPG, PNG ou WebP (max 5 Mo par image)</span>
+                <span class="drop-hint">{{ $t('offers.create.images.hint') }}</span>
               </div>
             </div>
 
@@ -430,8 +431,8 @@ const reinitialiserFormulaire = () => {
 
           <!-- Équipements -->
           <div class="section">
-            <h2 class="section-title">Équipements et services</h2>
-            <p class="section-description">Sélectionnez les équipements disponibles</p>
+            <h2 class="section-title">{{ $t('offers.create.sections.amenities') }}</h2>
+            <p class="section-description">{{ $t('offers.create.amenities.description') }}</p>
 
             <div class="equipements-grid">
               <button
@@ -455,14 +456,14 @@ const reinitialiserFormulaire = () => {
               class="btn-secondary"
               type="button"
             >
-              Réinitialiser
+              {{ $t('offers.create.resetBtn') }}
             </button>
             <button 
               type="submit" 
               class="btn-primary"
               :disabled="loading"
             >
-              {{ loading ? 'Publication en cours...' : 'Publier l\'offre' }}
+              {{ loading ? $t('offers.create.submitting') : $t('offers.create.submitBtn') }}
             </button>
           </div>
 

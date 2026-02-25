@@ -19,6 +19,7 @@ interface Offre {
   avis: { note: number }[];
 }
 
+const { t } = useI18n()
 const route = useRoute()
 const { data: session } = useAuth()
 
@@ -236,7 +237,7 @@ const addImageFile = async (event: Event) => {
       editForm.value.images.push(result.url)
     }
   } catch (e) {
-    saveError.value = 'Erreur lors de l\'upload de l\'image'
+    saveError.value = t('errors.imageUploadError')
     console.error(e)
   } finally {
     uploadingImage.value = false
@@ -271,13 +272,13 @@ const saveAll = async () => {
         images: editForm.value.images
       }
     })
-    saveMessage.value = 'Modifications enregistrées !'
+    saveMessage.value = t('offers.savedSuccess')
     await refresh()
     // Rester en mode édition pour continuer à modifier si besoin
     // Mettre à jour le formulaire avec les nouvelles données
     setTimeout(() => { saveMessage.value = '' }, 3000)
   } catch (e: any) {
-    saveError.value = e.data?.statusMessage || 'Erreur lors de la sauvegarde'
+    saveError.value = e.data?.statusMessage || t('errors.saveError')
     console.error(e)
   } finally {
     saving.value = false
@@ -325,13 +326,13 @@ const prevImage = () => {
       <!-- BOUTON TOGGLE ÉDITION -->
       <div v-if="canEdit" class="edit-toolbar">
         <button @click="toggleEditMode" class="btn-toggle-edit" :class="{ active: editMode }">
-          <span v-if="editMode">👁️ Vue visiteur</span>
-          <span v-else>✏️ Mode édition</span>
+          <span v-if="editMode">{{ $t('offers.visitorView') }}</span>
+          <span v-else>{{ $t('offers.editMode') }}</span>
         </button>
 
         <template v-if="editMode">
           <button @click="saveAll" :disabled="saving" class="btn-save-all">
-            {{ saving ? 'Enregistrement...' : '💾 Enregistrer tout' }}
+            {{ saving ? $t('offers.saving') : $t('offers.saveAll') }}
           </button>
         </template>
 
@@ -342,7 +343,7 @@ const prevImage = () => {
       <!-- ============ GALERIE ============ -->
       <div v-if="!editMode" class="gallery-grid">
         <div class="main-photo" @click="openGallery(0)" :style="{ backgroundImage: `url(${offre.imgs[0]})` }">
-          <button class="btn-see-photos">📷 Voir les {{ offre.imgs.length }} photos</button>
+          <button class="btn-see-photos">{{ $t('offers.seePhotos', { n: offre.imgs.length }) }}</button>
           <div class="photo-counter">1/{{ offre.imgs.length }}</div>
         </div>
         <div class="sub-photos">
@@ -357,7 +358,7 @@ const prevImage = () => {
 
       <!-- GALERIE EN MODE ÉDITION -->
       <div v-else class="edit-images-section">
-        <h3>📷 Images du logement</h3>
+        <h3>{{ $t('offers.edit.images') }}</h3>
         <div class="edit-images-grid">
           <div v-for="(img, index) in editForm.images" :key="index" class="edit-image-card">
             <img :src="img" alt="Image offre" class="edit-image-thumb">
@@ -368,7 +369,7 @@ const prevImage = () => {
             <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden @change="addImageFile">
             <span v-if="uploadingImage" class="spinner"></span>
             <span v-else class="add-icon">+</span>
-            <span class="add-text">Ajouter</span>
+            <span class="add-text">{{ $t('offers.edit.add') }}</span>
           </label>
         </div>
       </div>
@@ -386,7 +387,7 @@ const prevImage = () => {
               <div class="rating-block">
                 <Etoile :note="offre.rating" />
                 <NuxtLink :to="`/avis?offreId=${offre.id}`" class="avis-link">
-                  {{ offre.avisCount }} avis
+                  {{ $t('reviews.reviewsCount', { n: offre.avisCount }) }}
                 </NuxtLink>
               </div>
             </div>
@@ -398,24 +399,24 @@ const prevImage = () => {
 
             <div class="separator"></div>
 
-            <h2>À propos de ce logement</h2>
+            <h2>{{ $t('offers.about') }}</h2>
             <p class="description">{{ offre.desc }}</p>
           </template>
 
           <!-- MODE ÉDITION -->
           <template v-else>
             <div class="edit-group">
-              <label class="edit-label">Titre</label>
+              <label class="edit-label">{{ $t('offers.edit.titleLabel') }}</label>
               <input v-model="editForm.titre" type="text" class="edit-input" placeholder="Titre de l'annonce">
             </div>
 
             <div class="edit-group">
-              <label class="edit-label">Lieu / Quartier</label>
+              <label class="edit-label">{{ $t('offers.edit.locationLabel') }}</label>
               <input v-model="editForm.lieu" type="text" class="edit-input" placeholder="Amiens, Quartier...">
             </div>
 
             <div class="edit-group">
-              <label class="edit-label">Équipements</label>
+              <label class="edit-label">{{ $t('offers.edit.amenitiesLabel') }}</label>
               <div class="edit-tags-grid">
                 <button
                   v-for="equip in equipementsDisponibles"
@@ -433,9 +434,9 @@ const prevImage = () => {
             <div class="separator"></div>
 
             <div class="edit-group">
-              <label class="edit-label">Description</label>
+              <label class="edit-label">{{ $t('offers.edit.descriptionLabel') }}</label>
               <textarea v-model="editForm.description" class="edit-textarea" rows="8" placeholder="Décrivez le logement..."></textarea>
-              <small class="edit-hint">{{ editForm.description.length }} / 5000 caractères</small>
+              <small class="edit-hint">{{ $t('offers.edit.chars', { n: editForm.description.length }) }}</small>
             </div>
           </template>
 
@@ -449,56 +450,56 @@ const prevImage = () => {
             <template v-if="!editMode">
               <div class="card-header">
                 <span class="price">{{ offre.prix }}€</span>
-                <span class="sub-price">/ mois charges comprises</span>
+                <span class="sub-price">{{ $t('offers.chargesIncluded') }}</span>
               </div>
               <div class="divider"></div>
               <div class="details-list">
                 <div class="row">
-                  <span>Caution :</span>
+                  <span>{{ $t('offers.deposit') }}</span>
                   <strong>{{ offre.caution || 1000 }}€</strong>
                 </div>
                 <div class="row">
-                  <span>Colocation :</span>
-                  <strong>{{ offre.coloc || 3 }} personnes</strong>
+                  <span>{{ $t('offers.roommates') }}</span>
+                  <strong>{{ offre.coloc || 3 }} {{ $t('offers.people') }}</strong>
                 </div>
                 <div class="row">
-                  <span>Chambres dispo :</span>
+                  <span>{{ $t('offers.availableRooms') }}</span>
                   <strong :class="{ 'text-red': (offre.chambresDisponibles ?? offre.coloc) === 0 }">
                     {{ offre.chambresDisponibles ?? offre.coloc }} / {{ offre.coloc || 3 }}
                   </strong>
                 </div>
               </div>
               <OffreBouton to="/contact">
-                Contacter le propriétaire
+                {{ $t('offers.contactOwner') }}
               </OffreBouton>
             </template>
 
             <!-- MODE ÉDITION -->
             <template v-else>
               <div class="edit-card-group">
-                <label class="edit-label">Loyer (€/mois)</label>
+                <label class="edit-label">{{ $t('offers.edit.rentLabel') }}</label>
                 <input v-model.number="editForm.prix" type="number" min="0" class="edit-input-sm">
               </div>
               <div class="edit-card-group">
-                <label class="edit-label">Charges (€)</label>
+                <label class="edit-label">{{ $t('offers.edit.chargesLabel') }}</label>
                 <input v-model.number="editForm.charges" type="number" min="0" class="edit-input-sm">
               </div>
               <div class="divider"></div>
               <div class="edit-card-group">
-                <label class="edit-label">Caution (€)</label>
+                <label class="edit-label">{{ $t('offers.edit.depositLabel') }}</label>
                 <input v-model.number="editForm.caution" type="number" min="0" class="edit-input-sm">
               </div>
               <div class="edit-card-group">
-                <label class="edit-label">Surface (m²)</label>
+                <label class="edit-label">{{ $t('offers.edit.surfaceLabel') }}</label>
                 <input v-model.number="editForm.surface" type="number" min="0" class="edit-input-sm">
               </div>
               <div class="divider"></div>
               <div class="edit-card-group">
-                <label class="edit-label">Nb colocataires</label>
+                <label class="edit-label">{{ $t('offers.edit.roommatesLabel') }}</label>
                 <input v-model.number="editForm.coloc" type="number" min="0" class="edit-input-sm">
               </div>
               <div class="edit-card-group">
-                <label class="edit-label">Chambres disponibles</label>
+                <label class="edit-label">{{ $t('offers.edit.availableRoomsLabel') }}</label>
                 <input v-model.number="editForm.chambresDisponibles" type="number" min="0" class="edit-input-sm">
               </div>
             </template>
