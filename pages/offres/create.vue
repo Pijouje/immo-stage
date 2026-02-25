@@ -261,12 +261,12 @@ const reinitialiserFormulaire = () => {
             <h2 class="section-title">Informations principales</h2>
 
             <div class="form-group">
-              <label for="titre">Titre de l'annonce *</label>
+              <label for="titre">{{ $t('offers.create.fields.titleLabel') }}</label>
               <input 
                 v-model="form.titre" 
                 type="text" 
                 id="titre" 
-                placeholder="Ex: T2 meublé centre-ville Amiens"
+                :placeholder="$t('offers.create.fields.titlePlaceholder')"
                 class="input"
                 required
               >

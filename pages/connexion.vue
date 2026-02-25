@@ -55,25 +55,25 @@ const handleLogin = async() => {
     <div class="Carte">
         <div class="Haut_carte">
             <h1>STUD'LOC.</h1>
-            <div class="soustitre">Espace Étudiant</div>
+            <div class="soustitre">{{ $t('auth.studentSpace') }}</div>
         </div>
 
         <div class="Zone_Onglets">
-            <NuxtLink to="/connexion" class="Onglet actif">Se connecter</NuxtLink>
-            <NuxtLink to="/inscription" class="Onglet inactif">Créer un compte</NuxtLink>
+            <NuxtLink to="/connexion" class="Onglet actif">{{ $t('auth.login') }}</NuxtLink>
+            <NuxtLink to="/inscription" class="Onglet inactif">{{ $t('auth.signup') }}</NuxtLink>
         </div>
 
         <form @submit.prevent="handleLogin" class="Formulaire">
             
             <div class="Groupe_Input">
-                <label for="email">Email</label>
+                <label for="email">{{ $t('auth.email') }}</label>
                 <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
             </div>
 
             <div class="Groupe_Input">
                 <PasswordInput 
                     v-model="password"
-                    label="Mot de passe"
+                    :label="$t('auth.password')"
                     id="password"
                     :required="true"
                 />
@@ -82,10 +82,10 @@ const handleLogin = async() => {
                 {{ errorMessage }}
             </p>
 
-            <Bouton>Accéder à mon espace</Bouton>
+            <Bouton>{{ $t('auth.accessSpace') }}</Bouton>
 
             <NuxtLink to="/mot-de-passe-oublie" class="Lien_Oubli">
-                Mot de passe oublié ?
+                {{ $t('auth.forgotPassword') }}
             </NuxtLink>
 
         </form>
