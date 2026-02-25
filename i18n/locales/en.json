@@ -310,7 +310,7 @@
       "firstname": "First name",
       "lastname": "Last name",
       "newEmail": "New email",
-      "emailPlaceholder": "new@email.com",
+      "emailPlaceholder": "new{'@'}email.com",
       "currentPassword": "Current password",
       "newPassword": "New password",
       "confirmNewPassword": "Confirm new password",

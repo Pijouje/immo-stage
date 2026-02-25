@@ -310,7 +310,7 @@
       "firstname": "Prénom",
       "lastname": "Nom",
       "newEmail": "Nouvel email",
-      "emailPlaceholder": "nouveau@email.com",
+      "emailPlaceholder": "nouveau{'@'}email.com",
       "currentPassword": "Mot de passe actuel",
       "newPassword": "Nouveau mot de passe",
       "confirmNewPassword": "Confirmer le nouveau mot de passe",
