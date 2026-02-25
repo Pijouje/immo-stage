@@ -11,6 +11,7 @@ import { ref, computed } from 'vue'
 
 // Vérification de la session
 const { signOut } = useAuth()
+const { t } = useI18n()
 
 // Fonction de déconnexion
 const handleLogout = () => {
@@ -88,7 +89,7 @@ const saveNameChanges = async () => {
     isEditingName.value = false
     await refresh() // Recharger les données
   } catch (error: any) {
-    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
+    errorMessage.value = error.data?.statusMessage || t('errors.updateError')
   } finally {
     loading.value = false
   }
@@ -112,7 +113,7 @@ const saveEmailChanges = async () => {
     isEditingEmail.value = false
     await refresh()
   } catch (error: any) {
-    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la mise à jour'
+    errorMessage.value = error.data?.statusMessage || t('errors.updateError')
   } finally {
     loading.value = false
   }
@@ -135,12 +136,12 @@ const savePasswordChanges = async () => {
 
   // Validation côté client
   if (!editForm.value.currentPassword || !editForm.value.newPassword || !editForm.value.confirmPassword) {
-    errorMessage.value = 'Veuillez remplir tous les champs'
+    errorMessage.value = t('errors.fillAllFields')
     return
   }
 
   if (editForm.value.newPassword !== editForm.value.confirmPassword) {
-    errorMessage.value = 'Les mots de passe ne correspondent pas'
+    errorMessage.value = t('errors.passwordsNoMatch')
     return
   }
 
@@ -163,7 +164,7 @@ const savePasswordChanges = async () => {
     editForm.value.newPassword = ''
     editForm.value.confirmPassword = ''
   } catch (error: any) {
-    errorMessage.value = error.data?.statusMessage || 'Erreur lors de la modification du mot de passe'
+    errorMessage.value = error.data?.statusMessage || t('errors.passwordChangeError')
   } finally {
     loading.value = false
   }
@@ -188,7 +189,7 @@ const confirmerSuppression = async () => {
     await $fetch('/api/profile/documents/delete', { method: 'POST', body: { id: deletingId.value } })
     await refresh()
   } catch (err: any) {
-    uploadError.value = err.data?.message || 'Erreur lors de la suppression'
+    uploadError.value = err.data?.message || t('errors.deleteError')
   } finally {
     deletingId.value = null
   }
@@ -212,7 +213,7 @@ const onDocumentSelected = async (event: Event) => {
     await $fetch('/api/profile/documents/upload', { method: 'POST', body: formData })
     await refresh()
   } catch (err: any) {
-    uploadError.value = err.data?.message || 'Erreur lors de l\'upload'
+    uploadError.value = err.data?.message || t('errors.uploadError')
   } finally {
     uploadLoading.value = false
     ;(event.target as HTMLInputElement).value = ''
@@ -236,28 +237,28 @@ const isPasswordValid = computed(() =>
     <!-- État de chargement -->
     <div v-if="pending" class="Carte loading-state">
       <div class="loader"></div>
-      <p>Chargement de votre profil...</p>
+      <p>{{ $t('profile.loading') }}</p>
     </div>
 
     <!-- État d'erreur -->
     <div v-else-if="error" class="Carte error-state">
       <div class="icon">⚠️</div>
-      <h3>Erreur de chargement</h3>
+      <h3>{{ $t('profile.errorLoading') }}</h3>
       <p>{{ error.message }}</p>
-      <button @click="() => refresh()" class="btn-retry">Réessayer</button>
+      <button @click="() => refresh()" class="btn-retry">{{ $t('profile.retry') }}</button>
     </div>
 
     <!-- Contenu principal -->
     <div v-else class="Carte">
         <div class="Haut_carte">
-            <h1>Mon Profil</h1>
+            <h1>{{ $t('profile.title') }}</h1>
             <button @click="handleLogout" class="btn-logout-desktop" title="Se déconnecter">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                Déconnexion
+                {{ $t('profile.logout') }}
             </button>
         </div>
 
@@ -295,10 +296,10 @@ const isPasswordValid = computed(() =>
 
             <div class="Section_Securite">
                 <div class="Groupe_Info">
-                    <label>Mot de passe</label>
+                    <label>{{ $t('profile.password') }}</label>
                     <div class="Password_Row">
                         <span class="Password_Value">{{ passwordMasked }}</span>
-                        <button @click="handleEditPassword" class="Lien_Modifier">Modifier</button>
+                        <button @click="handleEditPassword" class="Lien_Modifier">{{ $t('profile.editBtn') }}</button>
                     </div>
                 </div>
             </div>
@@ -306,7 +307,7 @@ const isPasswordValid = computed(() =>
             <div class="Separateur"></div>
 
             <div class="Section_Documents">
-                <h3>Mes documents</h3>
+                <h3>{{ $t('profile.documents.title') }}</h3>
                 
                 <div v-if="documents.length > 0" class="Liste_Documents">
                     <div v-for="doc in documents" :key="doc.id" class="Document_Item">
@@ -322,7 +323,7 @@ const isPasswordValid = computed(() =>
                     </div>
                 </div>
                 <div v-else class="empty-documents">
-                  <p>Aucun document téléchargé pour le moment</p>
+                  <p>{{ $t('profile.documents.none') }}</p>
                 </div>
 
                 <div v-if="uploadError" class="error-message">{{ uploadError }}</div>
@@ -337,7 +338,7 @@ const isPasswordValid = computed(() =>
 
                 <Bouton @click="handleAddDocument" class="Btn_Ajout_Doc" :disabled="uploadLoading">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    {{ uploadLoading ? 'Envoi en cours...' : 'Ajouter un document' }}
+                    {{ uploadLoading ? $t('profile.documents.uploading') : $t('profile.documents.add') }}
                 </Bouton>
             </div>
 
@@ -348,24 +349,24 @@ const isPasswordValid = computed(() =>
     <Transition name="modal">
       <div v-if="isEditingName" class="modal-overlay" @click.self="isEditingName = false">
         <div class="modal-content">
-          <h3>Modifier le nom et prénom</h3>
+          <h3>{{ $t('profile.modals.editName') }}</h3>
           
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           
           <div class="Groupe_Input">
-            <label>Prénom</label>
+            <label>{{ $t('profile.modals.firstname') }}</label>
             <input v-model="editForm.prenom" type="text" class="Input_Style" placeholder="Votre prénom">
           </div>
           
           <div class="Groupe_Input">
-            <label>Nom</label>
+            <label>{{ $t('profile.modals.lastname') }}</label>
             <input v-model="editForm.nom" type="text" class="Input_Style" placeholder="Votre nom">
           </div>
           
           <div class="modal-actions">
-            <button @click="isEditingName = false" class="btn-cancel">Annuler</button>
+            <button @click="isEditingName = false" class="btn-cancel">{{ $t('profile.modals.cancel') }}</button>
             <button @click="saveNameChanges" :disabled="loading" class="btn-save">
-              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ loading ? $t('profile.modals.saving') : $t('profile.modals.save') }}
             </button>
           </div>
         </div>
@@ -376,19 +377,19 @@ const isPasswordValid = computed(() =>
     <Transition name="modal">
       <div v-if="isEditingEmail" class="modal-overlay" @click.self="isEditingEmail = false">
         <div class="modal-content">
-          <h3>Modifier l'email</h3>
+          <h3>{{ $t('profile.modals.editEmail') }}</h3>
           
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           
           <div class="Groupe_Input">
-            <label>Nouvel email</label>
+            <label>{{ $t('profile.modals.newEmail') }}</label>
             <input v-model="editForm.email" type="email" class="Input_Style" placeholder="nouveau@email.com">
           </div>
           
           <div class="modal-actions">
-            <button @click="isEditingEmail = false" class="btn-cancel">Annuler</button>
+            <button @click="isEditingEmail = false" class="btn-cancel">{{ $t('profile.modals.cancel') }}</button>
             <button @click="saveEmailChanges" :disabled="loading" class="btn-save">
-              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ loading ? $t('profile.modals.saving') : $t('profile.modals.save') }}
             </button>
           </div>
         </div>
@@ -399,48 +400,48 @@ const isPasswordValid = computed(() =>
     <Transition name="modal">
       <div v-if="isEditingPassword" class="modal-overlay" @click.self="isEditingPassword = false">
         <div class="modal-content modal-password">
-          <h3>Modifier le mot de passe</h3>
+          <h3>{{ $t('profile.modals.editPassword') }}</h3>
           
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           
           <div class="Groupe_Input">
-            <label>Mot de passe actuel</label>
+            <label>{{ $t('profile.modals.currentPassword') }}</label>
             <input v-model="editForm.currentPassword" type="password" class="Input_Style" placeholder="••••••••">
           </div>
           
           <div class="Groupe_Input">
-            <label>Nouveau mot de passe</label>
+            <label>{{ $t('profile.modals.newPassword') }}</label>
             <input v-model="editForm.newPassword" type="password" class="Input_Style" placeholder="••••••••">
             
             <!-- Checklist de validation -->
             <div v-if="editForm.newPassword.length > 0" class="password-checklist">
               <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
-                <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
+                <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> {{ $t('password.minLength') }}
               </div>
               <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
-                <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+                <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> {{ $t('password.uppercase') }}
               </div>
               <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
-                <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+                <span class="icon">{{ hasLower ? '✔' : '○' }}</span> {{ $t('password.lowercase') }}
               </div>
               <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
-                <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+                <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> {{ $t('password.number') }}
               </div>
               <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
-                <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> {{ $t('password.special') }}
               </div>
             </div>
           </div>
           
           <div class="Groupe_Input">
-            <label>Confirmer le nouveau mot de passe</label>
+            <label>{{ $t('profile.modals.confirmNewPassword') }}</label>
             <input v-model="editForm.confirmPassword" type="password" class="Input_Style" placeholder="••••••••">
           </div>
           
           <div class="modal-actions">
-            <button @click="isEditingPassword = false" class="btn-cancel">Annuler</button>
+            <button @click="isEditingPassword = false" class="btn-cancel">{{ $t('profile.modals.cancel') }}</button>
             <button @click="savePasswordChanges" :disabled="loading || !isPasswordValid" class="btn-save">
-              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ loading ? $t('profile.modals.saving') : $t('profile.modals.save') }}
             </button>
           </div>
         </div>
@@ -451,11 +452,11 @@ const isPasswordValid = computed(() =>
     <Transition name="modal">
       <div v-if="documentASupprimer !== null" class="modal-overlay" @click.self="documentASupprimer = null">
         <div class="modal-content modal-delete">
-          <h3>Supprimer le document</h3>
-          <p>Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.</p>
+          <h3>{{ $t('profile.modals.deleteDocument') }}</h3>
+          <p>{{ $t('profile.modals.deleteDocumentConfirm') }}</p>
           <div class="modal-actions">
-            <button @click="documentASupprimer = null" class="btn-cancel">Annuler</button>
-            <button @click="confirmerSuppression" class="btn-delete">Supprimer</button>
+            <button @click="documentASupprimer = null" class="btn-cancel">{{ $t('profile.modals.cancel') }}</button>
+            <button @click="confirmerSuppression" class="btn-delete">{{ $t('profile.modals.deleteConfirm') }}</button>
           </div>
         </div>
       </div>
@@ -465,11 +466,11 @@ const isPasswordValid = computed(() =>
     <Transition name="modal">
       <div v-if="confirmDeconnexion" class="modal-overlay" @click.self="confirmDeconnexion = false">
         <div class="modal-content modal-delete">
-          <h3>Se déconnecter</h3>
-          <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+          <h3>{{ $t('profile.modals.logoutTitle') }}</h3>
+          <p>{{ $t('profile.modals.logoutConfirm') }}</p>
           <div class="modal-actions">
-            <button @click="confirmDeconnexion = false" class="btn-cancel">Annuler</button>
-            <button @click="confirmerDeconnexion" class="btn-logout-confirm">Se déconnecter</button>
+            <button @click="confirmDeconnexion = false" class="btn-cancel">{{ $t('profile.modals.cancel') }}</button>
+            <button @click="confirmerDeconnexion" class="btn-logout-confirm">{{ $t('profile.modals.confirmLogout') }}</button>
           </div>
         </div>
       </div>

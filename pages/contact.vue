@@ -2,6 +2,7 @@
 
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 definePageMeta({ middleware: 'auth' })
+const { t } = useI18n()
 const { data: session } = useAuth()
 
 const { data: contacts, error, refresh: refreshContacts } = await useFetch('/api/users')
@@ -113,8 +114,8 @@ const formatDate = (date) => {
     
     const hier = new Date(aujourd)
     hier.setDate(hier.getDate() - 1)
-    if (d.toDateString() === hier.toDateString()) return 'Hier'
-    
+    if (d.toDateString() === hier.toDateString()) return t('messages.yesterday')
+
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
 }
 
@@ -126,13 +127,13 @@ const envoyerFichier = async (event) => {
 
     const TAILLE_MAX = 5 * 1024 * 1024;
     if (fichier.size > TAILLE_MAX) {
-        alert("⚠️ Le fichier est trop lourd ! (Max 5 Mo)");
+        alert(t('errors.fileTooLarge'));
         event.target.value = ''
         return;
     }
     const TYPES_AUTORISES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!TYPES_AUTORISES.includes(fichier.type)) {
-        alert("⛔ Type de fichier non autorisé.");
+        alert(t('errors.fileTypeNotAllowed'));
         event.target.value = ''
         return;
     }
@@ -204,7 +205,7 @@ const partagerDocument = async (document) => {
         chargerMessages(true)
         refreshContacts()
     } catch (e) {
-        erreurPartage.value = 'Erreur lors du partage'
+        erreurPartage.value = t('errors.shareError')
     }
 }
 
@@ -224,7 +225,7 @@ const sauvegarderFichier = async (fichier) => {
         })
         sauvegardesFaites.value.push(fichier.id)
     } catch (e) {
-        erreurSauvegarde.value = 'Erreur lors de la sauvegarde'
+        erreurSauvegarde.value = t('errors.saveError')
     } finally {
         sauvegardeEnCours.value = sauvegardeEnCours.value.filter(id => id !== fichier.id)
     }
@@ -248,7 +249,7 @@ const confirmerSuppressionFichier = async () => {
         })
         messages.value = messages.value.filter(m => m.id !== fichier.id)
     } catch (e) {
-        suppressionErreur.value = 'Erreur lors de la suppression'
+        suppressionErreur.value = t('errors.deleteError')
     }
 }
 
@@ -267,7 +268,7 @@ const formatHeureMessage = (date) => {
     const hier = new Date(aujourd)
     hier.setDate(hier.getDate() - 1)
     if (d.toDateString() === hier.toDateString()) {
-        return 'Hier'
+        return t('messages.yesterday')
     }
 
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit'})
@@ -297,13 +298,13 @@ const formatHeureMessage = (date) => {
                     </div>
                     <div class="preview-line">
                         <p class="preview-message" :class="{ 'non-lu': user.nonLus > 0 }">
-                            {{ user.dernierContenu ?? 'Cliquez pour discuter...' }}
+                            {{ user.dernierContenu ?? $t('messages.clickToChat') }}
                         </p>
                         <span v-if="user.nonLus > 0" class="badge">
                             {{ user.nonLus }}
                         </span>
                         <span v-else-if="user.monDernierMessageLu" class="vu-contact">
-                            Vu
+                            {{ $t('messages.seen') }}
                         </span>
                     </div>
                 </div>
@@ -326,18 +327,18 @@ const formatHeureMessage = (date) => {
                     <h3>{{ contactActuel.prenom }} {{ contactActuel.nom }}</h3>
                     <div class="status-container">
                         <span class="pastille-verte"></span>
-                        <span class="status-text">En ligne</span>
+                        <span class="status-text">{{ $t('messages.online') }}</span>
                     </div>
                 </div>
                 <div class="concernant">
                     <div class="Logo_Cercle">🏠</div>
-                    <p>Concernant : T2 Meublé - Saint-Leu</p>
+                    <p>{{ $t('messages.about') }} T2 Meublé - Saint-Leu</p>
                 </div>
             </template>
 
             <template v-else>
                 <div class="chat-info">
-                    <h3>Nom du Contact</h3>
+                    <h3>{{ $t('messages.contactName') }}</h3>
                 </div>
             </template>
         </div>
@@ -362,7 +363,7 @@ const formatHeureMessage = (date) => {
                             </div>
                         </div>
                         <span v-if="msg.expediteurId == Number(session?.user?.id) && msg.lu && estDernierMsgLu(index)"class="vu-texte">
-                            Vu
+                            {{ $t('messages.seen') }}
                         </span>
                     </div>
                 </div>
@@ -419,7 +420,7 @@ const formatHeureMessage = (date) => {
                             @click="sauvegarderFichier(fichier)"
                             :disabled="sauvegardeEnCours.includes(fichier.id) || sauvegardesFaites.includes(fichier.id)"
                         >
-                            {{ sauvegardesFaites.includes(fichier.id) ? '✓ Sauvegardé' : sauvegardeEnCours.includes(fichier.id) ? '...' : '💾 Mes docs' }}
+                            {{ sauvegardesFaites.includes(fichier.id) ? $t('messages.savedToDocs') : sauvegardeEnCours.includes(fichier.id) ? $t('messages.saving') : $t('messages.saveToDocs') }}
                         </button>
                         <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
                             🗑️ {{ $t('messages.delete') }}
@@ -438,7 +439,7 @@ const formatHeureMessage = (date) => {
                 class="btn-telecharger"
                 @click.stop
             >
-                ⬇ Télécharger l'image
+                ⬇ {{ $t('messages.downloadImage') }}
             </a>
         </div>
     </Transition>
@@ -447,13 +448,13 @@ const formatHeureMessage = (date) => {
     <Transition name="modal">
       <div v-if="mesDocumentsModal" class="modal-overlay" @click.self="mesDocumentsModal = false">
         <div class="modal-content modal-docs">
-          <h3>Partager depuis mes documents</h3>
-          <p>Sélectionnez un document à envoyer dans la conversation</p>
+          <h3>{{ $t('messages.shareDocTitle') }}</h3>
+          <p>{{ $t('messages.shareDocSubtitle') }}</p>
 
-          <div v-if="chargementDocuments" class="docs-loading">Chargement...</div>
+          <div v-if="chargementDocuments" class="docs-loading">{{ $t('messages.shareDocLoading') }}</div>
           <div v-else-if="mesDocuments.length === 0" class="docs-vide">
-            Aucun document dans votre profil.<br>
-            <small>Ajoutez-en depuis votre <a href="/profile" target="_blank">page profil</a>.</small>
+            {{ $t('messages.shareDocEmpty') }}<br>
+            <small><a href="/profile" target="_blank">{{ $t('messages.shareDocEmptyLink') }}</a></small>
           </div>
           <div v-else class="docs-liste">
             <div
@@ -464,13 +465,13 @@ const formatHeureMessage = (date) => {
             >
               <span class="doc-icon-modal">📄</span>
               <span class="doc-nom-modal">{{ doc.nom }}</span>
-              <span class="doc-partager-label">Partager →</span>
+              <span class="doc-partager-label">{{ $t('messages.shareDocAction') }}</span>
             </div>
           </div>
 
           <div v-if="erreurPartage" class="modal-error">{{ erreurPartage }}</div>
           <div class="modal-actions">
-            <button @click="mesDocumentsModal = false" class="btn-annuler">Fermer</button>
+            <button @click="mesDocumentsModal = false" class="btn-annuler">{{ $t('messages.shareDocClose') }}</button>
           </div>
         </div>
       </div>
@@ -480,12 +481,12 @@ const formatHeureMessage = (date) => {
     <Transition name="modal">
       <div v-if="fichierASupprimer" class="modal-overlay" @click.self="fichierASupprimer = null">
         <div class="modal-content">
-          <h3>Supprimer le fichier</h3>
-          <p>Voulez-vous vraiment supprimer ce fichier ? Cette action est irréversible.</p>
+          <h3>{{ $t('messages.deleteFileTitle') }}</h3>
+          <p>{{ $t('messages.deleteFileConfirm') }}</p>
           <div v-if="suppressionErreur" class="modal-error">{{ suppressionErreur }}</div>
           <div class="modal-actions">
-            <button @click="fichierASupprimer = null" class="btn-annuler">Annuler</button>
-            <button @click="confirmerSuppressionFichier" class="btn-supprimer">Supprimer</button>
+            <button @click="fichierASupprimer = null" class="btn-annuler">{{ $t('messages.deleteFileCancel') }}</button>
+            <button @click="confirmerSuppressionFichier" class="btn-supprimer">{{ $t('messages.deleteFileConfirmBtn') }}</button>
           </div>
         </div>
       </div>

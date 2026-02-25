@@ -61,6 +61,7 @@ interface AvisResponse {
 // ─── SESSION & RÔLE ──────────────────────────────────────────────────────────
 
 const { data: session } = useAuth()
+const { t } = useI18n()
 
 const isAdmin = computed(() => session.value?.user?.role === 'ADMIN')
 const isProprietaire = computed(() => session.value?.user?.role === 'PROPRIETAIRE')
@@ -111,7 +112,7 @@ const chargerAvis = async () => {
       query: { offreId: offreSelectionnee.value }
     })
   } catch (e: any) {
-    errorAvis.value = e.data?.statusMessage || 'Erreur lors du chargement'
+    errorAvis.value = e.data?.statusMessage || t('errors.loadingError')
   } finally {
     loadingAvis.value = false
   }
@@ -206,11 +207,11 @@ const posterAvis = async () => {
         commentaire: formAvis.value.commentaire
       }
     })
-    successPost.value = 'Votre avis a été publié avec succès !'
+    successPost.value = t('reviews.reviewPublished')
     formAvis.value = { note: 5, commentaire: '' }
     await chargerAvis()
   } catch (e: any) {
-    errorPost.value = e.data?.statusMessage || 'Erreur lors de la publication'
+    errorPost.value = e.data?.statusMessage || t('errors.publishError')
   } finally {
     loadingPost.value = false
   }
@@ -221,13 +222,13 @@ const posterAvis = async () => {
 const suppressionEnCours = ref<number | null>(null)
 
 const supprimerAvis = async (avisId: number) => {
-  if (!confirm('Supprimer cet avis définitivement ?')) return
+  if (!confirm(t('reviews.deleteConfirm'))) return
   suppressionEnCours.value = avisId
   try {
     await $fetch(`/api/avis/${avisId}`, { method: 'DELETE' })
     await chargerAvis()
   } catch (e: any) {
-    alert(e.data?.statusMessage || 'Erreur lors de la suppression')
+    alert(e.data?.statusMessage || t('errors.deleteError'))
   } finally {
     suppressionEnCours.value = null
   }
@@ -259,7 +260,7 @@ const accorderPermission = async () => {
   successGrant.value = ''
 
   if (!grantForm.value.userId || !grantForm.value.offreId) {
-    errorGrant.value = 'Veuillez sélectionner un utilisateur et une offre'
+    errorGrant.value = t('errors.selectUserAndOffer')
     return
   }
 
@@ -275,7 +276,7 @@ const accorderPermission = async () => {
     successGrant.value = res.message
     await chargerAvis()
   } catch (e: any) {
-    errorGrant.value = e.data?.statusMessage || 'Erreur lors de l\'attribution'
+    errorGrant.value = e.data?.statusMessage || t('errors.grantError')
   } finally {
     loadingGrant.value = false
   }
@@ -294,8 +295,7 @@ const getInitiale = (auteur: Auteur) => {
 }
 
 const labelNote = (note: number) => {
-  const labels = ['', 'Décevant', 'Passable', 'Correct', 'Bien', 'Excellent']
-  return labels[note] || ''
+  return note >= 1 && note <= 5 ? t(`reviews.ratings.${note}`) : ''
 }
 </script>
 
@@ -306,13 +306,13 @@ const labelNote = (note: number) => {
     <div class="page-header">
       <div class="header-inner">
         <div class="header-left">
-          <h1>Avis des locataires</h1>
-          <p class="header-sub">Retours d'expérience vérifiés</p>
+          <h1>{{ $t('reviews.title') }}</h1>
+          <p class="header-sub">{{ $t('reviews.subtitle') }}</p>
         </div>
 
         <!-- Sélecteur d'offre -->
         <div class="offre-selector">
-          <label>Logement</label>
+          <label>{{ $t('reviews.property') }}</label>
           <select v-model="offreSelectionnee" class="select-offre">
             <option v-for="o in offres" :key="o.id" :value="o.id">
               {{ o.titre }}
@@ -327,7 +327,7 @@ const labelNote = (note: number) => {
           class="btn-grant"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Accorder un droit d'avis
+          {{ $t('reviews.grantRight') }}
         </button>
       </div>
     </div>
@@ -337,13 +337,13 @@ const labelNote = (note: number) => {
       <!-- ─── CHARGEMENT ───────────────────────────────────────── -->
       <div v-if="loadingAvis" class="state-center">
         <div class="spinner"></div>
-        <p>Chargement des avis...</p>
+        <p>{{ $t('reviews.loading') }}</p>
       </div>
 
       <div v-else-if="errorAvis" class="state-center error-state">
         <span class="icon-big">⚠️</span>
         <p>{{ errorAvis }}</p>
-        <button @click="chargerAvis" class="btn-retry">Réessayer</button>
+        <button @click="chargerAvis" class="btn-retry">{{ $t('common.retry') }}</button>
       </div>
 
       <template v-else>
@@ -352,9 +352,9 @@ const labelNote = (note: number) => {
         <div class="stats-panel" v-if="nbAvis > 0">
           <div class="stats-score">
             <div class="score-number">{{ moyAvis }}</div>
-            <div class="score-label">sur 5</div>
+            <div class="score-label">{{ $t('reviews.outOf5') }}</div>
             <Etoile :note="moyenneNumerique" />
-            <div class="score-count">{{ nbAvis }} avis</div>
+            <div class="score-count">{{ $t('reviews.reviewsCount', { n: nbAvis }) }}</div>
           </div>
 
           <div class="stats-bars">
@@ -373,28 +373,27 @@ const labelNote = (note: number) => {
         <!-- CAS 1 : Utilisateur non connecté -->
         <div v-if="!session" class="form-placeholder">
           <div class="placeholder-icon">🔐</div>
-          <p>Connectez-vous pour voir si vous pouvez laisser un avis.</p>
-          <NuxtLink to="/connexion" class="btn-connect">Se connecter</NuxtLink>
+          <p>{{ $t('reviews.loginToReview') }}</p>
+          <NuxtLink to="/connexion" class="btn-connect">{{ $t('reviews.loginBtn') }}</NuxtLink>
         </div>
 
         <!-- CAS 2 : Déjà posté -->
         <div v-else-if="aDejaPoste" class="form-placeholder already">
           <div class="placeholder-icon">✅</div>
-          <p>Vous avez déjà laissé un avis pour ce logement.</p>
+          <p>{{ $t('reviews.alreadyReviewed') }}</p>
         </div>
 
         <!-- CAS 3 : Pas de permission -->
         <div v-else-if="!peutPoster" class="form-placeholder">
           <div class="placeholder-icon">⏳</div>
-          <p>Vous ne pouvez pas encore laisser d'avis sur ce logement.<br>
-          <small>Cette fonctionnalité est réservée aux locataires vérifiés.</small></p>
+          <p>{{ $t('reviews.noPermission') }}<br><small>{{ $t('reviews.verifiedOnly') }}</small></p>
         </div>
 
         <!-- CAS 4 : Permission accordée → Afficher le formulaire -->
         <div v-else class="form-card">
           <h2 class="form-title">
-            <span class="form-badge">✦ Locataire vérifié</span>
-            Laisser un avis
+            <span class="form-badge">{{ $t('reviews.verifiedBadge') }}</span>
+            {{ $t('reviews.leaveReview') }}
           </h2>
 
           <div v-if="successPost" class="msg-success">✓ {{ successPost }}</div>
@@ -402,7 +401,7 @@ const labelNote = (note: number) => {
 
           <!-- Sélecteur d'étoiles interactif -->
           <div class="stars-picker">
-            <label>Votre note</label>
+            <label>{{ $t('reviews.yourRating') }}</label>
             <div class="stars-row">
               <button
                 v-for="n in 5"
@@ -419,15 +418,15 @@ const labelNote = (note: number) => {
           </div>
 
           <div class="form-group">
-            <label>Votre commentaire</label>
+            <label>{{ $t('reviews.yourComment') }}</label>
             <textarea
               v-model="formAvis.commentaire"
               rows="4"
-              placeholder="Décrivez votre expérience dans ce logement (min. 10 caractères)..."
+              :placeholder="$t('reviews.commentPlaceholder')"
               class="textarea"
               maxlength="1000"
             ></textarea>
-            <span class="char-count">{{ formAvis.commentaire.length }}/1000</span>
+            <span class="char-count">{{ $t('reviews.charCount', { n: formAvis.commentaire.length }) }}</span>
           </div>
 
           <button
@@ -435,7 +434,7 @@ const labelNote = (note: number) => {
             :disabled="loadingPost || formAvis.commentaire.length < 10"
             class="btn-submit"
           >
-            {{ loadingPost ? 'Publication...' : 'Publier mon avis' }}
+            {{ loadingPost ? $t('reviews.publishing') : $t('reviews.publish') }}
           </button>
         </div>
 
@@ -443,14 +442,14 @@ const labelNote = (note: number) => {
         <div class="avis-section">
 
           <h2 class="section-heading" v-if="nbAvis > 0">
-            {{ nbAvis }} avis pour ce logement
+            {{ nbAvis }} {{ $t('reviews.forProperty') }}
           </h2>
 
           <!-- Aucun avis -->
           <div v-if="nbAvis === 0" class="state-center empty-state">
             <div class="empty-icon">💬</div>
-            <h3>Aucun avis pour le moment</h3>
-            <p>Soyez le premier à partager votre expérience !</p>
+            <h3>{{ $t('reviews.noReviews') }}</h3>
+            <p>{{ $t('reviews.beFirst') }}</p>
           </div>
 
           <!-- Liste -->
@@ -492,21 +491,21 @@ const labelNote = (note: number) => {
       <div v-if="showGrantModal" class="modal-overlay" @click.self="showGrantModal = false">
         <div class="modal-box">
           <div class="modal-header">
-            <h3>Accorder un droit d'avis</h3>
+            <h3>{{ $t('reviews.modal.title') }}</h3>
             <button @click="showGrantModal = false" class="modal-close">✕</button>
           </div>
 
           <p class="modal-desc">
-            Donnez à un locataire le droit de poster <strong>un seul avis</strong> sur une offre précise.
+            {{ $t('reviews.modal.description') }}
           </p>
 
           <div v-if="successGrant" class="msg-success">✓ {{ successGrant }}</div>
           <div v-if="errorGrant" class="msg-error">⚠ {{ errorGrant }}</div>
 
           <div class="form-group">
-            <label>Locataire</label>
+            <label>{{ $t('reviews.modal.tenant') }}</label>
             <select v-model="grantForm.userId" class="select-input">
-              <option value="">-- Sélectionner un utilisateur --</option>
+              <option value="">{{ $t('reviews.modal.selectUser') }}</option>
               <option
                 v-for="u in utilisateurs"
                 :key="u.id"
@@ -518,9 +517,9 @@ const labelNote = (note: number) => {
           </div>
 
           <div class="form-group">
-            <label>Offre concernée</label>
+            <label>{{ $t('reviews.modal.offer') }}</label>
             <select v-model="grantForm.offreId" class="select-input">
-              <option value="">-- Sélectionner une offre --</option>
+              <option value="">{{ $t('reviews.modal.selectOffer') }}</option>
               <option v-for="o in offres" :key="o.id" :value="o.id">
                 {{ o.titre }}
               </option>
@@ -528,13 +527,13 @@ const labelNote = (note: number) => {
           </div>
 
           <div class="modal-actions">
-            <button @click="showGrantModal = false" class="btn-cancel">Annuler</button>
+            <button @click="showGrantModal = false" class="btn-cancel">{{ $t('reviews.modal.cancel') }}</button>
             <button
               @click="accorderPermission"
               :disabled="loadingGrant || !grantForm.userId || !grantForm.offreId"
               class="btn-grant-confirm"
             >
-              {{ loadingGrant ? 'Attribution...' : '✦ Accorder le droit' }}
+              {{ loadingGrant ? $t('reviews.modal.granting') : $t('reviews.modal.grant') }}
             </button>
           </div>
         </div>
