@@ -14,17 +14,18 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
+const { t } = useI18n()
 
 const handleLogin = async() => {
     errorMessage.value = ''
     if(!email.value && !password.value) {
-        errorMessage.value = 'Veuillez remplir tous les champs'
+        errorMessage.value = t('errors.fillAllFields')
         return
     }else if(!email.value) {
-        errorMessage.value = 'Veuillez entrer votre email'
+        errorMessage.value = t('errors.enterEmail')
         return
     }else if(!password.value) {
-        errorMessage.value = 'Veuillez entrer votre mot de passe'
+        errorMessage.value = t('errors.enterPassword')
         return
     }
 
@@ -38,13 +39,13 @@ const handleLogin = async() => {
         })
 
         if(result.error) {
-            errorMessage.value = 'Email ou mot de passe incorrect'
+            errorMessage.value = t('errors.wrongCredentials')
             loading.value = false
         } else {
             await navigateTo('/')
         }
     }catch (error) {
-        errorMessage.value = 'Une erreur est survenue lors de la connexion.'
+        errorMessage.value = t('errors.loginError')
         loading.value = false
     }
 }

@@ -19,6 +19,7 @@ const MessageError = ref('')
 const confirmPassword = ref('')
 const compteCreé = ref(false)
 const prenomCreé = ref('')
+const { t } = useI18n()
 
 const hasMinLength = computed(() => password.value.length >= 12)
 const hasUpper = computed(() => /[A-Z]/.test(password.value))
@@ -33,12 +34,12 @@ const handleInscription = async () => {
     MessageError.value = ''
 
     if(!email.value || !password.value || !nom.value || !prenom.value) {
-        MessageError.value = 'Veuillez remplir tous les champs'
+        MessageError.value = t('errors.fillAllFields')
         return
     }
 
     if (!isValid.value) {
-        MessageError.value = "Veuillez respecter tous les critères du mot de passe."
+        MessageError.value = t('errors.passwordCriteria')
         return
     }
 
@@ -58,7 +59,7 @@ const handleInscription = async () => {
         compteCreé.value = true
 
     } catch (error) {
-        MessageError.value = error.statusMessage || 'Une erreur est survenue lors de l\'inscription.'
+        MessageError.value = error.statusMessage || t('errors.signupError')
     }finally {
         loading.value = false
     }
@@ -76,10 +77,10 @@ const handleInscription = async () => {
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
-            <h2>Bienvenue, {{ prenomCreé }} !</h2>
-            <p>Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter et accéder à votre espace.</p>
+            <h2>{{ $t('auth.welcome', { name: prenomCreé }) }}</h2>
+            <p>{{ $t('auth.accountCreated') }}</p>
             <button @click="router.push('/connexion')" class="btn-connexion">
-                Se connecter
+                {{ $t('auth.connect') }}
             </button>
         </div>
 
@@ -87,53 +88,53 @@ const handleInscription = async () => {
         <template v-else>
             <div class="Haut_carte">
                 <h1>STUD'LOC.</h1>
-                <div class="soustitre">Espace Étudiant</div>
+                <div class="soustitre">{{ $t('auth.studentSpace') }}</div>
             </div>
 
             <div class="Zone_Onglets">
-                <NuxtLink to="/connexion" class="Onglet inactif">Se connecter</NuxtLink>
-                <NuxtLink to="/inscription" class="Onglet actif">Créer un compte</NuxtLink>
+                <NuxtLink to="/connexion" class="Onglet inactif">{{ $t('auth.login') }}</NuxtLink>
+                <NuxtLink to="/inscription" class="Onglet actif">{{ $t('auth.createAccount') }}</NuxtLink>
             </div>
 
             <form @submit.prevent="handleInscription" class="Formulaire">
 
                 <div class="Groupe_Input">
-                    <label for="nom">Nom</label>
+                    <label for="nom">{{ $t('auth.name') }}</label>
                     <input v-model="nom" type="text" id="nom" placeholder="LeDudu" class="Input_Style">
                 </div>
 
                 <div class="Groupe_Input">
-                    <label for="prenom">Prénom</label>
+                    <label for="prenom">{{ $t('auth.firstname') }}</label>
                     <input v-model="prenom" type="text" id="prenom" placeholder="Thomas" class="Input_Style">
                 </div>
 
                 <div class="Groupe_Input">
-                    <label for="email">Email</label>
+                    <label for="email">{{ $t('auth.email') }}</label>
                     <input v-model="email" type="email" id="email" placeholder="thomas@exemple.com" class="Input_Style">
                 </div>
 
                 <div class="Groupe_Input">
                     <PasswordInput
                         v-model="password"
-                        label="Mot de passe"
+                        :label="$t('auth.password')"
                         id="password"
                         :required="true"
                     />
                     <div v-if="password.length > 0" class="password-checklist">
                         <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
-                            <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
+                            <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> {{ $t('password.minLength') }}
                         </div>
                         <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
-                            <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+                            <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> {{ $t('password.uppercase') }}
                         </div>
                         <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
-                            <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+                            <span class="icon">{{ hasLower ? '✔' : '○' }}</span> {{ $t('password.lowercase') }}
                         </div>
                         <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
-                            <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+                            <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> {{ $t('password.number') }}
                         </div>
                         <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
-                            <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                            <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> {{ $t('password.special') }}
                         </div>
                     </div>
                 </div>
@@ -142,7 +143,7 @@ const handleInscription = async () => {
                     {{ MessageError }}
                 </p>
 
-                <Bouton>S'inscrire maintenant</Bouton>
+                <Bouton>{{ $t('auth.signupNow') }}</Bouton>
             </form>
         </template>
 

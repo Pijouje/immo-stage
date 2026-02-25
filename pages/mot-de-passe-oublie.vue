@@ -4,6 +4,7 @@ const email = ref('')
 const message = ref('')
 const loading = ref(false)
 const raison = computed(() => route.query.raison?.toString() || '')
+const { t } = useI18n()
 
 const envoyerLien = async () => {
     if (!email.value) return
@@ -18,7 +19,7 @@ const envoyerLien = async () => {
         })
         message.value = result.message
     } catch (e) {
-        message.value = 'Erreur lors de l\'envoi'
+        message.value = t('errors.sendError')
     } finally {
         loading.value = false
     }
@@ -28,8 +29,8 @@ const envoyerLien = async () => {
 <template>
     <div class="page-reset">
         <div class="card-reset">
-            <h1>Mot de passe oublié</h1>
-            <p>Entrez votre email pour recevoir un lien de réinitialisation</p>
+            <h1>{{ $t('password.reset.title') }}</h1>
+            <p>{{ $t('password.reset.subtitle') }}</p>
 
             <div v-if="raison" class="message-raison">⚠ {{ raison }}</div>
 
@@ -41,14 +42,14 @@ const envoyerLien = async () => {
                     required
                 />
                 <button type="submit" :disabled="loading">
-                    {{ loading ? 'Envoi...' : 'Envoyer le lien' }}
+                    {{ loading ? $t('password.reset.sending') : $t('password.reset.sendLink') }}
                 </button>
             </form>
 
             <p v-if="message" class="message">{{ message }}</p>
 
             <NuxtLink to="/connexion" class="back-link">
-                ← Retour à la connexion
+                {{ $t('password.reset.backToLogin') }}
             </NuxtLink>
         </div>
     </div>

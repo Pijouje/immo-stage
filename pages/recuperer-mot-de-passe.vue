@@ -16,17 +16,18 @@ const message = ref('')
 const error = ref('')
 const loading = ref(false)
 const verificationEnCours = ref(true)
+const { t } = useI18n()
 
 onMounted(async () => {
     if (!token.value) {
-        router.replace('/mot-de-passe-oublie?raison=' + encodeURIComponent('Lien invalide. Aucun token trouvé.'))
+        router.replace('/mot-de-passe-oublie?raison=' + encodeURIComponent(t('errors.invalidLink')))
         return
     }
     try {
         await $fetch(`/api/auth/verify-reset-token?token=${token.value}`)
         verificationEnCours.value = false
     } catch (e) {
-        const raison = e.data?.message || 'Lien invalide ou expiré'
+        const raison = e.data?.message || t('errors.linkExpired')
         router.replace('/mot-de-passe-oublie?raison=' + encodeURIComponent(raison))
     }
 })
@@ -47,12 +48,12 @@ const reinitialiser = async () => {
     message.value = ''
 
     if (!isPasswordValid.value) {
-        error.value = 'Le mot de passe ne respecte pas tous les critères'
+        error.value = t('errors.passwordNotValid')
         return
     }
 
     if (newPassword.value !== confirmPassword.value) {
-        error.value = 'Les mots de passe ne correspondent pas'
+        error.value = t('errors.passwordsNoMatch')
         return
     }
 
@@ -69,7 +70,7 @@ const reinitialiser = async () => {
         message.value = result.message
         setTimeout(() => router.push('/connexion'), 2000)
     } catch (e) {
-        error.value = e.data?.message || 'Erreur lors de la réinitialisation'
+        error.value = e.data?.message || t('errors.resetError')
     } finally {
         loading.value = false
     }
@@ -83,38 +84,38 @@ const reinitialiser = async () => {
             <!-- Vérification en cours -->
             <div v-if="verificationEnCours" class="etat-token">
                 <div class="spinner"></div>
-                <p>Vérification du lien...</p>
+                <p>{{ $t('password.reset.verifying') }}</p>
             </div>
 
             <!-- Formulaire (token valide) -->
             <template v-else>
-            <h1>Nouveau mot de passe</h1>
-            <p>Entrez votre nouveau mot de passe</p>
+            <h1>{{ $t('password.reset.newPasswordTitle') }}</h1>
+            <p>{{ $t('password.reset.enterNew') }}</p>
 
             <form @submit.prevent="reinitialiser">
                 <div class="Groupe_Input">
                     <PasswordInput 
                         v-model="newPassword"
-                        label="Nouveau mot de passe"
+                        :label="$t('password.reset.newPasswordTitle')"
                         id="newPassword"
                         :required="true"
                     />
                     
                     <div v-if="newPassword.length > 0" class="password-checklist">
                         <div :class="{ 'valid': hasMinLength, 'invalid': !hasMinLength }">
-                            <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> 12 Caractères
+                            <span class="icon">{{ hasMinLength ? '✔' : '○' }}</span> {{ $t('password.minLength') }}
                         </div>
                         <div :class="{ 'valid': hasUpper, 'invalid': !hasUpper }">
-                            <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> 1 Majuscule
+                            <span class="icon">{{ hasUpper ? '✔' : '○' }}</span> {{ $t('password.uppercase') }}
                         </div>
                         <div :class="{ 'valid': hasLower, 'invalid': !hasLower }">
-                            <span class="icon">{{ hasLower ? '✔' : '○' }}</span> 1 Minuscule
+                            <span class="icon">{{ hasLower ? '✔' : '○' }}</span> {{ $t('password.lowercase') }}
                         </div>
                         <div :class="{ 'valid': hasNumber, 'invalid': !hasNumber }">
-                            <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> 1 Chiffre
+                            <span class="icon">{{ hasNumber ? '✔' : '○' }}</span> {{ $t('password.number') }}
                         </div>
                         <div :class="{ 'valid': hasSpecial, 'invalid': !hasSpecial }">
-                            <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> 1 Symbole (@$!%*?&_)
+                            <span class="icon">{{ hasSpecial ? '✔' : '○' }}</span> {{ $t('password.special') }}
                         </div>
                     </div>
                 </div>
@@ -122,14 +123,14 @@ const reinitialiser = async () => {
                 <div class="Groupe_Input">
                     <PasswordInput 
                         v-model="confirmPassword"
-                        label="Confirmer le mot de passe"
+                        :label="$t('password.reset.confirm')"
                         id="confirmPassword"
                         :required="true"
                     />
                 </div>
 
                 <button type="submit" :disabled="loading || !isPasswordValid">
-                    {{ loading ? 'Réinitialisation...' : 'Réinitialiser' }}
+                    {{ loading ? $t('password.reset.resetting') : $t('password.reset.resetButton') }}
                 </button>
             </form>
 
