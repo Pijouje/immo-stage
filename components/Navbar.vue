@@ -66,7 +66,7 @@ onUnmounted(() => {
                 </div>
                 <div class="Nom_site">
                     <NuxtLink to="/" aria-label="Accueil">
-                        <span class="site-name">NOM DU<br>SITE (AMIENS)</span>
+                        <span class="site-name">{{ $t('footer.siteName') }}</span>
                     </NuxtLink>
                 </div>
             </div>
@@ -94,8 +94,8 @@ onUnmounted(() => {
                 <NuxtLink to="/contact" @click="menuOuvert = false">{{ $t('nav.contact') }}</NuxtLink>
 
                 <template v-if="!isAuthenticated">
-                    <NuxtLink to="/inscription" @click="menuOuvert = false">S'INSCRIRE</NuxtLink>
-                    <NuxtLink to="/connexion" @click="menuOuvert = false">SE CONNECTER</NuxtLink>
+                    <NuxtLink to="/inscription" @click="menuOuvert = false">{{ $t('nav.signup') }}</NuxtLink>
+                    <NuxtLink to="/connexion" @click="menuOuvert = false">{{ $t('nav.login') }}</NuxtLink>
                 </template>
 
                 <template v-if="isAuthenticated">
@@ -103,7 +103,7 @@ onUnmounted(() => {
                         <div class="avatar-cercle">
                             {{ userInitial }}
                         </div>
-                        <span class="texte-profile">MON ESPACE</span>
+                        <span class="texte-profile">{{ $t('nav.mySpace') }}</span>
                     </NuxtLink>
 
                     <button @click="handleLogout" class="btn-logout-mobile">
@@ -112,7 +112,7 @@ onUnmounted(() => {
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
-                        Déconnexion
+                        {{ $t('nav.logout') }}
                     </button>
                 </template>
             </nav>

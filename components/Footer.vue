@@ -3,24 +3,24 @@
     <div class="footer-container">
 
       <section class="footer-col brand-col" aria-label="A propos">
-        <h3>NOM DU SITE</h3>
-        <p>Agence de location de logements étudiants et jeunes actifs à Amiens. Trouvez votre futur chez-vous en toute confiance parmi nos offres vérifiées avec avis de locataires.</p>
+        <h3>{{ $t('footer.siteName') }}</h3>
+        <p>{{ $t('footer.description') }}</p>
       </section>
 
       <nav class="footer-col" aria-label="Aide et support">
-        <h3>AIDE</h3>
+        <h3>{{ $t('footer.help') }}</h3>
         <ul>
-          <li><NuxtLink to="/contact">Nous contacter</NuxtLink></li>
-          <li><NuxtLink to="/avis">Avis locataires</NuxtLink></li>
+          <li><NuxtLink to="/contact">{{ $t('footer.contactUs') }}</NuxtLink></li>
+          <li><NuxtLink to="/avis">{{ $t('footer.tenantReviews') }}</NuxtLink></li>
         </ul>
       </nav>
 
       <nav class="footer-col" aria-label="Informations légales">
-        <h3>LEGAL</h3>
+        <h3>{{ $t('footer.legal') }}</h3>
         <ul>
-          <li><NuxtLink to="/legal/mentions">Mentions Légales</NuxtLink></li>
-          <li><NuxtLink to="/legal/privacy">Politique de confidentialité</NuxtLink></li>
-          <li><NuxtLink to="/legal/cgu">CGU / CGV</NuxtLink></li>
+          <li><NuxtLink to="/legal/mentions">{{ $t('footer.legalNotice') }}</NuxtLink></li>
+          <li><NuxtLink to="/legal/privacy">{{ $t('footer.privacy') }}</NuxtLink></li>
+          <li><NuxtLink to="/legal/cgu">{{ $t('footer.terms') }}</NuxtLink></li>
         </ul>
       </nav>
 
@@ -28,8 +28,8 @@
 
     <div class="footer-bottom">
       <div class="separator" role="presentation"></div>
-      <p>© {{ new Date().getFullYear() }} NOM DU SITE - Tous droits réservés</p>
-      <p class="signature">BY M&A</p>
+      <p>© {{ new Date().getFullYear() }} {{ $t('footer.copyright') }}</p>
+      <p class="signature">{{ $t('footer.signature') }}</p>
     </div>
   </footer>
 </template>

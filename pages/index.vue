@@ -64,7 +64,7 @@ watch(() => route.fullPath, () => {
       </h1>
 
       <p class="hero-subtitle">
-        Appartements, studios et colocations pour étudiants et jeunes actifs à Amiens.
+        {{ $t('home.subtitle') }}
       </p>
 
       <NuxtLink to="/offres" class="cta-button" aria-label="Découvrir toutes les offres de location">
