@@ -7,6 +7,32 @@ definePageMeta({
   }
 })
 
+// SEO : Meta tags
+useSeoMeta({
+  title: 'Offres de Location Étudiante à Amiens | Agence Immo',
+  description: 'Consultez toutes nos offres de location étudiante à Amiens : studios, T2, T3, colocations meublées. Prix, photos et avis de locataires pour chaque logement.',
+  ogTitle: 'Offres de Location Étudiante à Amiens',
+  ogDescription: 'Consultez toutes nos offres de location étudiante à Amiens. Studios, appartements et colocations meublées.',
+  ogUrl: 'https://ton-site-stage.com/offres',
+})
+
+// SEO : Breadcrumb JSON-LD
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://ton-site-stage.com' },
+          { '@type': 'ListItem', position: 2, name: 'Offres de location', item: 'https://ton-site-stage.com/offres' },
+        ],
+      }),
+    },
+  ],
+})
+
 const { data: session } = useAuth()
 
 const canCreateOffre = computed(() => {
@@ -25,6 +51,33 @@ const { data, pending, error, refresh } = await useFetch('/api/offres', {
 const offres = computed(() => data.value?.offres ?? [])
 const totalPages = computed(() => data.value?.totalPages ?? 1)
 
+// SEO : Schema ItemList dynamique pour les offres
+const itemListSchema = computed(() => {
+  if (!offres.value || offres.value.length === 0) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Offres de location étudiante à Amiens',
+    numberOfItems: offres.value.length,
+    itemListElement: offres.value.map((offre: any, index: number) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `https://ton-site-stage.com/offres/${offre.id}`,
+      name: offre.titre,
+    })),
+  }
+})
+
+useHead({
+  script: computed(() => {
+    if (!itemListSchema.value) return []
+    return [{
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify(itemListSchema.value),
+    }]
+  }),
+})
+
 const retryFetch = async () => {
   error.value = undefined
   await refresh()
@@ -32,77 +85,97 @@ const retryFetch = async () => {
 </script>
 
 <template>
-  <div class="offres-page">
+  <section class="offres-page" aria-label="Liste des offres de location">
     <div class="container">
 
+      <h1 class="sr-only">Offres de location étudiante à Amiens</h1>
+
       <!-- Bouton flottant "Créer une offre" (visible uniquement pour admin/proprio) -->
-      <NuxtLink 
-        v-if="canCreateOffre" 
-        to="/offres/create" 
+      <NuxtLink
+        v-if="canCreateOffre"
+        to="/offres/create"
         class="btn-floating-create"
         title="Créer une nouvelle offre"
+        aria-label="Créer une nouvelle offre de location"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         <span class="btn-text">Créer une offre</span>
       </NuxtLink>
 
-      <div v-if="error" class="state-box error-box">
-        <div class="icon">⚠️</div>
-        <h3>Oups, petit problème technique</h3>
+      <div v-if="error" class="state-box error-box" role="alert">
+        <div class="icon" aria-hidden="true">⚠️</div>
+        <h2>Oups, petit problème technique</h2>
         <p>Impossible de contacter le serveur.</p>
         <button @click="retryFetch" class="btn-retry">Réessayer la connexion</button>
       </div>
 
-      <div v-else-if="pending" class="state-box loading-box">
-        <div class="loader"></div>
+      <div v-else-if="pending" class="state-box loading-box" aria-live="polite">
+        <div class="loader" aria-hidden="true"></div>
         <p>Recherche des meilleures offres...</p>
       </div>
 
       <div v-else-if="!offres || offres.length === 0" class="state-box empty-box">
-        <div class="icon">📭</div>
-        <h3>Aucune annonce pour le moment</h3>
+        <div class="icon" aria-hidden="true">📭</div>
+        <h2>Aucune annonce pour le moment</h2>
         <p>Revenez un peu plus tard, nos propriétaires postent régulièrement !</p>
-        
-        <!-- Bouton de création si admin/proprio -->
+
         <NuxtLink v-if="canCreateOffre" to="/offres/create" class="btn-create-first">
           + Créer la première offre
         </NuxtLink>
       </div>
 
       <div v-else class="offres-grid">
-        <div v-for="offre in offres" :key="offre.id" class="card">
+        <article v-for="offre in offres" :key="offre.id" class="card">
           <div class="card-image">
-            <img :src="offre.image || '/images/default.png'" :alt="offre.titre">
+            <img
+              :src="offre.image || '/images/default.png'"
+              :alt="`${offre.titre} - Location à ${offre.lieu}`"
+              loading="lazy"
+              width="350"
+              height="220"
+            >
           </div>
           <div class="card-content">
-            <h3>{{ offre.titre }}</h3>
+            <h2>{{ offre.titre }}</h2>
             <p class="location">
-              <span class="pin">📍</span> {{ offre.lieu }}
+              <span class="pin" aria-hidden="true">📍</span> {{ offre.lieu }}
             </p>
-            <p class="price"><strong>{{ offre.prix }}</strong> /mois</p>
+            <p class="price"><strong>{{ offre.prix }}€</strong> /mois</p>
             <div class="card-action">
              <OffreBouton :to="`/offres/${offre.id}`">
                Voir l'annonce
              </OffreBouton>
             </div>
           </div>
-        </div>
+        </article>
       </div>
 
-      <div v-if="totalPages > 1" class="pagination">
-        <button :disabled="page <= 1" @click="page--" class="page-btn">← Précédent</button>
-        <span class="page-info">Page {{ page }} / {{ totalPages }}</span>
-        <button :disabled="page >= totalPages" @click="page++" class="page-btn">Suivant →</button>
-      </div>
+      <nav v-if="totalPages > 1" class="pagination" aria-label="Pagination des offres">
+        <button :disabled="page <= 1" @click="page--" class="page-btn" aria-label="Page précédente">← Précédent</button>
+        <span class="page-info" aria-current="page">Page {{ page }} / {{ totalPages }}</span>
+        <button :disabled="page >= totalPages" @click="page++" class="page-btn" aria-label="Page suivante">Suivant →</button>
+      </nav>
 
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .offres-page {
   box-sizing: border-box; 
@@ -295,7 +368,7 @@ const retryFetch = async () => {
   text-align: left;
 }
 
-.card-content h3 {
+.card-content h2 {
   font-size: 1.2rem;
   font-weight: 800;
   color: #01111d;

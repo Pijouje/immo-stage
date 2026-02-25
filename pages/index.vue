@@ -3,15 +3,23 @@ import { ref, onMounted, watch } from 'vue'
 
 // --- META ---
 definePageMeta({
-  layout: 'home', // Utilise le layout home avec navbar transparente
+  layout: 'home',
   pageTransition: {
     name: 'hero-flow',
     mode: 'out-in'
   }
 })
 
-useHead({
-  title: 'Accueil - NOM DU SITE'
+// SEO : Meta tags complets pour la page d'accueil
+useSeoMeta({
+  title: 'Location Logement Étudiant Amiens | Agence Immo',
+  description: 'Trouvez votre logement étudiant à Amiens : studios, appartements meublés, colocations. Offres vérifiées avec avis de locataires. Recherche simple et rapide.',
+  ogTitle: 'Location Logement Étudiant Amiens | Agence Immo',
+  ogDescription: 'Trouvez votre logement étudiant à Amiens parmi nos offres vérifiées. Studios, colocations, appartements meublés.',
+  ogUrl: 'https://ton-site-stage.com',
+  ogType: 'website',
+  twitterTitle: 'Location Logement Étudiant Amiens | Agence Immo',
+  twitterDescription: 'Trouvez votre logement étudiant à Amiens parmi nos offres vérifiées.',
 })
 
 // --- VIDEO AUTOPLAY ---
@@ -37,18 +45,17 @@ watch(() => route.fullPath, () => {
 </script>
 
 <template>
-  <!-- La vidéo et l'overlay sont maintenant dans le contenu de la page -->
-  <div class="home-hero">
-    
-    <!-- Vidéo de fond en plein écran -->
-    <div class="video-bg">
-      <video ref="videoRef" autoplay loop muted playsinline>
-        <source src="/videos/video_presentation_salon.mp4" type="video/mp4">
+  <section class="home-hero" aria-label="Présentation de l'agence">
+
+    <!-- Vidéo de fond (preload metadata pour perf LCP) -->
+    <div class="video-bg" aria-hidden="true">
+      <video ref="videoRef" autoplay loop muted playsinline preload="metadata" :poster="'/images/default.png'">
+        <source :src="'/videos/video_presentation_salon.mp4'" type="video/mp4">
       </video>
       <div class="overlay"></div>
     </div>
 
-    <!-- Contenu Hero par-dessus la vidéo -->
+    <!-- Contenu Hero -->
     <div class="hero-content">
       <h1 class="main-title">
         {{ $t('home.title1') }}<br>
@@ -56,13 +63,17 @@ watch(() => route.fullPath, () => {
         {{ $t('home.title3') }}
       </h1>
 
-      <NuxtLink to="/offres" class="cta-button">
+      <p class="hero-subtitle">
+        Appartements, studios et colocations pour étudiants et jeunes actifs à Amiens.
+      </p>
+
+      <NuxtLink to="/offres" class="cta-button" aria-label="Découvrir toutes les offres de location">
         {{ $t('home.viewOffers1') }} <br>
          {{ $t('home.viewOffers2') }}
       </NuxtLink>
     </div>
 
-  </div>
+  </section>
 </template>
 
 <style scoped>
@@ -120,8 +131,18 @@ watch(() => route.fullPath, () => {
   text-transform: uppercase;
   letter-spacing: 2px;
   line-height: 1.2;
-  margin-bottom: 100px;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre pour meilleure lisibilité */
+  margin-bottom: 20px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  font-weight: 400;
+  max-width: 500px;
+  line-height: 1.5;
+  margin-bottom: 40px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .cta-button {

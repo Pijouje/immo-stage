@@ -1,6 +1,32 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+// SEO : Meta tags pour la page Avis
+useSeoMeta({
+  title: 'Avis Locataires Vérifiés | Agence Immo Amiens',
+  description: 'Consultez les avis vérifiés de nos locataires sur les logements étudiants à Amiens. Notes, commentaires et retours d\'expérience authentiques.',
+  ogTitle: 'Avis Locataires - Agence Immo Amiens',
+  ogDescription: 'Découvrez les avis vérifiés de locataires sur nos logements étudiants à Amiens.',
+  ogUrl: 'https://ton-site-stage.com/avis',
+})
+
+// SEO : Breadcrumb JSON-LD
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://ton-site-stage.com' },
+          { '@type': 'ListItem', position: 2, name: 'Avis locataires', item: 'https://ton-site-stage.com/avis' },
+        ],
+      }),
+    },
+  ],
+})
+
 // ─── INTERFACES ──────────────────────────────────────────────────────────────
 
 interface Auteur {
@@ -122,6 +148,35 @@ const distributionNotes = computed(() => {
     const pct = nbAvis.value > 0 ? (count / nbAvis.value) * 100 : 0
     return { note, count, pct }
   })
+})
+
+// SEO : Schema AggregateRating dynamique
+useHead({
+  script: computed(() => {
+    if (nbAvis.value === 0) return []
+    return [{
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ApartmentComplex',
+        name: 'Logements étudiants - Agence Immo Amiens',
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: moyenneNumerique.value.toFixed(1),
+          bestRating: 5,
+          worstRating: 1,
+          ratingCount: nbAvis.value,
+        },
+        review: avis.value.slice(0, 5).map((a: AvisItem) => ({
+          '@type': 'Review',
+          author: { '@type': 'Person', name: `${a.auteur.prenom} ${a.auteur.nom}` },
+          reviewRating: { '@type': 'Rating', ratingValue: a.note, bestRating: 5 },
+          reviewBody: a.commentaire,
+          datePublished: a.createdAt?.split('T')[0],
+        })),
+      }),
+    }]
+  }),
 })
 
 // ─── FORMULAIRE D'AJOUT D'AVIS ───────────────────────────────────────────────

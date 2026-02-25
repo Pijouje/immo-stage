@@ -29,8 +29,84 @@ if (error.value || !offreRaw.value) {
   throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée', fatal: true })
 }
 
+// SEO : Meta tags dynamiques
+useSeoMeta({
+  title: `${offreRaw.value?.titre || 'Offre'} - Location Amiens | Agence Immo`,
+  description: `${offreRaw.value?.titre} à ${offreRaw.value?.lieu}. ${offreRaw.value?.prix}€/mois. ${offreRaw.value?.description?.substring(0, 140) || 'Logement étudiant à Amiens.'}`,
+  ogTitle: `${offreRaw.value?.titre} - ${offreRaw.value?.prix}€/mois`,
+  ogDescription: `Location à ${offreRaw.value?.lieu}. ${offreRaw.value?.charges > 0 ? offreRaw.value.charges + '€ de charges' : 'Charges comprises'}.`,
+  ogUrl: `https://ton-site-stage.com/offres/${route.params.id}`,
+  ogType: 'website',
+  ogImage: offreRaw.value?.images?.[0]?.url || '/images/default.png',
+})
+
+// SEO : Breadcrumb + RealEstateListing JSON-LD
 useHead({
-  title: `${offreRaw.value?.titre || 'Offre'} - Location Amiens`
+  script: computed(() => {
+    const o = offreRaw.value
+    if (!o) return []
+
+    const noteMoyenne = o.avis && o.avis.length > 0
+      ? o.avis.reduce((acc: number, curr: any) => acc + curr.note, 0) / o.avis.length
+      : 0
+
+    const schemas: any[] = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://ton-site-stage.com' },
+          { '@type': 'ListItem', position: 2, name: 'Offres', item: 'https://ton-site-stage.com/offres' },
+          { '@type': 'ListItem', position: 3, name: o.titre, item: `https://ton-site-stage.com/offres/${o.id}` },
+        ],
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'RealEstateListing',
+        name: o.titre,
+        description: o.description,
+        url: `https://ton-site-stage.com/offres/${o.id}`,
+        datePosted: new Date().toISOString().split('T')[0],
+        ...(o.images?.length > 0 && { image: o.images.map((img: any) => img.url) }),
+        offers: {
+          '@type': 'Offer',
+          price: o.prix,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+        },
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: o.lieu || 'Amiens',
+          addressRegion: 'Hauts-de-France',
+          addressCountry: 'FR',
+        },
+        ...(o.surface && {
+          floorSize: {
+            '@type': 'QuantitativeValue',
+            value: o.surface,
+            unitCode: 'MTK',
+          },
+        }),
+        numberOfRooms: o.coloc || undefined,
+        ...(o.avis && o.avis.length > 0 && {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: Number(noteMoyenne.toFixed(1)),
+            bestRating: 5,
+            ratingCount: o.avis.length,
+          },
+        }),
+        provider: {
+          '@id': 'https://ton-site-stage.com/#organization',
+        },
+      },
+    ]
+
+    return schemas.map(s => ({
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify(s),
+    }))
+  }),
 })
 
 // --- ADAPTATION DES DONNÉES ---
@@ -243,7 +319,7 @@ const prevImage = () => {
 </script>
 
 <template>
-  <div class="detail-page">
+  <article class="detail-page" itemscope itemtype="https://schema.org/Apartment">
     <div class="container">
 
       <!-- BOUTON TOGGLE ÉDITION -->
@@ -439,7 +515,7 @@ const prevImage = () => {
         <button class="nav-btn prev" @click.stop="prevImage">❮</button>
         <button class="nav-btn next" @click.stop="nextImage">❯</button>
         <div class="lightbox-content" @click.stop>
-          <img :src="offre.imgs[currentImageIndex]" class="lightbox-img" alt="Vue agrandie">
+          <img :src="offre.imgs[currentImageIndex]" class="lightbox-img" :alt="`${offre.titre} - Photo ${currentImageIndex + 1}`">
         </div>
         <div class="lightbox-footer">
           {{ currentImageIndex + 1 }} / {{ offre.imgs.length }} : {{ offre.titre }}
@@ -447,7 +523,7 @@ const prevImage = () => {
       </div>
     </Transition>
 
-  </div>
+  </article>
 </template>
 
 <style scoped>
