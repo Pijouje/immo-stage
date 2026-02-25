@@ -1,7 +1,7 @@
 <template>
   <div class="home-layout">
     <Navbar transparent />
-    <main class="home-content">
+    <main role="main" class="home-content">
       <slot />
     </main>
   </div>

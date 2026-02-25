@@ -59,27 +59,27 @@ onUnmounted(() => {
     <header :class="transparent ? 'navbar-transparent' : 'navbar-solid'">
         <div class="Bandeau_haut">
             <div class="Conteneur_Logo">
-                <div class="Logo_Cercle">
-                    <NuxtLink to="/">
+                <div class="Logo_Cercle" aria-hidden="true">
+                    <NuxtLink to="/" aria-label="Accueil - Agence Immo Amiens">
                         <span>🏠</span>
                     </NuxtLink>
                 </div>
                 <div class="Nom_site">
-                    <NuxtLink to="/">
-                        <h2>NOM DU<br>SITE (AMIENS)</h2>
+                    <NuxtLink to="/" aria-label="Accueil">
+                        <span class="site-name">NOM DU<br>SITE (AMIENS)</span>
                     </NuxtLink>
                 </div>
             </div>
 
-            <button class="bouton-burger" @click="toggleMenu" ref="refBurger">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="bouton-burger" @click="toggleMenu" ref="refBurger" aria-label="Ouvrir le menu de navigation" :aria-expanded="menuOuvert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
 
-            <div class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu">
+            <nav class="Menu_navigation" :class="{'actif': menuOuvert}" ref="refMenu" aria-label="Navigation principale">
                 <NuxtLink to="/offres" @click="menuOuvert = false">{{ $t('nav.offers') }}</NuxtLink>
 
                 <NuxtLink
@@ -115,7 +115,7 @@ onUnmounted(() => {
                         Déconnexion
                     </button>
                 </template>
-            </div>
+            </nav>
         </div>
     </header>
 </template>
@@ -143,7 +143,7 @@ onUnmounted(() => {
     background-color: rgba(1, 17, 29, 0.95);
 }
 
-.navbar-transparent .Nom_site h2 {
+.navbar-transparent .Nom_site .site-name {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -202,12 +202,12 @@ onUnmounted(() => {
     transform: scale(1.05);
 }
 
-.Nom_site h2 {
+.Nom_site .site-name {
+    display: block;
     color: white;
     font-size: 0.85rem;
     font-weight: 800;
     line-height: 1.2;
-    margin: 0;
     letter-spacing: 1px;
     text-align: left;
     text-transform: uppercase;

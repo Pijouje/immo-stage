@@ -1,32 +1,33 @@
 <template>
-  <footer class="site-footer">
+  <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      
-      <div class="footer-col brand-col">
-        <h3>NOM DU SITE</h3>
-        <p>Location de logements étudiants à Amiens.<br>Trouvez votre futur chez-vous en toute confiance.</p>
-      </div>
 
-      <div class="footer-col">
+      <section class="footer-col brand-col" aria-label="A propos">
+        <h3>NOM DU SITE</h3>
+        <p>Agence de location de logements étudiants et jeunes actifs à Amiens. Trouvez votre futur chez-vous en toute confiance parmi nos offres vérifiées avec avis de locataires.</p>
+      </section>
+
+      <nav class="footer-col" aria-label="Aide et support">
         <h3>AIDE</h3>
         <ul>
           <li><NuxtLink to="/contact">Nous contacter</NuxtLink></li>
+          <li><NuxtLink to="/avis">Avis locataires</NuxtLink></li>
         </ul>
-      </div>
+      </nav>
 
-      <div class="footer-col">
+      <nav class="footer-col" aria-label="Informations légales">
         <h3>LEGAL</h3>
         <ul>
           <li><NuxtLink to="/legal/mentions">Mentions Légales</NuxtLink></li>
           <li><NuxtLink to="/legal/privacy">Politique de confidentialité</NuxtLink></li>
           <li><NuxtLink to="/legal/cgu">CGU / CGV</NuxtLink></li>
         </ul>
-      </div>
+      </nav>
 
     </div>
 
     <div class="footer-bottom">
-      <div class="separator"></div>
+      <div class="separator" role="presentation"></div>
       <p>© {{ new Date().getFullYear() }} NOM DU SITE - Tous droits réservés</p>
       <p class="signature">BY M&A</p>
     </div>
