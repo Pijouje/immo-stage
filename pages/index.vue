@@ -63,10 +63,6 @@ watch(() => route.fullPath, () => {
         {{ $t('home.title3') }}
       </h1>
 
-      <p class="hero-subtitle">
-        {{ $t('home.subtitle') }}
-      </p>
-
       <NuxtLink to="/offres" class="cta-button" aria-label="Découvrir toutes les offres de location">
         {{ $t('home.viewOffers1') }} <br>
          {{ $t('home.viewOffers2') }}
