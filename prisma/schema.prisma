@@ -64,7 +64,9 @@ model Document {
 model Offre {
   id          Int      @id @default(autoincrement())
   titre       String
+  titreEn     String?
   description String   @db.Text
+  descriptionEn String? @db.Text
   prix        Int
   charges     Int?     @default(0)
   caution     Int?
