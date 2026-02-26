@@ -222,13 +222,17 @@
     "edit": {
       "images": "📷 Images du logement",
       "add": "Ajouter",
-      "titleLabel": "Titre",
+      "titleLabel": "Titre (FR)",
       "titlePlaceholder": "Titre de l'annonce",
+      "titleEnLabel": "Titre en anglais (optionnel)",
+      "titleEnPlaceholder": "Ex: Furnished T2 city centre Amiens",
       "locationLabel": "Lieu / Quartier",
       "locationPlaceholder": "Amiens, Quartier...",
       "amenitiesLabel": "Équipements",
-      "descriptionLabel": "Description",
+      "descriptionLabel": "Description (FR)",
       "descriptionPlaceholder": "Décrivez le logement...",
+      "descriptionEnLabel": "Description en anglais (optionnel)",
+      "descriptionEnPlaceholder": "Describe your property in detail...",
       "chars": "{n} / 5000 caractères",
       "rentLabel": "Loyer (€/mois)",
       "chargesLabel": "Charges (€)",
@@ -253,10 +257,14 @@
         "amenities": "Équipements et services"
       },
       "fields": {
-        "titleLabel": "Titre de l'annonce *",
+        "titleLabel": "Titre de l'annonce (FR) *",
         "titlePlaceholder": "Ex: T2 meublé centre-ville Amiens",
-        "descriptionLabel": "Description *",
+        "titleEnLabel": "Titre en anglais (optionnel)",
+        "titleEnPlaceholder": "Ex: Furnished T2 city centre Amiens",
+        "descriptionLabel": "Description (FR) *",
         "descriptionPlaceholder": "Décrivez votre logement en détail...",
+        "descriptionEnLabel": "Description en anglais (optionnel)",
+        "descriptionEnPlaceholder": "Describe your property in detail...",
         "descChars": "{n} caractères",
         "rentLabel": "Loyer mensuel (€) *",
         "rentPlaceholder": "500",
@@ -283,6 +291,22 @@
       "amenities": {
         "description": "Sélectionnez les équipements disponibles"
       }
+    },
+    "tags": {
+      "wifiFibre": "WiFi / Fibre",
+      "cuisineEquipee": "Cuisine équipée",
+      "laveLinge": "Lave-linge",
+      "secheLinge": "Sèche-linge",
+      "laveVaisselle": "Lave-vaisselle",
+      "parking": "Parking",
+      "balcon": "Balcon",
+      "terrasse": "Terrasse",
+      "ascenseur": "Ascenseur",
+      "meuble": "Meublé",
+      "cave": "Cave",
+      "gardien": "Gardien",
+      "procheTransports": "Proche transports",
+      "procheCommerces": "Proche commerces"
     }
   },
   "profile": {

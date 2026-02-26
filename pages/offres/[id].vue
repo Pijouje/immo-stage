@@ -5,7 +5,9 @@ import { ref, computed, watch } from 'vue'
 interface Offre {
   id: number;
   titre: string;
+  titreEn: string | null;
   description: string;
+  descriptionEn: string | null;
   prix: number;
   lieu: string;
   charges: number;
@@ -19,7 +21,7 @@ interface Offre {
   avis: { note: number }[];
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const { data: session } = useAuth()
 
@@ -126,9 +128,11 @@ const offre = computed(() => {
     ? o.avis.reduce((acc: number, curr: any) => acc + curr.note, 0) / o.avis.length
     : 0
 
+  const isEn = locale.value === 'en'
   return {
     ...o,
-    desc: o.description || '',
+    titre: isEn && o.titreEn ? o.titreEn : o.titre,
+    desc: (isEn && o.descriptionEn ? o.descriptionEn : o.description) || '',
     imgs: o.images ? o.images.map((img: any) => img.url) : [],
     chargesRaw: o.charges || 0,
     chargesText: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
@@ -138,7 +142,7 @@ const offre = computed(() => {
   }
 })
 
-// --- MAPPING EMOJIS ---
+// --- MAPPING EMOJIS + TRADUCTION ---
 const tagEmojis: Record<string, string> = {
   'WiFi / Fibre': '📶', 'Cuisine équipée': '🍳', 'Lave-linge': '👕',
   'Sèche-linge': '💨', 'Lave-vaisselle': '🍽️', 'Parking': '🅿️',
@@ -146,7 +150,18 @@ const tagEmojis: Record<string, string> = {
   'Meublé': '🛋️', 'Cave': '📦', 'Gardien': '🔒',
   'Proche transports': '🚇', 'Proche commerces': '🛒'
 }
+const tagKeyMap: Record<string, string> = {
+  'WiFi / Fibre': 'wifiFibre', 'Cuisine équipée': 'cuisineEquipee', 'Lave-linge': 'laveLinge',
+  'Sèche-linge': 'secheLinge', 'Lave-vaisselle': 'laveVaisselle', 'Parking': 'parking',
+  'Balcon': 'balcon', 'Terrasse': 'terrasse', 'Ascenseur': 'ascenseur',
+  'Meublé': 'meuble', 'Cave': 'cave', 'Gardien': 'gardien',
+  'Proche transports': 'procheTransports', 'Proche commerces': 'procheCommerces'
+}
 const getTagEmoji = (tag: string): string => tagEmojis[tag] || '✨'
+const translateTag = (tag: string): string => {
+  const key = tagKeyMap[tag]
+  return key ? t(`offers.tags.${key}`) : tag
+}
 
 const equipementsDisponibles = [
   'WiFi / Fibre', 'Cuisine équipée', 'Lave-linge', 'Sèche-linge',
@@ -173,7 +188,9 @@ const saveError = ref('')
 // Formulaire d'édition (copie des données actuelles)
 const editForm = ref({
   titre: '',
+  titreEn: '',
   description: '',
+  descriptionEn: '',
   lieu: '',
   prix: 0,
   charges: 0,
@@ -188,19 +205,22 @@ const editForm = ref({
 // Active/Désactive le mode édition
 const toggleEditMode = () => {
   if (!editMode.value) {
-    // Copier les données actuelles dans le formulaire
+    // Copier les données actuelles dans le formulaire (toujours les valeurs brutes FR + EN)
+    const o = offreRaw.value!
     editForm.value = {
-      titre: offre.value.titre,
-      description: offre.value.desc,
-      lieu: offre.value.lieu,
-      prix: offre.value.prix,
-      charges: offre.value.chargesRaw,
-      caution: offre.value.caution || 0,
-      coloc: offre.value.coloc,
-      chambresDisponibles: offre.value.chambresDisponibles ?? offre.value.coloc,
-      surface: offre.value.surface,
-      tags: [...offre.value.tags],
-      images: [...offre.value.imgs]
+      titre: o.titre,
+      titreEn: o.titreEn || '',
+      description: o.description,
+      descriptionEn: o.descriptionEn || '',
+      lieu: o.lieu,
+      prix: o.prix,
+      charges: o.charges || 0,
+      caution: o.caution || 0,
+      coloc: o.coloc,
+      chambresDisponibles: o.chambresDisponibles ?? o.coloc,
+      surface: o.surface,
+      tags: Array.isArray(o.tags) ? [...o.tags] : [],
+      images: o.images ? o.images.map((img: any) => img.url) : []
     }
     saveMessage.value = ''
     saveError.value = ''
@@ -260,7 +280,9 @@ const saveAll = async () => {
       method: 'PATCH',
       body: {
         titre: editForm.value.titre,
+        titreEn: editForm.value.titreEn || null,
         description: editForm.value.description,
+        descriptionEn: editForm.value.descriptionEn || null,
         lieu: editForm.value.lieu,
         prix: editForm.value.prix,
         charges: editForm.value.charges,
@@ -394,7 +416,7 @@ const prevImage = () => {
             <p class="location">📍 {{ offre.lieu }}</p>
 
             <div class="tags">
-              <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ tag }}</span>
+              <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
             </div>
 
             <div class="separator"></div>
@@ -407,12 +429,17 @@ const prevImage = () => {
           <template v-else>
             <div class="edit-group">
               <label class="edit-label">{{ $t('offers.edit.titleLabel') }}</label>
-              <input v-model="editForm.titre" type="text" class="edit-input" placeholder="Titre de l'annonce">
+              <input v-model="editForm.titre" type="text" class="edit-input" :placeholder="$t('offers.edit.titlePlaceholder')">
+            </div>
+
+            <div class="edit-group">
+              <label class="edit-label">{{ $t('offers.edit.titleEnLabel') }}</label>
+              <input v-model="editForm.titreEn" type="text" class="edit-input" :placeholder="$t('offers.edit.titleEnPlaceholder')">
             </div>
 
             <div class="edit-group">
               <label class="edit-label">{{ $t('offers.edit.locationLabel') }}</label>
-              <input v-model="editForm.lieu" type="text" class="edit-input" placeholder="Amiens, Quartier...">
+              <input v-model="editForm.lieu" type="text" class="edit-input" :placeholder="$t('offers.edit.locationPlaceholder')">
             </div>
 
             <div class="edit-group">
@@ -426,7 +453,7 @@ const prevImage = () => {
                   :class="{ selected: editForm.tags.includes(equip) }"
                   type="button"
                 >
-                  {{ getTagEmoji(equip) }} {{ equip }}
+                  {{ getTagEmoji(equip) }} {{ translateTag(equip) }}
                 </button>
               </div>
             </div>
@@ -435,8 +462,14 @@ const prevImage = () => {
 
             <div class="edit-group">
               <label class="edit-label">{{ $t('offers.edit.descriptionLabel') }}</label>
-              <textarea v-model="editForm.description" class="edit-textarea" rows="8" placeholder="Décrivez le logement..."></textarea>
+              <textarea v-model="editForm.description" class="edit-textarea" rows="8" :placeholder="$t('offers.edit.descriptionPlaceholder')"></textarea>
               <small class="edit-hint">{{ $t('offers.edit.chars', { n: editForm.description.length }) }}</small>
+            </div>
+
+            <div class="edit-group">
+              <label class="edit-label">{{ $t('offers.edit.descriptionEnLabel') }}</label>
+              <textarea v-model="editForm.descriptionEn" class="edit-textarea" rows="8" :placeholder="$t('offers.edit.descriptionEnPlaceholder')"></textarea>
+              <small class="edit-hint">{{ $t('offers.edit.chars', { n: editForm.descriptionEn.length }) }}</small>
             </div>
           </template>
 

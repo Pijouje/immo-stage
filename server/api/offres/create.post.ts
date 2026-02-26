@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   // 3. Récupération des données du formulaire
   const body = await readBody(event)
 
-  // 4. Validation des champs obligatoires
+  // 4. Validation des champs obligatoires (titre FR, description FR, prix, lieu)
   const requiredFields = ['titre', 'description', 'prix', 'lieu']
   const missingFields = requiredFields.filter(field => !body[field])
 
@@ -64,6 +64,12 @@ export default defineEventHandler(async (event) => {
   if (body.lieu.trim().length > 200) {
     throw createError({ statusCode: 400, statusMessage: 'Le lieu ne doit pas dépasser 200 caractères' })
   }
+  if (body.titreEn && String(body.titreEn).trim().length > 200) {
+    throw createError({ statusCode: 400, statusMessage: 'The English title must not exceed 200 characters' })
+  }
+  if (body.descriptionEn && String(body.descriptionEn).trim().length > 5000) {
+    throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 5000 characters' })
+  }
 
   // SECURITE : Validation des URLs d'images (empêcher javascript:, data:, etc.)
   let imagesValidees: { url: string }[] = []
@@ -89,7 +95,9 @@ export default defineEventHandler(async (event) => {
     const nouvelleOffre = await prisma.offre.create({
       data: {
         titre: body.titre.trim(),
+        titreEn: body.titreEn ? String(body.titreEn).trim() || null : null,
         description: body.description.trim(),
+        descriptionEn: body.descriptionEn ? String(body.descriptionEn).trim() || null : null,
         prix: prix,
         lieu: body.lieu.trim(),
         charges: body.charges ? Number(body.charges) : 0,

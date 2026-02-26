@@ -25,7 +25,9 @@ if (!hasPermission.value && session.value) {
 // États du formulaire
 const form = ref({
   titre: '',
+  titreEn: '',
   description: '',
+  descriptionEn: '',
   prix: '',
   lieu: '',
   charges: '',
@@ -41,23 +43,25 @@ const imageFiles = ref([])       // { file: File, preview: string, url: string, 
 const isDragging = ref(false)
 const uploadError = ref('')
 
-// Liste des équipements disponibles
+// Liste des équipements disponibles (clés françaises = valeurs stockées en BDD)
 const equipementsDisponibles = [
-  'WiFi / Fibre',
-  'Cuisine équipée',
-  'Lave-linge',
-  'Sèche-linge',
-  'Lave-vaisselle',
-  'Parking',
-  'Balcon',
-  'Terrasse',
-  'Ascenseur',
-  'Meublé',
-  'Cave',
-  'Gardien',
-  'Proche transports',
-  'Proche commerces'
+  'WiFi / Fibre', 'Cuisine équipée', 'Lave-linge', 'Sèche-linge',
+  'Lave-vaisselle', 'Parking', 'Balcon', 'Terrasse', 'Ascenseur',
+  'Meublé', 'Cave', 'Gardien', 'Proche transports', 'Proche commerces'
 ]
+
+// Traduction des tags selon la langue active
+const tagKeyMap = {
+  'WiFi / Fibre': 'wifiFibre', 'Cuisine équipée': 'cuisineEquipee', 'Lave-linge': 'laveLinge',
+  'Sèche-linge': 'secheLinge', 'Lave-vaisselle': 'laveVaisselle', 'Parking': 'parking',
+  'Balcon': 'balcon', 'Terrasse': 'terrasse', 'Ascenseur': 'ascenseur',
+  'Meublé': 'meuble', 'Cave': 'cave', 'Gardien': 'gardien',
+  'Proche transports': 'procheTransports', 'Proche commerces': 'procheCommerces'
+}
+const translateTag = (tag) => {
+  const key = tagKeyMap[tag]
+  return key ? t(`offers.tags.${key}`) : tag
+}
 
 // États de soumission
 const loading = ref(false)
@@ -177,7 +181,9 @@ const soumettreOffre = async () => {
       method: 'POST',
       body: {
         titre: form.value.titre,
+        titreEn: form.value.titreEn || null,
         description: form.value.description,
+        descriptionEn: form.value.descriptionEn || null,
         prix: Number(form.value.prix),
         lieu: form.value.lieu,
         charges: form.value.charges ? Number(form.value.charges) : 0,
@@ -209,7 +215,9 @@ const soumettreOffre = async () => {
 const reinitialiserFormulaire = () => {
   form.value = {
     titre: '',
+    titreEn: '',
     description: '',
+    descriptionEn: '',
     prix: '',
     lieu: '',
     charges: '',
@@ -261,29 +269,54 @@ const reinitialiserFormulaire = () => {
           <div class="section">
             <h2 class="section-title">{{ $t('offers.create.sections.main') }}</h2>
 
-            <div class="form-group">
-              <label for="titre">{{ $t('offers.create.fields.titleLabel') }}</label>
-              <input 
-                v-model="form.titre" 
-                type="text" 
-                id="titre" 
-                :placeholder="$t('offers.create.fields.titlePlaceholder')"
-                class="input"
-                required
-              >
+            <div class="form-row">
+              <div class="form-group">
+                <label for="titre">{{ $t('offers.create.fields.titleLabel') }}</label>
+                <input
+                  v-model="form.titre"
+                  type="text"
+                  id="titre"
+                  :placeholder="$t('offers.create.fields.titlePlaceholder')"
+                  class="input"
+                  required
+                >
+              </div>
+              <div class="form-group">
+                <label for="titreEn">{{ $t('offers.create.fields.titleEnLabel') }}</label>
+                <input
+                  v-model="form.titreEn"
+                  type="text"
+                  id="titreEn"
+                  :placeholder="$t('offers.create.fields.titleEnPlaceholder')"
+                  class="input"
+                >
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="description">{{ $t('offers.create.fields.descriptionLabel') }}</label>
-              <textarea
-                v-model="form.description"
-                id="description"
-                rows="6"
-                :placeholder="$t('offers.create.fields.descriptionPlaceholder')"
-                class="input textarea"
-                required
-              ></textarea>
-              <small class="help-text">{{ $t('offers.create.fields.descChars', { n: form.description.length }) }}</small>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="description">{{ $t('offers.create.fields.descriptionLabel') }}</label>
+                <textarea
+                  v-model="form.description"
+                  id="description"
+                  rows="6"
+                  :placeholder="$t('offers.create.fields.descriptionPlaceholder')"
+                  class="input textarea"
+                  required
+                ></textarea>
+                <small class="help-text">{{ $t('offers.create.fields.descChars', { n: form.description.length }) }}</small>
+              </div>
+              <div class="form-group">
+                <label for="descriptionEn">{{ $t('offers.create.fields.descriptionEnLabel') }}</label>
+                <textarea
+                  v-model="form.descriptionEn"
+                  id="descriptionEn"
+                  rows="6"
+                  :placeholder="$t('offers.create.fields.descriptionEnPlaceholder')"
+                  class="input textarea"
+                ></textarea>
+                <small class="help-text">{{ $t('offers.create.fields.descChars', { n: form.descriptionEn.length }) }}</small>
+              </div>
             </div>
 
             <div class="form-row">
@@ -444,7 +477,7 @@ const reinitialiserFormulaire = () => {
                 type="button"
               >
                 <span class="check-icon">{{ form.tags.includes(equip) ? '✓' : '' }}</span>
-                {{ equip }}
+                {{ translateTag(equip) }}
               </button>
             </div>
           </div>

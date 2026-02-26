@@ -222,13 +222,17 @@
     "edit": {
       "images": "📷 Property images",
       "add": "Add",
-      "titleLabel": "Title",
+      "titleLabel": "Title (FR)",
       "titlePlaceholder": "Listing title",
+      "titleEnLabel": "Title in English (optional)",
+      "titleEnPlaceholder": "E.g.: Furnished T2 city centre Amiens",
       "locationLabel": "Location / Area",
       "locationPlaceholder": "Amiens, Neighbourhood...",
       "amenitiesLabel": "Amenities",
-      "descriptionLabel": "Description",
+      "descriptionLabel": "Description (FR)",
       "descriptionPlaceholder": "Describe the property...",
+      "descriptionEnLabel": "Description in English (optional)",
+      "descriptionEnPlaceholder": "Describe your property in detail...",
       "chars": "{n} / 5000 characters",
       "rentLabel": "Monthly rent (€)",
       "chargesLabel": "Charges (€)",
@@ -253,10 +257,14 @@
         "amenities": "Amenities & services"
       },
       "fields": {
-        "titleLabel": "Listing title *",
-        "titlePlaceholder": "E.g.: Furnished T2 city centre Amiens",
-        "descriptionLabel": "Description *",
-        "descriptionPlaceholder": "Describe your property in detail...",
+        "titleLabel": "Listing title (FR) *",
+        "titlePlaceholder": "Ex: T2 meublé centre-ville Amiens",
+        "titleEnLabel": "Listing title in English (optional)",
+        "titleEnPlaceholder": "E.g.: Furnished T2 city centre Amiens",
+        "descriptionLabel": "Description (FR) *",
+        "descriptionPlaceholder": "Décrivez votre logement en détail...",
+        "descriptionEnLabel": "Description in English (optional)",
+        "descriptionEnPlaceholder": "Describe your property in detail...",
         "descChars": "{n} characters",
         "rentLabel": "Monthly rent (€) *",
         "rentPlaceholder": "500",
@@ -283,6 +291,22 @@
       "amenities": {
         "description": "Select available amenities"
       }
+    },
+    "tags": {
+      "wifiFibre": "WiFi / Fibre",
+      "cuisineEquipee": "Equipped kitchen",
+      "laveLinge": "Washing machine",
+      "secheLinge": "Dryer",
+      "laveVaisselle": "Dishwasher",
+      "parking": "Parking",
+      "balcon": "Balcony",
+      "terrasse": "Terrace",
+      "ascenseur": "Elevator",
+      "meuble": "Furnished",
+      "cave": "Cellar",
+      "gardien": "Caretaker",
+      "procheTransports": "Near public transport",
+      "procheCommerces": "Near shops"
     }
   },
   "profile": {

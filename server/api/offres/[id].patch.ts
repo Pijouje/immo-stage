@@ -63,6 +63,22 @@ export default defineEventHandler(async (event) => {
     updateData.description = desc
   }
 
+  if (body.titreEn !== undefined) {
+    const titreEn = body.titreEn ? String(body.titreEn).trim() : null
+    if (titreEn && titreEn.length > 200) {
+      throw createError({ statusCode: 400, statusMessage: 'The English title must not exceed 200 characters' })
+    }
+    updateData.titreEn = titreEn || null
+  }
+
+  if (body.descriptionEn !== undefined) {
+    const descEn = body.descriptionEn ? String(body.descriptionEn).trim() : null
+    if (descEn && descEn.length > 5000) {
+      throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 5000 characters' })
+    }
+    updateData.descriptionEn = descEn || null
+  }
+
   if (body.lieu !== undefined) {
     const lieu = String(body.lieu).trim()
     if (lieu.length === 0 || lieu.length > 200) {
