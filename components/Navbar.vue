@@ -9,12 +9,6 @@ const props = defineProps({
 })
 
 const { data: session, status, signOut } = useAuth()
-const { locale, setLocale } = useI18n()
-
-const toggleLocale = () => {
-  setLocale(locale.value === 'fr' ? 'en' : 'fr')
-}
-
 const menuOuvert = ref(false)
 const refMenu = ref(null)
 const refBurger = ref(null)
@@ -121,9 +115,6 @@ onUnmounted(() => {
                     </button>
                 </template>
 
-                <button class="btn-lang" @click="toggleLocale" :aria-label="locale === 'fr' ? 'Switch to English' : 'Passer en français'">
-                  {{ locale === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR' }}
-                </button>
             </nav>
         </div>
     </header>
@@ -300,24 +291,6 @@ onUnmounted(() => {
     display: none;
 }
 
-.btn-lang {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.btn-lang:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-}
 
 @media (max-width: 768px) {
     .bouton-burger {
