@@ -1,8 +1,7 @@
 import { getServerSession } from '#auth'
 import { prisma } from '../../utils/prisma'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { uploadToR2 } from '../../utils/r2'
 
 const TAILLE_MAX = 5 * 1024 * 1024
 const TYPES_AUTORISES = [
@@ -23,7 +22,7 @@ const MIME_TO_EXT: Record<string, string> = {
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
-    if(!session){
+    if (!session) {
         throw createError({ statusCode: 401, message: 'Non connecté' })
     }
 
@@ -31,7 +30,7 @@ export default defineEventHandler(async (event) => {
     const fichier = formData.get('fichier') as File
     const destinataireId = formData.get('destinataireId') as string
 
-    if(!destinataireId || !fichier || !fichier.size){
+    if (!destinataireId || !fichier || !fichier.size) {
         throw createError({ statusCode: 400, message: 'Fichier ou destinataire manquant' })
     }
 
@@ -56,20 +55,14 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 415, message: 'Format de fichier non autorisé' })
     }
 
-    const byte = await fichier.arrayBuffer()
-    const buffer = Buffer.from(byte)
-
-    const dossier = join(process.cwd(), 'public', 'uploads')
-    await mkdir(dossier, { recursive: true })
+    const buffer = Buffer.from(await fichier.arrayBuffer())
 
     // SECURITE : Extension dérivée du MIME validé, pas du nom de fichier client
     const extension = MIME_TO_EXT[fichier.type] || '.bin'
-    const nomFichier = `${randomUUID()}${extension}`
-    
-    await writeFile(join(dossier, nomFichier), buffer)
+    const nomFichier = `messages/${randomUUID()}${extension}`
 
-    const urlFichier = `/uploads/${nomFichier}`
-    const typeFichier = TYPES_AUTORISES[fichier.type]
+    // Upload vers Cloudflare R2
+    const urlFichier = await uploadToR2(buffer, nomFichier, fichier.type)
 
     const message = await prisma.message.create({
         data: {
