@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 
   site: {
     url: 'https://ton-site-stage.com',
-    name: 'Agence Immo - Location Étudiante Amiens',
+    name: "Stud'Loc - Location Étudiante Amiens",
     description: 'Trouvez votre logement étudiant à Amiens : appartements meublés, colocations, studios. Location vérifiée avec avis de locataires.',
     defaultLocale: 'fr',
   },
@@ -26,7 +26,7 @@ export default defineNuxtConfig({
         { name: 'format-detection', content: 'telephone=no' },
         { property: 'og:type', content: 'website' },
         { property: 'og:locale', content: 'fr_FR' },
-        { property: 'og:site_name', content: 'Agence Immo Amiens' },
+        { property: 'og:site_name', content: "Stud'Loc" },
         { name: 'twitter:card', content: 'summary_large_image' },
       ],
     },

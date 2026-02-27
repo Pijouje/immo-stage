@@ -59,8 +59,8 @@ onUnmounted(() => {
         <div class="Bandeau_haut">
             <div class="Conteneur_Logo">
                 <div class="Logo_Cercle" aria-hidden="true">
-                    <NuxtLink to="/" aria-label="Accueil - Agence Immo Amiens">
-                        <span>🏠</span>
+                    <NuxtLink to="/" aria-label="Accueil - Stud'Loc">
+                        <img src="/images/logo.png" alt="Stud'Loc logo" class="logo-img" />
                     </NuxtLink>
                 </div>
                 <div class="Nom_site">
@@ -186,20 +186,28 @@ onUnmounted(() => {
 }
 
 .Logo_Cercle {
-    width: 40px;
-    height: 40px;
-    background-color: white;
-    border-radius: 50%;
+    background: transparent !important;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.4rem;
-    color: #01111d;
     transition: transform 0.2s;
+}
+
+.Logo_Cercle a {
+    background: transparent;
+    display: flex;
+    line-height: 0;
 }
 
 .Logo_Cercle:hover {
     transform: scale(1.05);
+}
+
+.logo-img {
+    display: block;
+    height: 44px;
+    width: auto;
+    background: transparent;
 }
 
 .Nom_site .site-name {
