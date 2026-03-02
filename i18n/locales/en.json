@@ -321,7 +321,9 @@
       "title": "My documents",
       "none": "No documents uploaded yet",
       "add": "Add a document",
-      "uploading": "Uploading..."
+      "uploading": "Uploading...",
+      "open": "Open",
+      "download": "Download"
     },
     "modals": {
       "editName": "Edit name and surname",

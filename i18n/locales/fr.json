@@ -321,7 +321,9 @@
       "title": "Mes documents",
       "none": "Aucun document téléchargé pour le moment",
       "add": "Ajouter un document",
-      "uploading": "Envoi en cours..."
+      "uploading": "Envoi en cours...",
+      "open": "Ouvrir",
+      "download": "Télécharger"
     },
     "modals": {
       "editName": "Modifier le nom et prénom",

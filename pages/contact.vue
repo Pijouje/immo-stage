@@ -412,7 +412,7 @@ const formatHeureMessage = (date) => {
                     </div>
 
                     <div class="fichier-actions-externe">
-                        <a :href="sanitizeUrl(fichier.contenu)" :download="fichier.nom || fichier.contenu.split('/').pop()" class="btn-action-externe">
+                        <a :href="`/api/download?url=${encodeURIComponent(fichier.contenu)}&nom=${encodeURIComponent(fichier.nom || fichier.contenu.split('/').pop())}`" class="btn-action-externe" target="_blank" rel="noopener noreferrer">
                             ⬇ {{ $t('messages.download') }}
                         </a>
                         <button
@@ -434,9 +434,10 @@ const formatHeureMessage = (date) => {
         <div v-if="imageAgrandie" class="lightbox-img-overlay" @click="fermerImage">
             <img :src="sanitizeUrl(imageAgrandie)" class="lightbox-img-grande" @click.stop />
             <a
-                :href="sanitizeUrl(imageAgrandie)"
-                :download="imageAgrandie.split('/').pop()"
+                :href="`/api/download?url=${encodeURIComponent(imageAgrandie)}&nom=${encodeURIComponent(imageAgrandie.split('/').pop())}`"
                 class="btn-telecharger"
+                target="_blank"
+                rel="noopener noreferrer"
                 @click.stop
             >
                 ⬇ {{ $t('messages.downloadImage') }}

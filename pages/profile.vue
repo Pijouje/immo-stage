@@ -317,8 +317,11 @@ const isPasswordValid = computed(() =>
                         <div class="Doc_Info">
                           <span class="Doc_Nom">{{ doc.nom }}</span>
                         </div>
-                        <a :href="doc.url" target="_blank" rel="noopener noreferrer" class="Doc_Ouvrir" aria-label="Ouvrir">
+                        <a :href="doc.url" target="_blank" rel="noopener noreferrer" class="Doc_Ouvrir" :aria-label="$t('profile.documents.open')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                        <a :href="`/api/download?url=${encodeURIComponent(doc.url)}&nom=${encodeURIComponent(doc.nom)}`" class="Doc_Telecharger" :aria-label="$t('profile.documents.download')" target="_blank" rel="noopener noreferrer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </a>
                         <button class="Doc_Supprimer" @click="supprimerDocument(doc.id)" :disabled="deletingId === doc.id" aria-label="Supprimer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -808,6 +811,27 @@ label {
 .Doc_Ouvrir:hover {
   color: #2563eb;
   background-color: #eff6ff;
+}
+
+.Doc_Telecharger {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-right: 4px;
+  text-decoration: none;
+}
+
+.Doc_Telecharger:hover {
+  color: #0d9488;
+  background-color: #f0fdfa;
 }
 
 .Doc_Supprimer {
