@@ -322,26 +322,8 @@ const ouvrirDocument = async (doc: any) => {
                 
                 <div v-if="documents.length > 0" class="Liste_Documents">
                     <div v-for="doc in documents" :key="doc.id" class="Document_Item">
-<<<<<<< HEAD
                     <div class="Doc_Icone">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-=======
-                        <div class="Doc_Icone">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        </div>
-                        <div class="Doc_Info">
-                          <span class="Doc_Nom">{{ doc.nom }}</span>
-                        </div>
-                        <button @click="ouvrirDocument(doc)" class="Doc_Ouvrir" :aria-label="$t('profile.documents.open')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </button>
-                        <a :href="`/api/download?url=${encodeURIComponent(doc.url)}&nom=${encodeURIComponent(doc.nom)}`" class="Doc_Telecharger" :aria-label="$t('profile.documents.download')" target="_blank" rel="noopener noreferrer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        </a>
-                        <button class="Doc_Supprimer" @click="supprimerDocument(doc.id)" :disabled="deletingId === doc.id" aria-label="Supprimer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        </button>
->>>>>>> f05f15f7001d486080977fe658fb14ed3eb3938b
                     </div>
                     <div class="Doc_Info">
                         <span class="Doc_Nom">{{ doc.nom }}</span>
