@@ -229,6 +229,17 @@ const hasSpecial = computed(() => /[@$!%*?&_]/.test(editForm.value.newPassword))
 const isPasswordValid = computed(() => 
   hasMinLength.value && hasUpper.value && hasLower.value && hasNumber.value && hasSpecial.value
 )
+
+
+const ouvrirDocument = async (doc: any) => {
+  try {
+    const { url } = await $fetch<{ url: string }>(`/api/profile/documents/${doc.id}/url`)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  } catch {
+    uploadError.value = t('errors.openError')
+  }
+}
+
 </script>
 
 <template>
@@ -317,9 +328,9 @@ const isPasswordValid = computed(() =>
                         <div class="Doc_Info">
                           <span class="Doc_Nom">{{ doc.nom }}</span>
                         </div>
-                        <a :href="doc.url" target="_blank" rel="noopener noreferrer" class="Doc_Ouvrir" aria-label="Ouvrir">
+                        <button @click="ouvrirDocument(doc)" class="Doc_Ouvrir" aria-label="Ouvrir">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>
+                        </button>
                         <button class="Doc_Supprimer" @click="supprimerDocument(doc.id)" :disabled="deletingId === doc.id" aria-label="Supprimer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>

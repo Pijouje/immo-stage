@@ -1,4 +1,19 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { GetObjectCommand } from '@aws-sdk/client-s3'
+
+
+export const getSignedUrlFromR2 = async (url: string): Promise<string> => {
+  const key = url.replace(`${process.env.R2_PUBLIC_URL}/`, '')
+  
+  const command = new GetObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key
+  })
+
+  return await getSignedUrl(r2, command, { expiresIn: 3600 })
+}
+
 
 const r2 = new S3Client({
   region: 'auto',
