@@ -354,8 +354,14 @@ const formatHeureMessage = (date) => {
                     <div class="message-wrapper">
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
                             <img v-if="msg.type === 'image'" :src="sanitizeUrl(msg.contenu)" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
-                            <a v-else-if="msg.type === 'fichier'" :href="sanitizeUrl(msg.contenu)" target="_blank" rel="noopener noreferrer" class="msg-fichier">
-                                📄 {{ msg.nom || msg.contenu.split('/').pop() }}
+                            <a v-else-if="msg.type === 'fichier'" :href="sanitizeUrl(msg.contenu)" target="_blank" rel="noopener noreferrer" class="msg-fichier-card">
+                                <div class="msg-fichier-icone">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                </div>
+                                <div class="msg-fichier-infos">
+                                    <span class="msg-fichier-nom">{{ msg.nom || msg.contenu.split('/').pop() }}</span>
+                                    <span class="msg-fichier-ouvrir">Ouvrir ↗</span>
+                                </div>
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
@@ -1305,6 +1311,78 @@ const formatHeureMessage = (date) => {
 .modal-enter-from .modal-content,
 .modal-leave-to .modal-content {
   transform: scale(0.9);
+}
+
+.msg-fichier-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    width: 85%;
+    transition: background 0.2s;
+}
+
+.message-recu .msg-fichier-card {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+.msg-fichier-card:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.message-recu .msg-fichier-card:hover {
+    background: #e2e8f0;
+}
+
+.msg-fichier-icone {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+}
+
+.message-recu .msg-fichier-icone {
+    background: #dbeafe;
+    color: #2563EB;
+}
+
+.msg-fichier-infos {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.msg-fichier-nom {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-recu .msg-fichier-nom {
+    color: #334155;
+}
+
+.msg-fichier-ouvrir {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+}
+
+.message-recu .msg-fichier-ouvrir {
+    color: #2563EB;
 }
 
 @media (max-width: 768px) {
