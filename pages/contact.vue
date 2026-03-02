@@ -744,6 +744,8 @@ const formatHeureMessage = (date) => {
     max-width: 60%;
     width: fit-content;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+    min-width: 220px;
 }
 
 .message-envoye {
@@ -754,6 +756,8 @@ const formatHeureMessage = (date) => {
     max-width: 60%;
     width: fit-content;
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    overflow: hidden;
+    min-width: 220px;
 }
 
 .message-recu p, .message-envoye p {
@@ -1322,7 +1326,8 @@ const formatHeureMessage = (date) => {
     border-radius: 12px;
     padding: 12px 16px;
     text-decoration: none;
-    width: 85%;
+    width: 100%;
+    box-sizing: border-box;
     transition: background 0.2s;
 }
 
