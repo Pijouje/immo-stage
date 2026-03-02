@@ -354,7 +354,7 @@ const formatHeureMessage = (date) => {
                     <div class="message-wrapper">
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
                             <img v-if="msg.type === 'image'" :src="`/api/messages/media?id=${msg.id}`" class="msg-image" @click.stop="ouvrirImage(msg)"/>
-                            <a v-else-if="msg.type === 'fichier'" :href="`/api/messages/media?id=${msg.id}&download=1&nom=${encodeURIComponent(msg.nom || '')}`" target="_blank" rel="noopener noreferrer" class="msg-fichier-card">
+                            <a v-else-if="msg.type === 'fichier'" :href="`/api/messages/media?id=${msg.id}&nom=${encodeURIComponent(msg.nom || '')}`" target="_blank" rel="noopener noreferrer" class="msg-fichier-card">
                                 <div class="msg-fichier-icone">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 </div>
@@ -745,7 +745,6 @@ const formatHeureMessage = (date) => {
     width: fit-content;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     overflow: hidden;
-    min-width: 220px;
 }
 
 .message-envoye {
@@ -757,7 +756,6 @@ const formatHeureMessage = (date) => {
     width: fit-content;
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
     overflow: hidden;
-    min-width: 220px;
 }
 
 .message-recu p, .message-envoye p {
