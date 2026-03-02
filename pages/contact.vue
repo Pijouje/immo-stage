@@ -156,8 +156,8 @@ const envoyerFichier = async (event) => {
     }
 }
 
-const ouvrirImage = (url) => {
-    imageAgrandie.value = url
+const ouvrirImage = (msg) => {
+    imageAgrandie.value = msg
 }
 
 const fermerImage = () => {
@@ -353,6 +353,7 @@ const formatHeureMessage = (date) => {
                     
                     <div class="message-wrapper">
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
+<<<<<<< HEAD
                             <img v-if="msg.type === 'image'" :src="sanitizeUrl(msg.contenu)" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
                             <a v-else-if="msg.type === 'fichier'" :href="sanitizeUrl(msg.contenu)" target="_blank" rel="noopener noreferrer" class="msg-fichier-card">
                                 <div class="msg-fichier-icone">
@@ -362,6 +363,11 @@ const formatHeureMessage = (date) => {
                                     <span class="msg-fichier-nom">{{ msg.nom || msg.contenu.split('/').pop() }}</span>
                                     <span class="msg-fichier-ouvrir">Ouvrir ↗</span>
                                 </div>
+=======
+                            <img v-if="msg.type === 'image'" :src="`/api/messages/media?id=${msg.id}`" class="msg-image" @click.stop="ouvrirImage(msg)"/>
+                            <a v-else-if="msg.type === 'fichier'" :href="`/api/messages/media?id=${msg.id}&download=1&nom=${encodeURIComponent(msg.nom || '')}`" target="_blank" rel="noopener noreferrer" class="msg-fichier">
+                                📄 {{ msg.nom || msg.contenu.split('/').pop() }}
+>>>>>>> 0dc59f43da0a8a7b32e2d416b90219f3692d0ada
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
@@ -405,8 +411,8 @@ const formatHeureMessage = (date) => {
                     <div
                         v-if="fichier.type === 'image'"
                         class="fichier-thumb-externe"
-                        :style="{ backgroundImage: `url(${fichier.contenu})` }"
-                        @click="ouvrirImage(fichier.contenu)"
+                        :style="{ backgroundImage: `url(/api/messages/media?id=${fichier.id})` }"
+                        @click="ouvrirImage(fichier)"
                     ></div>
                     <div v-else class="fichier-thumb-externe fichier-doc-externe">📄</div>
 
@@ -418,7 +424,7 @@ const formatHeureMessage = (date) => {
                     </div>
 
                     <div class="fichier-actions-externe">
-                        <a :href="`/api/download?url=${encodeURIComponent(fichier.contenu)}&nom=${encodeURIComponent(fichier.nom || fichier.contenu.split('/').pop())}`" class="btn-action-externe" target="_blank" rel="noopener noreferrer">
+                        <a :href="`/api/messages/media?id=${fichier.id}&download=1&nom=${encodeURIComponent(fichier.nom || '')}`" class="btn-action-externe" target="_blank" rel="noopener noreferrer">
                             ⬇ {{ $t('messages.download') }}
                         </a>
                         <button
@@ -438,9 +444,9 @@ const formatHeureMessage = (date) => {
     </div>
     <Transition name="fade">
         <div v-if="imageAgrandie" class="lightbox-img-overlay" @click="fermerImage">
-            <img :src="sanitizeUrl(imageAgrandie)" class="lightbox-img-grande" @click.stop />
+            <img :src="`/api/messages/media?id=${imageAgrandie.id}`" class="lightbox-img-grande" @click.stop />
             <a
-                :href="`/api/download?url=${encodeURIComponent(imageAgrandie)}&nom=${encodeURIComponent(imageAgrandie.split('/').pop())}`"
+                :href="`/api/messages/media?id=${imageAgrandie.id}&download=1&nom=${encodeURIComponent(imageAgrandie.nom || '')}`"
                 class="btn-telecharger"
                 target="_blank"
                 rel="noopener noreferrer"
