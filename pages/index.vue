@@ -118,7 +118,7 @@ watch(() => route.fullPath, () => {
   justify-content: center;
   align-items: flex-start;
   padding-left: 5%;
-  padding-bottom: 15vh;
+  padding-bottom: 25vh;
 }
 
 .main-title {
