@@ -353,7 +353,6 @@ const formatHeureMessage = (date) => {
                     
                     <div class="message-wrapper">
                         <div :class="[msg.expediteurId == Number(session?.user?.id) ? 'message-envoye' : 'message-recu',msg.type === 'image' ? 'message-image' : '']">
-<<<<<<< HEAD
                             <img v-if="msg.type === 'image'" :src="sanitizeUrl(msg.contenu)" class="msg-image" @click.stop="ouvrirImage(msg.contenu)"/>
                             <a v-else-if="msg.type === 'fichier'" :href="sanitizeUrl(msg.contenu)" target="_blank" rel="noopener noreferrer" class="msg-fichier-card">
                                 <div class="msg-fichier-icone">
@@ -363,11 +362,6 @@ const formatHeureMessage = (date) => {
                                     <span class="msg-fichier-nom">{{ msg.nom || msg.contenu.split('/').pop() }}</span>
                                     <span class="msg-fichier-ouvrir">Ouvrir ↗</span>
                                 </div>
-=======
-                            <img v-if="msg.type === 'image'" :src="`/api/messages/media?id=${msg.id}`" class="msg-image" @click.stop="ouvrirImage(msg)"/>
-                            <a v-else-if="msg.type === 'fichier'" :href="`/api/messages/media?id=${msg.id}&download=1&nom=${encodeURIComponent(msg.nom || '')}`" target="_blank" rel="noopener noreferrer" class="msg-fichier">
-                                📄 {{ msg.nom || msg.contenu.split('/').pop() }}
->>>>>>> 0dc59f43da0a8a7b32e2d416b90219f3692d0ada
                             </a>
                             <p v-else>{{ msg.contenu }}</p>
                             <div :class="msg.expediteurId == Number(session?.user?.id) ? 'heure-receveur' : 'heure-destinataire'">
