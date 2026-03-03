@@ -4,6 +4,7 @@ import { NuxtAuthHandler } from '#auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '../../utils/prisma'
 import { compare } from 'bcrypt'
+import { checkRateLimit, recordFailedAttempt, resetAttempts, getRemainingAttempts } from '../../utils/rateLimiter'
 
 // SECURITE : AUTH_SECRET doit être défini (pas de fallback en dur)
 const authSecret = process.env.AUTH_SECRET
@@ -45,7 +46,19 @@ export default NuxtAuthHandler({
                 password: { label: 'Password', type: 'password' }
             },
 
-            async authorize(credentials: any) {
+            async authorize(credentials: any, req: any) {
+                // Extraire l'IP pour le rate limiting (support proxy)
+                const ip = (req?.headers?.['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+                    || req?.socket?.remoteAddress
+                    || 'unknown'
+
+                // SECURITE : vérifier le rate limit avant tout traitement
+                const rateCheck = checkRateLimit(ip)
+                if (rateCheck.blocked) {
+                    const minutes = Math.ceil((rateCheck.remainingMs || 0) / 60000)
+                    throw new Error(`RATE_LIMITED:${minutes}`)
+                }
+
                 // 1. Vérifier que les credentials sont fournis
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error('Email et mot de passe requis')
@@ -58,17 +71,26 @@ export default NuxtAuthHandler({
                     }
                 })
 
-                // SECURITE : message générique pour empêcher l'énumération d'utilisateurs
+                // SECURITE : retourner null (code "CredentialsSignin") pour empêcher l'énumération d'utilisateurs
                 if (!user) {
-                    throw new Error('Email ou mot de passe incorrect')
+                    recordFailedAttempt(ip)
+                    const remaining = getRemainingAttempts(ip)
+                    if (remaining > 0 && remaining <= 3) throw new Error(`WARN_ATTEMPTS:${remaining}`)
+                    return null
                 }
 
                 // 3. Vérifier le mot de passe
                 const isPwdValid = await compare(credentials.password, user.password)
 
                 if (!isPwdValid) {
-                    throw new Error('Email ou mot de passe incorrect')
+                    recordFailedAttempt(ip)
+                    const remaining = getRemainingAttempts(ip)
+                    if (remaining > 0 && remaining <= 3) throw new Error(`WARN_ATTEMPTS:${remaining}`)
+                    return null
                 }
+
+                // Connexion réussie : réinitialiser le compteur de tentatives
+                resetAttempts(ip)
 
                 // 4. Retourner l'utilisateur (sera stocké dans le token JWT)
                 return {

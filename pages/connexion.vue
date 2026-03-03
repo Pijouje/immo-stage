@@ -13,11 +13,15 @@ const { signIn } = useAuth()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+const warningMessage = ref('')
+const isRateLimited = ref(false)
 const loading = ref(false)
 const { t } = useI18n()
 
 const handleLogin = async() => {
     errorMessage.value = ''
+    warningMessage.value = ''
+    isRateLimited.value = false
     if(!email.value && !password.value) {
         errorMessage.value = t('errors.fillAllFields')
         return
@@ -40,7 +44,23 @@ const handleLogin = async() => {
         })
 
         if(result.error) {
-            errorMessage.value = t('errors.wrongCredentials')
+            if (result.error === 'CredentialsSignin') {
+                // Mauvais email ou mot de passe, pas d'avertissement
+                errorMessage.value = t('errors.wrongCredentials')
+            } else if (result.error.startsWith('WARN_ATTEMPTS:')) {
+                // Mauvais mot de passe + avertissement tentatives restantes
+                const n = Number(result.error.split(':')[1])
+                errorMessage.value = t('errors.wrongCredentials')
+                warningMessage.value = t('errors.rateLimitWarning', { n, s: n > 1 ? 's' : '' })
+            } else if (result.error.startsWith('RATE_LIMITED:')) {
+                // Compte bloqué par le rate limiter
+                const n = Number(result.error.split(':')[1])
+                errorMessage.value = t('errors.rateLimitBlocked', { n, s: n > 1 ? 's' : '' })
+                isRateLimited.value = true
+            } else {
+                // Erreur inattendue
+                errorMessage.value = t('errors.loginError')
+            }
             loading.value = false
         } else {
             await navigateTo('/')
@@ -80,8 +100,11 @@ const handleLogin = async() => {
                     :required="true"
                 />
             </div>
-            <p v-if="errorMessage" class="error-text">
+            <p v-if="errorMessage" :class="isRateLimited ? 'error-text rate-limit-text' : 'error-text'">
                 {{ errorMessage }}
+            </p>
+            <p v-if="warningMessage" class="warning-text">
+                ⚠️ {{ warningMessage }}
             </p>
 
             <Bouton>{{ $t('auth.accessSpace') }}</Bouton>
@@ -225,6 +248,28 @@ label {
   margin-bottom: 0px;
   text-align: center;
   padding: 2px;
+}
+
+.rate-limit-text {
+  color: #b45309;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.warning-text {
+  color: #92400e;
+  background-color: #fff7ed;
+  border: 1px solid #fb923c;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0;
 }
 
 :deep(.password-wrapper input) {
