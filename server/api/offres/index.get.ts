@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       id: offre.id,
       titre: offre.titre,
       lieu: offre.lieu,
-      prix: `${offre.prix}€`,
+      prix: offre.prix,
       image: offre.images[0]?.url || '/images/default.png'
     })),
     total,
