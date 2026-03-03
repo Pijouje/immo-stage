@@ -428,7 +428,12 @@ const formatHeureMessage = (date) => {
                         >
                             {{ sauvegardesFaites.includes(fichier.id) ? $t('messages.savedToDocs') : sauvegardeEnCours.includes(fichier.id) ? $t('messages.saving') : $t('messages.saveToDocs') }}
                         </button>
-                        <button class="btn-action-externe btn-supprimer-externe" @click="supprimerFichier(fichier)">
+                        <button
+                            class="btn-action-externe btn-supprimer-externe"
+                            @click="supprimerFichier(fichier)"
+                            :disabled="Number(fichier.expediteurId) !== Number(session?.user?.id)"
+                            :title="Number(fichier.expediteurId) !== Number(session?.user?.id) ? $t('messages.cannotDeleteOthers') : ''"
+                        >
                             🗑️ {{ $t('messages.delete') }}
                         </button>
                     </div>
@@ -1108,6 +1113,16 @@ const formatHeureMessage = (date) => {
 
 .btn-supprimer-externe:hover {
     background: #dc2626;
+}
+
+.btn-supprimer-externe:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #ef4444;
+}
+
+.btn-supprimer-externe:disabled:hover {
+    background: #ef4444;
 }
 
 .btn-sauvegarder-externe {

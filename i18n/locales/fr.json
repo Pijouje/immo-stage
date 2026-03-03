@@ -108,6 +108,7 @@
     "deleteFileConfirm": "Voulez-vous vraiment supprimer ce fichier ? Cette action est irréversible.",
     "deleteFileCancel": "Annuler",
     "deleteFileConfirmBtn": "Supprimer",
+    "cannotDeleteOthers": "Vous ne pouvez pas supprimer les fichiers envoyés par votre contact",
     "savedToDocs": "✓ Sauvegardé",
     "saveToDocs": "💾 Mes docs",
     "saving": "...",
