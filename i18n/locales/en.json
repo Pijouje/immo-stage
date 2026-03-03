@@ -36,6 +36,8 @@
     "enterPassword": "Please enter your password",
     "wrongCredentials": "Incorrect email or password",
     "loginError": "An error occurred during login.",
+    "rateLimitWarning": "Warning: you have {n} attempt{s} left before a 15-minute lockout.",
+    "rateLimitBlocked": "Too many attempts. Try again in {n} minute{s}.",
     "signupError": "An error occurred during registration.",
     "passwordCriteria": "Please meet all password criteria.",
     "passwordsNoMatch": "Passwords do not match",

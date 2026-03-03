@@ -53,6 +53,8 @@
     "enterPassword": "Veuillez entrer votre mot de passe",
     "wrongCredentials": "Email ou mot de passe incorrect",
     "loginError": "Une erreur est survenue lors de la connexion.",
+    "rateLimitWarning": "Attention : il vous reste {n} tentative{s} avant blocage de 15 minutes.",
+    "rateLimitBlocked": "Trop de tentatives. Réessayez dans {n} minute{s}.",
     "signupError": "Une erreur est survenue lors de l'inscription.",
     "passwordCriteria": "Veuillez respecter tous les critères du mot de passe.",
     "passwordsNoMatch": "Les mots de passe ne correspondent pas",
