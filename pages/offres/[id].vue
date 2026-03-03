@@ -37,10 +37,9 @@ useSeoMeta({
   title: `${offreRaw.value?.titre || 'Offre'} - Location Amiens | Agence Immo`,
   description: `${offreRaw.value?.titre} à ${offreRaw.value?.lieu}. ${offreRaw.value?.prix}€/mois. ${offreRaw.value?.description?.substring(0, 140) || 'Logement étudiant à Amiens.'}`,
   ogTitle: `${offreRaw.value?.titre} - ${offreRaw.value?.prix}€/mois`,
-  ogDescription: `Location à ${offreRaw.value?.lieu}. ${offreRaw.value?.charges > 0 ? offreRaw.value.charges + '€ de charges' : 'Charges comprises'}.`,
-  ogUrl: `https://ton-site-stage.com/offres/${route.params.id}`,
+  ogDescription: `Location à ${offreRaw.value?.lieu || 'Amiens'}. ${(offreRaw.value?.charges ?? 0) > 0 ? offreRaw.value?.charges + '€ de charges' : 'Charges comprises'}.`,  ogUrl: `https://ton-site-stage.com/offres/${route.params.id}`,
   ogType: 'website',
-  ogImage: offreRaw.value?.images?.[0]?.url || '/images/default.png',
+  ogImage: (offreRaw.value as any)?.offreimage?.[0]?.url || '/images/default.png',
 })
 
 // SEO : Breadcrumb + RealEstateListing JSON-LD

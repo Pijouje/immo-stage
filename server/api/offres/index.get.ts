@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
       skip: (page - 1) * LIMIT,
       take: LIMIT,
       include: {
-        images: { take: 1 }
+        offreimage: { take: 1 }
       }
     }),
     prisma.offre.count()
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
       titre: offre.titre,
       lieu: offre.lieu,
       prix: `${offre.prix}€`,
-      image: offre.images[0]?.url || '/images/default.png'
+      image: offre.offreimage[0]?.url || '/images/default.png'
     })),
     total,
     page,

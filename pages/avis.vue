@@ -43,7 +43,7 @@ interface AvisItem {
   auteurId: number
   offreId: number
   createdAt: string
-  auteur: Auteur
+  user?: Auteur
 }
 
 interface Offre {
@@ -170,7 +170,7 @@ useHead({
         },
         review: avis.value.slice(0, 5).map((a: AvisItem) => ({
           '@type': 'Review',
-          author: { '@type': 'Person', name: `${a.auteur.prenom} ${a.auteur.nom}` },
+          author: { '@type': 'Person', name: `${a.user?.prenom || 'Utilisateur'} ${a.user?.nom || 'Anonyme'}` },
           reviewRating: { '@type': 'Rating', ratingValue: a.note, bestRating: 5 },
           reviewBody: a.commentaire,
           datePublished: a.createdAt?.split('T')[0],
@@ -290,8 +290,9 @@ const formaterDate = (date: string) => {
   })
 }
 
-const getInitiale = (auteur: Auteur) => {
-  return (auteur.prenom?.[0] || '?').toUpperCase()
+const getInitiale = (user?: Auteur) => {
+  if (!user) return '?';
+  return (user.prenom?.[0] || '?').toUpperCase()
 }
 
 const labelNote = (note: number) => {
@@ -457,9 +458,9 @@ const labelNote = (note: number) => {
             <div v-for="a in avis" :key="a.id" class="avis-card">
               <div class="avis-header">
                 <div class="avis-auteur">
-                  <div class="auteur-avatar">{{ getInitiale(a.auteur) }}</div>
+                  <div class="auteur-avatar">{{ getInitiale(a.user) }}</div>
                   <div class="auteur-info">
-                    <strong>{{ a.auteur.prenom }} {{ a.auteur.nom }}</strong>
+                    <strong>{{ a.user?.prenom }} {{ a.user?.nom }}</strong>
                     <Etoile :note="a.note" />
                   </div>
                 </div>

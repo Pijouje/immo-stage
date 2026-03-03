@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,150 +7,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ETUDIANT
-  PROPRIETAIRE
-  ADMIN
+model avis {
+  id          Int      @id @default(autoincrement())
+  note        Int
+  commentaire String   @db.Text
+  createdAt   DateTime @default(now())
+  auteurId    Int
+  offreId     Int
+  user        user     @relation(fields: [auteurId], references: [id], onDelete: Cascade, map: "Avis_auteurId_fkey")
+  offre       offre    @relation(fields: [offreId], references: [id], onDelete: Cascade, map: "Avis_offreId_fkey")
+
+  @@unique([auteurId, offreId], map: "Avis_auteurId_offreId_key")
+  @@index([offreId], map: "Avis_offreId_fkey")
 }
 
-model User {
+model document {
+  id     Int             @id @default(autoincrement())
+  nom    String
+  url    String
+  type   String
+  status document_status @default(EN_ATTENTE)
+  userId Int
+  user   user            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Document_userId_fkey")
+
+  @@index([userId], map: "Document_userId_fkey")
+}
+
+model message {
+  id                                Int      @id @default(autoincrement())
+  contenu                           String   @db.Text
+  createdAt                         DateTime @default(now())
+  lu                                Boolean  @default(false)
+  expediteurId                      Int
+  destinataireId                    Int
+  type                              String   @default("texte")
+  nom                               String?
+  user_message_destinataireIdTouser user     @relation("message_destinataireIdTouser", fields: [destinataireId], references: [id], map: "Message_destinataireId_fkey")
+  user_message_expediteurIdTouser   user     @relation("message_expediteurIdTouser", fields: [expediteurId], references: [id], map: "Message_expediteurId_fkey")
+
+  @@index([destinataireId], map: "Message_destinataireId_fkey")
+  @@index([expediteurId], map: "Message_expediteurId_fkey")
+}
+
+model offre {
+  id                  Int                @id @default(autoincrement())
+  titre               String
+  lieu                String
+  prix                Int
+  description         String             @db.Text
+  caution             Int?
+  coloc               Int                @default(0)
+  tags                Json?
+  createdAt           DateTime           @default(now())
+  charges             Int?               @default(0)
+  proprietaireId      Int
+  surface             Int?
+  updatedAt           DateTime
+  chambresDisponibles Int?
+  descriptionEn       String?            @db.Text
+  titreEn             String?
+  avis                avis[]
+  user                user               @relation(fields: [proprietaireId], references: [id], map: "Offre_proprietaireId_fkey")
+  offreimage          offreimage[]
+  reviewpermission    reviewpermission[]
+
+  @@index([proprietaireId], map: "Offre_proprietaireId_fkey")
+}
+
+model offreimage {
+  id      Int    @id @default(autoincrement())
+  url     String
+  offreId Int
+  offre   offre  @relation(fields: [offreId], references: [id], onDelete: Cascade, map: "OffreImage_offreId_fkey")
+
+  @@index([offreId], map: "OffreImage_offreId_fkey")
+}
+
+model passwordreset {
   id        Int      @id @default(autoincrement())
-  nom       String
-  prenom    String?
-  email     String   @unique
-  password  String
-  avatar    String?
-  role      Role     @default(ETUDIANT)
+  email     String
+  token     String   @unique(map: "PasswordReset_token_key")
+  expiresAt DateTime
+  used      Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  offres                   Offre[]            @relation("ProprietaireOffres")
-  avis                     Avis[]             @relation("AvisAuteur")
-  documents                Document[]
-  messagesEnvoi            Message[]          @relation("Expediteur")
-  messagesRecu             Message[]          @relation("Destinataire")
-  reviewPermissions        ReviewPermission[] @relation("PermissionUser")
-  reviewPermissionsGranted ReviewPermission[] @relation("GrantedPermissions")
 }
 
-// --------------------------------------
-// 2. GESTION DOCUMENTS
-// --------------------------------------
+model reviewpermission {
+  id                                    Int      @id @default(autoincrement())
+  createdAt                             DateTime @default(now())
+  userId                                Int
+  offreId                               Int
+  grantedBy                             Int
+  user_reviewpermission_grantedByTouser user     @relation("reviewpermission_grantedByTouser", fields: [grantedBy], references: [id], map: "ReviewPermission_grantedBy_fkey")
+  offre                                 offre    @relation(fields: [offreId], references: [id], onDelete: Cascade, map: "ReviewPermission_offreId_fkey")
+  user_reviewpermission_userIdTouser    user     @relation("reviewpermission_userIdTouser", fields: [userId], references: [id], onDelete: Cascade, map: "ReviewPermission_userId_fkey")
 
-enum DocStatus {
+  @@unique([userId, offreId], map: "ReviewPermission_userId_offreId_key")
+  @@index([grantedBy], map: "ReviewPermission_grantedBy_fkey")
+  @@index([offreId], map: "ReviewPermission_offreId_fkey")
+}
+
+model user {
+  id                                                Int                @id @default(autoincrement())
+  email                                             String             @unique(map: "User_email_key")
+  nom                                               String
+  prenom                                            String?
+  password                                          String
+  role                                              user_role          @default(ETUDIANT)
+  createdAt                                         DateTime           @default(now())
+  avatar                                            String?
+  updatedAt                                         DateTime
+  derniereActivite                                  DateTime?
+  avis                                              avis[]
+  document                                          document[]
+  message_message_destinataireIdTouser              message[]          @relation("message_destinataireIdTouser")
+  message_message_expediteurIdTouser                message[]          @relation("message_expediteurIdTouser")
+  offre                                             offre[]
+  reviewpermission_reviewpermission_grantedByTouser reviewpermission[] @relation("reviewpermission_grantedByTouser")
+  reviewpermission_reviewpermission_userIdTouser    reviewpermission[] @relation("reviewpermission_userIdTouser")
+}
+
+enum document_status {
   EN_ATTENTE
   VALIDE
   REFUSE
 }
 
-model Document {
-  id     Int       @id @default(autoincrement())
-  nom    String
-  url    String
-  type   String
-  status DocStatus @default(EN_ATTENTE)
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// --------------------------------------
-// 3. GESTION DES OFFRES
-// --------------------------------------
-
-model Offre {
-  id          Int      @id @default(autoincrement())
-  titre       String
-  titreEn     String?
-  description String   @db.Text
-  descriptionEn String? @db.Text
-  prix        Int
-  charges     Int?     @default(0)
-  caution     Int?
-  surface     Int?
-  lieu        String
-  coloc               Int      @default(0)
-  chambresDisponibles Int?
-  tags                Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  proprietaireId Int
-  proprietaire   User @relation("ProprietaireOffres", fields: [proprietaireId], references: [id])
-
-  images            OffreImage[]
-  avis              Avis[]
-  reviewPermissions ReviewPermission[]
-}
-
-model OffreImage {
-  id      Int    @id @default(autoincrement())
-  url     String
-  offreId Int
-  offre   Offre  @relation(fields: [offreId], references: [id], onDelete: Cascade)
-}
-
-// --------------------------------------
-// 4. GESTION DES AVIS
-// --------------------------------------
-
-model ReviewPermission {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  userId Int
-  user   User @relation("PermissionUser", fields: [userId], references: [id], onDelete: Cascade)
-
-  offreId Int
-  offre   Offre @relation(fields: [offreId], references: [id], onDelete: Cascade)
-
-  grantedBy     Int
-  grantedByUser User @relation("GrantedPermissions", fields: [grantedBy], references: [id])
-
-  @@unique([userId, offreId])
-}
-
-model Avis {
-  id          Int      @id @default(autoincrement())
-  note        Int
-  commentaire String   @db.Text
-  createdAt   DateTime @default(now())
-
-  auteurId Int
-  auteur   User  @relation("AvisAuteur", fields: [auteurId], references: [id], onDelete: Cascade)
-
-  offreId Int
-  offre   Offre @relation(fields: [offreId], references: [id], onDelete: Cascade)
-
-  @@unique([auteurId, offreId])
-}
-
-// --------------------------------------
-// 5. MESSAGERIE
-// --------------------------------------
-
-model Message {
-  id          Int      @id @default(autoincrement())
-  contenu     String   @db.Text
-  nom         String?
-  type        String   @default("texte")
-  createdAt   DateTime @default(now())
-  lu          Boolean  @default(false)
-
-  expediteurId Int
-  expediteur   User @relation("Expediteur", fields: [expediteurId], references: [id])
-
-  destinataireId Int
-  destinataire   User @relation("Destinataire", fields: [destinataireId], references: [id])
-}
-
-model PasswordReset {
-  id        Int      @id @default(autoincrement())
-  email     String
-  token     String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
+enum user_role {
+  ETUDIANT
+  PROPRIETAIRE
+  ADMIN
 }

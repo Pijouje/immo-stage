@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       role: true,
       createdAt: true,
       // On inclut aussi les documents pour les afficher dans le profil
-      documents: {
+      document: {
         select: {
           id: true,
           nom: true,

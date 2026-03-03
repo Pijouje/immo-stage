@@ -111,7 +111,8 @@
     "savedToDocs": "✓ Sauvegardé",
     "saveToDocs": "💾 Mes docs",
     "saving": "...",
-    "about": "Concernant :"
+    "about": "Concernant :",
+    "offline": "Hors ligne"
   },
   "password": {
     "minLength": "12 Caractères",

@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const avis = await prisma.avis.findMany({
     where: { offreId },
     include: {
-      auteur: {
+      user: {
         select: { id: true, prenom: true, nom: true, avatar: true }
       }
     },
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   if (session?.user?.id) {
     const userId = parseInt(session.user.id)
 
-    const permission = await prisma.reviewPermission.findUnique({
+    const permission = await prisma.reviewpermission.findUnique({
       where: { userId_offreId: { userId, offreId } }
     })
 

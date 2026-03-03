@@ -12,9 +12,9 @@ export default defineEventHandler(async (event) => {
   const offre = await prisma.offre.findUnique({
     where: { id },
     include: {
-      images: true, // Toutes les images pour la galerie
+      offreimage: true, // Toutes les images pour la galerie
       avis: true,   // Pour calculer la note et le nombre d'avis
-      proprietaire: {
+      user: {
         select: { nom: true, prenom: true }
       }
     }

@@ -25,13 +25,14 @@ export default defineEventHandler(async (event) => {
             avatar: true,
             email: true,
             role: true,
-            messagesEnvoi: {
+            derniereActivite: true,
+            message_message_expediteurIdTouser: {
                 where: { destinataireId: userId },
                 orderBy: { createdAt: 'desc' },
                 take: 1,
                 select: { createdAt: true, contenu: true }
             },
-            messagesRecu: {
+            message_message_destinataireIdTouser: {
                 where: { expediteurId: userId },
                 orderBy: { createdAt: 'desc' },
                 take: 1,
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
             },
             _count: {
                 select: {
-                    messagesEnvoi: {
+                    message_message_expediteurIdTouser: {
                         where: { destinataireId: userId, lu: false }
                     }
                 }
@@ -48,15 +49,15 @@ export default defineEventHandler(async (event) => {
     })
 
     const usersAvecDate = users.map((u) => {
-        const dateEnvoi = u.messagesEnvoi[0]?.createdAt ?? null
-        const dateRecu = u.messagesRecu[0]?.createdAt ?? null
+        const dateEnvoi = u.message_message_expediteurIdTouser[0]?.createdAt ?? null
+        const dateRecu = u.message_message_destinataireIdTouser[0]?.createdAt ?? null
         const dernierMessage = !dateEnvoi ? dateRecu
             : !dateRecu ? dateEnvoi
             : dateEnvoi > dateRecu ? dateEnvoi : dateRecu
 
         const dernierContenu = dernierMessage === dateEnvoi
-            ? u.messagesEnvoi[0]?.contenu
-            : u.messagesRecu[0]?.contenu
+            ? u.message_message_expediteurIdTouser[0]?.contenu
+            : u.message_message_destinataireIdTouser[0]?.contenu
 
         return {
             id: u.id,
@@ -67,10 +68,13 @@ export default defineEventHandler(async (event) => {
             role: u.role,
             dernierMessage,
             dernierContenu,
-            nonLus: u._count.messagesEnvoi,
-            monDernierMessageLu: u.messagesRecu.length > 0
-                && u.messagesRecu[0].lu
-                && dernierMessage === dateRecu
+            nonLus: u._count.message_message_expediteurIdTouser,
+            monDernierMessageLu: u.message_message_destinataireIdTouser.length > 0
+                && u.message_message_destinataireIdTouser[0]?.lu
+                && dernierMessage === dateRecu,
+            enLigne: u.derniereActivite
+                ? (new Date().getTime() - new Date(u.derniereActivite).getTime()) < 2 * 60 * 1000
+                : false
         }
     })
 

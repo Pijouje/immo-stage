@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 3. VÉRIFICATION DU "POUVOIR SPÉCIAL"
-  const permission = await prisma.reviewPermission.findUnique({
+  const permission = await prisma.reviewpermission.findUnique({
     where: { userId_offreId: { userId, offreId } }
   })
 
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       offreId
     },
     include: {
-      auteur: { select: { id: true, prenom: true, nom: true } }
+      user: { select: { id: true, prenom: true, nom: true } }
     }
   })
 

@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Créer la permission (upsert = créer ou ignorer si existe déjà)
-  const permission = await prisma.reviewPermission.upsert({
+  const permission = await prisma.reviewpermission.upsert({
     where: { userId_offreId: { userId: targetUserId, offreId } },
     update: {}, // Si existe, ne rien changer
     create: {

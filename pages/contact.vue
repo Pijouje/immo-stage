@@ -92,14 +92,17 @@ const scrollToBottom = async () => {
 }
 
 onMounted(() => {
-    intervalId = setInterval(() => {
-        if (contactId.value) chargerMessages(false)
-        refreshContacts()
-    }, 3000)
-})
+  $fetch('/api/users/ping', { method: 'POST' })
+  const pingId = setInterval(() => {
+    $fetch('/api/users/ping', { method: 'POST' })
+  }, 30000)
 
-onUnmounted(() => {
-    clearInterval(intervalId)
+  intervalId = setInterval(() => {
+    if (contactId.value) chargerMessages(false)
+    refreshContacts()
+  }, 3000)
+
+  onUnmounted(() => clearInterval(pingId))
 })
 
 const formatDate = (date) => {
@@ -326,8 +329,10 @@ const formatHeureMessage = (date) => {
                 <div class="chat-info">
                     <h3>{{ contactActuel.prenom }} {{ contactActuel.nom }}</h3>
                     <div class="status-container">
-                        <span class="pastille-verte"></span>
-                        <span class="status-text">{{ $t('messages.online') }}</span>
+                        <span class="pastille-verte" :class="{ 'offline': !contactActuel.enLigne }"></span>
+                        <span class="status-text" :class="{ 'offline': !contactActuel.enLigne }">
+                            {{ contactActuel.enLigne ? $t('messages.online') : $t('messages.offline') }}
+                        </span>
                     </div>
                 </div>
                 <div class="concernant">
@@ -685,6 +690,13 @@ const formatHeureMessage = (date) => {
     font-size: 0.8rem;
     color: #22c55e;
     font-weight: 500;
+}
+
+.pastille-verte.offline {
+    background-color: #94a3b8;
+}
+.status-text.offline {
+    color: #94a3b8;
 }
 
 .concernant {

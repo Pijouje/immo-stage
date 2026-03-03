@@ -109,16 +109,17 @@ export default defineEventHandler(async (event) => {
 
         // Relation avec l'utilisateur connecté
         proprietaireId: parseInt(session.user.id),
+        updatedAt: new Date(),
 
         // Création des images validées
-        images: {
+        offreimage: {
           create: imagesValidees
         }
       },
       // Inclure les images dans la réponse
       include: {
-        images: true,
-        proprietaire: {
+        offreimage: true,
+        user: {
           select: {
             id: true,
             nom: true,
