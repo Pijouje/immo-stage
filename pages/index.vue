@@ -128,7 +128,7 @@ watch(() => route.fullPath, () => {
   text-transform: uppercase;
   letter-spacing: 2px;
   line-height: 1.2;
-  margin-bottom: 20px;
+  margin-bottom: 80px;
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
