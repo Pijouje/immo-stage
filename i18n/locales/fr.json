@@ -7,7 +7,9 @@
     "createOffer": "+ CRÉER UNE OFFRE",
     "signup": "S'INSCRIRE",
     "login": "SE CONNECTER",
-    "mySpace": "MON ESPACE"
+    "mySpace": "MON ESPACE",
+    "language": "Langue",
+    "settings": "Paramètres"
   },
   "home": {
     "title1": "LOUEZ VOTRE FUTUR",

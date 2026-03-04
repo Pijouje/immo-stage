@@ -7,7 +7,9 @@
     "createOffer": "+ CREATE OFFER",
     "signup": "SIGN UP",
     "login": "LOG IN",
-    "mySpace": "MY SPACE"
+    "mySpace": "MY SPACE",
+    "language": "Language",
+    "settings": "Settings"
   },
   "home": {
     "title1": "RENT YOUR FUTURE",
