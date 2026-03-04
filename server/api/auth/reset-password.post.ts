@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Token et nouveau mot de passe requis' })
     }
 
-    const resetRecord = await prisma.passwordReset.findUnique({
+    const resetRecord = await prisma.passwordreset.findUnique({
         where: { token: body.token }
     })
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
         data: { password: hashedPassword }
     })
 
-    await prisma.passwordReset.update({
+    await prisma.passwordreset.update({
         where: { id: resetRecord.id },
         data: { used: true }
     })

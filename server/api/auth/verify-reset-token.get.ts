@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Token manquant' })
     }
 
-    const record = await prisma.passwordReset.findUnique({
+    const record = await prisma.passwordreset.findUnique({
         where: { token: token as string }
     })
 

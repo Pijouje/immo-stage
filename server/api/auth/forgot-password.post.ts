@@ -22,14 +22,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Supprimer les anciens tokens non utilisés pour cet email
-    await prisma.passwordReset.deleteMany({
+    await prisma.passwordreset.deleteMany({
         where: { email: body.email, used: false }
     })
 
     const token = randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 3600000)
 
-    const resetRecord = await prisma.passwordReset.create({
+    const resetRecord = await prisma.passwordreset.create({
         data: { email: body.email, token, expiresAt }
     })
 
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
 
     } catch (error) {
         // Rollback : supprimer le token créé puisque l'email n'a pas été envoyé
-        await prisma.passwordReset.delete({ where: { id: resetRecord.id } }).catch(() => {})
+        await prisma.passwordreset.delete({ where: { id: resetRecord.id } }).catch(() => {})
         console.error('Erreur envoi email:', error)
         throw createError({ statusCode: 500, message: 'Erreur lors de l\'envoi de l\'email' })
     }

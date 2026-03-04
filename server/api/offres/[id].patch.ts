@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   // 3. Vérifier que l'offre existe
   const offre = await prisma.offre.findUnique({
     where: { id },
-    include: { images: true }
+    include: { offreimage: true }
   })
 
   if (!offre) {
@@ -149,9 +149,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Supprimer les anciennes images et créer les nouvelles
-    await prisma.offreImage.deleteMany({ where: { offreId: id } })
+    await prisma.offreimage.deleteMany({ where: { offreId: id } })
     if (urls.length > 0) {
-      await prisma.offreImage.createMany({
+      await prisma.offreimage.createMany({
         data: urls.map(url => ({ url, offreId: id }))
       })
     }
@@ -171,12 +171,12 @@ export default defineEventHandler(async (event) => {
     updated = await prisma.offre.update({
       where: { id },
       data: updateData,
-      include: { images: true, avis: true, proprietaire: { select: { nom: true, prenom: true } } }
+      include: { offreimage: true, avis: true, user: { select: { nom: true, prenom: true } } }
     })
   } else {
     updated = await prisma.offre.findUnique({
       where: { id },
-      include: { images: true, avis: true, proprietaire: { select: { nom: true, prenom: true } } }
+      include: { offreimage: true, avis: true, user: { select: { nom: true, prenom: true } } }
     })
   }
 
