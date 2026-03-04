@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
         }
 
         if (response.ContentLength) {
-            setHeader(event, 'Content-Length', String(response.ContentLength))
+            setHeader(event, 'Content-Length', response.ContentLength!)
         }
 
         const buffer = Buffer.from(await response.Body!.transformToByteArray())
