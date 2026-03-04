@@ -82,6 +82,7 @@ const retryFetch = async () => {
   error.value = undefined
   await refresh()
 }
+
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 // 1. Interface des données
 interface Offre {
@@ -306,6 +306,35 @@ const saveAll = async () => {
   }
 }
 
+// --- CAROUSEL ---
+const carouselIndex = ref(0)
+const carouselPaused = ref(false)
+let carouselInterval: ReturnType<typeof setInterval> | null = null
+
+const nextCarousel = () => {
+  const len = offre.value.imgs.length
+  if (len <= 1) return
+  carouselIndex.value = (carouselIndex.value + 1) % len
+}
+
+const prevCarousel = () => {
+  const len = offre.value.imgs.length
+  if (len <= 1) return
+  carouselIndex.value = (carouselIndex.value - 1 + len) % len
+}
+
+onMounted(() => {
+  carouselInterval = setInterval(() => {
+    if (!carouselPaused.value && !isGalleryOpen.value) {
+      nextCarousel()
+    }
+  }, 4000)
+})
+
+onUnmounted(() => {
+  if (carouselInterval) clearInterval(carouselInterval)
+})
+
 // --- LIGHTBOX ---
 const isGalleryOpen = ref(false)
 const currentImageIndex = ref(0)
@@ -361,19 +390,44 @@ const prevImage = () => {
         <span v-if="saveError" class="save-msg error">{{ saveError }}</span>
       </div>
 
-      <!-- ============ GALERIE ============ -->
-      <div v-if="!editMode" class="gallery-grid">
-        <div class="main-photo" @click="openGallery(0)" :style="{ backgroundImage: `url(${offre.imgs[0]})` }">
-          <button class="btn-see-photos">{{ $t('offers.seePhotos', { n: offre.imgs.length }) }}</button>
-          <div class="photo-counter">1/{{ offre.imgs.length }}</div>
-        </div>
-        <div class="sub-photos">
-          <div class="sub-photo" @click="openGallery(1)" :style="{ backgroundImage: `url(${offre.imgs[1] || offre.imgs[0]})` }"></div>
-          <div class="sub-photo" @click="openGallery(2)" :style="{ backgroundImage: `url(${offre.imgs[2] || offre.imgs[0]})` }">
-            <div class="more-overlay" v-if="offre.imgs.length > 3" @click.stop="openGallery(3)">
-              +{{ offre.imgs.length - 3 }}
-            </div>
-          </div>
+      <!-- ============ CAROUSEL ============ -->
+      <div
+        v-if="!editMode"
+        class="gallery-carousel"
+        @mouseenter="carouselPaused = true"
+        @mouseleave="carouselPaused = false"
+      >
+        <img
+          v-for="(img, idx) in offre.imgs"
+          :key="idx"
+          :src="img"
+          :alt="`${offre.titre} - Photo ${idx + 1}`"
+          class="carousel-slide"
+          :class="{ active: carouselIndex === idx }"
+          @click="openGallery(idx)"
+        >
+
+        <!-- Flèches -->
+        <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-prev" @click.stop="prevCarousel" aria-label="Photo précédente">❮</button>
+        <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-next" @click.stop="nextCarousel" aria-label="Photo suivante">❯</button>
+
+        <!-- Compteur -->
+        <div class="carousel-counter">{{ carouselIndex + 1 }} / {{ offre.imgs.length }}</div>
+
+        <!-- Bouton voir toutes les photos -->
+        <button class="btn-see-photos" @click.stop="openGallery(carouselIndex)">
+          {{ $t('offers.seePhotos', { n: offre.imgs.length }) }}
+        </button>
+
+        <!-- Dots -->
+        <div v-if="offre.imgs.length > 1" class="carousel-dots">
+          <span
+            v-for="(_, idx) in offre.imgs"
+            :key="idx"
+            class="dot"
+            :class="{ active: carouselIndex === idx }"
+            @click.stop="carouselIndex = idx"
+          ></span>
         </div>
       </div>
 
@@ -631,58 +685,105 @@ const prevImage = () => {
 .save-msg.error { background: #fee2e2; color: #991b1b; }
 
 /* =============================================
-   GALERIE (Mode visiteur)
+   CAROUSEL (Mode visiteur)
    ============================================= */
-.gallery-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 15px;
+.gallery-carousel {
+  position: relative;
   height: 450px;
   border-radius: 20px;
   overflow: hidden;
   margin-bottom: 40px;
   cursor: pointer;
+  background: #000;
 }
 
-.main-photo {
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  transition: transform 0.3s;
+.carousel-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.7s ease;
 }
 
-.sub-photos {
+.carousel-slide.active {
+  opacity: 1;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s;
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  align-items: center;
+  justify-content: center;
 }
+.carousel-arrow:hover { background: rgba(0, 0, 0, 0.7); }
+.carousel-prev { left: 16px; }
+.carousel-next { right: 16px; }
 
-.sub-photo {
-  flex: 1;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  transition: opacity 0.3s;
+.carousel-counter {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 3;
 }
-
-.main-photo:hover, .sub-photo:hover { opacity: 0.9; }
 
 .btn-see-photos {
-  position: absolute; bottom: 20px; left: 20px;
-  background: white; border: none; padding: 8px 16px; border-radius: 8px;
-  font-weight: 700; font-size: 0.9rem; color: #01111d; cursor: pointer;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #01111d;
+  cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 3;
 }
-.photo-counter {
-  position: absolute; bottom: 20px; right: 20px;
-  background: rgba(0,0,0,0.6); color: white; padding: 5px 12px;
-  border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+
+.carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  z-index: 3;
 }
-.more-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.5); color: white;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; font-weight: 700;
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.dot.active {
+  background: white;
+  transform: scale(1.25);
 }
 
 /* =============================================
