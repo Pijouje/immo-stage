@@ -32,7 +32,7 @@ const user = computed(() => userData.value || {
   email: ''
 })
 
-const documents = computed(() => userData.value?.documents || [])
+const documents = computed(() => userData.value?.document || [])
 
 const passwordMasked = '••••••••••••'
 
