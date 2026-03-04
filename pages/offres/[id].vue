@@ -17,7 +17,7 @@ interface Offre {
   chambresDisponibles: number | null;
   proprietaireId: number;
   tags: string[] | string;
-  images: { url: string }[];
+  offreimage: { url: string }[];
   avis: { note: number }[];
 }
 
@@ -69,7 +69,7 @@ useHead({
         description: o.description,
         url: `https://ton-site-stage.com/offres/${o.id}`,
         datePosted: new Date().toISOString().split('T')[0],
-        ...(o.images?.length > 0 && { image: o.images.map((img: any) => img.url) }),
+        ...((o as any).offreimage?.length > 0 && { image: (o as any).offreimage.map((img: any) => img.url) }),
         offers: {
           '@type': 'Offer',
           price: o.prix,
@@ -132,7 +132,7 @@ const offre = computed(() => {
     ...o,
     titre: isEn && o.titreEn ? o.titreEn : o.titre,
     desc: (isEn && o.descriptionEn ? o.descriptionEn : o.description) || '',
-    imgs: o.images ? o.images.map((img: any) => img.url) : [],
+    imgs: (o as any).offreimage ? (o as any).offreimage.map((img: any) => img.url) : [],
     chargesRaw: o.charges || 0,
     chargesText: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
     rating: Number(noteMoyenne.toFixed(1)),
@@ -219,7 +219,7 @@ const toggleEditMode = () => {
       chambresDisponibles: o.chambresDisponibles ?? o.coloc,
       surface: o.surface,
       tags: Array.isArray(o.tags) ? [...o.tags] : [],
-      images: o.images ? o.images.map((img: any) => img.url) : []
+      images: (o as any).offreimage ? (o as any).offreimage.map((img: any) => img.url) : []
     }
     saveMessage.value = ''
     saveError.value = ''
