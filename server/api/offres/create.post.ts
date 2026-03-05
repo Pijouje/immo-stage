@@ -63,8 +63,8 @@ export default defineEventHandler(async (event) => {
   if (body.titre.trim().length > 200) {
     throw createError({ statusCode: 400, statusMessage: 'Le titre ne doit pas dépasser 200 caractères' })
   }
-  if (body.description.trim().length > 5000) {
-    throw createError({ statusCode: 400, statusMessage: 'La description ne doit pas dépasser 5000 caractères' })
+  if (body.description.trim().length > 10000) {
+    throw createError({ statusCode: 400, statusMessage: 'La description ne doit pas dépasser 10000 caractères' })
   }
   if (body.lieu.trim().length > 200) {
     throw createError({ statusCode: 400, statusMessage: 'Le lieu ne doit pas dépasser 200 caractères' })
@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
   if (body.titreEn && String(body.titreEn).trim().length > 200) {
     throw createError({ statusCode: 400, statusMessage: 'The English title must not exceed 200 characters' })
   }
-  if (body.descriptionEn && String(body.descriptionEn).trim().length > 5000) {
-    throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 5000 characters' })
+  if (body.descriptionEn && String(body.descriptionEn).trim().length > 10000) {
+    throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 10000 characters' })
   }
 
   // SECURITE : Validation des URLs d'images (empêcher javascript:, data:, etc.)
@@ -111,7 +111,7 @@ export default defineEventHandler(async (event) => {
         chambresDisponibles: body.chambresDisponibles ? Number(body.chambresDisponibles) : null,
         surface: body.surface ? Number(body.surface) : null,
         tags: tags.length > 0 ? tags : undefined,
-        equipements: equipements.length > 0 ? equipements : undefined,
+        equipements: equipements.length > 0 ? equipements as any : undefined,
 
         // Relation avec l'utilisateur connecté
         proprietaireId: parseInt(session.user.id),

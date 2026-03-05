@@ -57,8 +57,8 @@ export default defineEventHandler(async (event) => {
 
   if (body.description !== undefined) {
     const desc = String(body.description).trim()
-    if (desc.length === 0 || desc.length > 5000) {
-      throw createError({ statusCode: 400, statusMessage: 'La description doit faire entre 1 et 5000 caractères' })
+    if (desc.length === 0 || desc.length > 10000) {
+      throw createError({ statusCode: 400, statusMessage: 'La description doit faire entre 1 et 10000 caractères' })
     }
     updateData.description = desc
   }
@@ -73,8 +73,8 @@ export default defineEventHandler(async (event) => {
 
   if (body.descriptionEn !== undefined) {
     const descEn = body.descriptionEn ? String(body.descriptionEn).trim() : null
-    if (descEn && descEn.length > 5000) {
-      throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 5000 characters' })
+    if (descEn && descEn.length > 10000) {
+      throw createError({ statusCode: 400, statusMessage: 'The English description must not exceed 10000 characters' })
     }
     updateData.descriptionEn = descEn || null
   }
@@ -138,7 +138,7 @@ export default defineEventHandler(async (event) => {
   // --- Équipements ---
   if (body.equipements !== undefined) {
     if (Array.isArray(body.equipements)) {
-      updateData.equipements = body.equipements.filter((e: string) => e && e.trim() !== '')
+      updateData.equipements = body.equipements.filter((e: string) => e && e.trim() !== '') as any
     }
   }
 
