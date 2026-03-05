@@ -117,7 +117,7 @@ const offre = computed(() => {
   if (!o) {
     return {
       id: 0, titre: 'Chargement...', lieu: '', prix: 0, desc: '', imgs: [],
-      chargesRaw: 0, chargesText: '', rating: 0, avisCount: 0, tags: [] as string[],
+      chargesRaw: 0, chargesText: '', rating: 0, avisCount: 0, tags: [] as string[], equipements: [] as string[],
       caution: 0, coloc: 0, surface: null as number | null,
       chambresDisponibles: null as number | null, proprietaireId: 0
     }
@@ -137,7 +137,8 @@ const offre = computed(() => {
     chargesText: o.charges && o.charges > 0 ? `${o.charges}€ charges` : 'Charges comprises',
     rating: Number(noteMoyenne.toFixed(1)),
     avisCount: o.avis ? o.avis.length : 0,
-    tags: Array.isArray(o.tags) ? o.tags : []
+    tags: Array.isArray(o.tags) ? o.tags : [],
+    equipements: Array.isArray((o as any).equipements) ? (o as any).equipements : []
   }
 })
 
@@ -162,11 +163,52 @@ const translateTag = (tag: string): string => {
   return key ? t(`offers.tags.${key}`) : tag
 }
 
-const equipementsDisponibles = [
+// Liste pour les ATOUTS (tags = highlights)
+const atoulsDisponibles = [
   'WiFi / Fibre', 'Cuisine équipée', 'Lave-linge', 'Sèche-linge',
   'Lave-vaisselle', 'Parking', 'Balcon', 'Terrasse', 'Ascenseur',
   'Meublé', 'Cave', 'Gardien', 'Proche transports', 'Proche commerces'
 ]
+
+// Liste pour les ÉQUIPEMENTS (nouvelle section détaillée)
+const equipementsListDisponibles = [
+  'Lave-linge', 'Sèche-linge', 'Lave-vaisselle', 'Réfrigérateur',
+  'Congélateur', 'Four', 'Micro-ondes', 'Plaque de cuisson',
+  'Hotte aspirante', 'Cafetière', 'Grille-pain', 'Ustensiles de cuisine',
+  'Télévision', 'WiFi / Fibre', 'Climatisation', 'Chauffage',
+  'Linge de lit', 'Serviettes de bain', 'Sèche-cheveux',
+  'Fer à repasser', 'Bureau', 'Parking', 'Cave', 'Ascenseur',
+  'Balcon', 'Terrasse', 'Jardin'
+]
+
+const equipementEmojis: Record<string, string> = {
+  'Lave-linge': '🫧', 'Sèche-linge': '💨', 'Lave-vaisselle': '🍽️',
+  'Réfrigérateur': '🧊', 'Congélateur': '❄️', 'Four': '🔥',
+  'Micro-ondes': '📡', 'Plaque de cuisson': '🍳', 'Hotte aspirante': '🌬️',
+  'Cafetière': '☕', 'Grille-pain': '🍞', 'Ustensiles de cuisine': '🥄',
+  'Télévision': '📺', 'WiFi / Fibre': '📶', 'Climatisation': '🌡️',
+  'Chauffage': '🔆', 'Linge de lit': '🛏️', 'Serviettes de bain': '🚿',
+  'Sèche-cheveux': '💇', 'Fer à repasser': '👔', 'Bureau': '🖥️',
+  'Parking': '🅿️', 'Cave': '📦', 'Ascenseur': '🛗',
+  'Balcon': '🌿', 'Terrasse': '☀️', 'Jardin': '🌳'
+}
+const getEquipementEmoji = (equip: string): string => equipementEmojis[equip] || '✦'
+
+const EQUIPEMENTS_SHOWN = 8
+const showAllEquipements = ref(false)
+const displayedEquipements = computed(() =>
+  showAllEquipements.value
+    ? offre.value.equipements
+    : offre.value.equipements.slice(0, EQUIPEMENTS_SHOWN)
+)
+
+const DESC_LIMIT = 600
+const showFullDesc = ref(false)
+const truncatedDesc = computed(() =>
+  offre.value.desc.length > DESC_LIMIT && !showFullDesc.value
+    ? offre.value.desc.substring(0, DESC_LIMIT).trimEnd() + '…'
+    : offre.value.desc
+)
 
 // --- PERMISSIONS ---
 const canEdit = computed(() => {
@@ -198,6 +240,7 @@ const editForm = ref({
   chambresDisponibles: 0,
   surface: 0 as number | null,
   tags: [] as string[],
+  equipements: [] as string[],
   images: [] as string[]
 })
 
@@ -219,6 +262,7 @@ const toggleEditMode = () => {
       chambresDisponibles: o.chambresDisponibles ?? o.coloc,
       surface: o.surface,
       tags: Array.isArray(o.tags) ? [...o.tags] : [],
+      equipements: Array.isArray((o as any).equipements) ? [...(o as any).equipements] : [],
       images: (o as any).offreimage ? (o as any).offreimage.map((img: any) => img.url) : []
     }
     saveMessage.value = ''
@@ -227,14 +271,18 @@ const toggleEditMode = () => {
   editMode.value = !editMode.value
 }
 
-// Toggle un tag dans le formulaire
+// Toggle un atout (tag)
 const toggleTag = (tag: string) => {
   const idx = editForm.value.tags.indexOf(tag)
-  if (idx > -1) {
-    editForm.value.tags.splice(idx, 1)
-  } else {
-    editForm.value.tags.push(tag)
-  }
+  if (idx > -1) editForm.value.tags.splice(idx, 1)
+  else editForm.value.tags.push(tag)
+}
+
+// Toggle un équipement
+const toggleEquipement = (equip: string) => {
+  const idx = editForm.value.equipements.indexOf(equip)
+  if (idx > -1) editForm.value.equipements.splice(idx, 1)
+  else editForm.value.equipements.push(equip)
 }
 
 // --- GESTION IMAGES EN ÉDITION ---
@@ -290,6 +338,7 @@ const saveAll = async () => {
         chambresDisponibles: editForm.value.chambresDisponibles,
         surface: editForm.value.surface,
         tags: editForm.value.tags,
+        equipements: editForm.value.equipements,
         images: editForm.value.images
       }
     })
@@ -490,14 +539,40 @@ const prevImage = () => {
               </a>
             </p>
 
-            <div class="tags">
+            <div v-if="offre.tags.length > 0" class="tags">
               <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
             </div>
 
             <div class="separator"></div>
 
             <h2>{{ $t('offers.about') }}</h2>
-            <p class="description">{{ offre.desc }}</p>
+            <p class="description">{{ truncatedDesc }}</p>
+            <button
+              v-if="offre.desc.length > DESC_LIMIT"
+              class="btn-voir-plus desc-voir-plus"
+              @click="showFullDesc = !showFullDesc"
+            >
+              {{ showFullDesc ? '▲ Voir moins' : '▼ Voir plus' }}
+            </button>
+
+            <!-- Section équipements -->
+            <template v-if="offre.equipements.length > 0">
+              <div class="separator"></div>
+              <h2 class="equipements-title">Équipements <span class="equip-count">({{ offre.equipements.length }})</span></h2>
+              <div class="equipements-grid-display">
+                <div v-for="equip in displayedEquipements" :key="equip" class="equip-item">
+                  <span class="equip-icon">{{ getEquipementEmoji(equip) }}</span>
+                  <span class="equip-label">{{ equip }}</span>
+                </div>
+              </div>
+              <button
+                v-if="offre.equipements.length > EQUIPEMENTS_SHOWN"
+                class="btn-voir-plus"
+                @click="showAllEquipements = !showAllEquipements"
+              >
+                {{ showAllEquipements ? '▲ Voir moins' : `Voir les ${offre.equipements.length} équipements` }}
+              </button>
+            </template>
           </template>
 
           <!-- MODE ÉDITION -->
@@ -518,10 +593,11 @@ const prevImage = () => {
             </div>
 
             <div class="edit-group">
-              <label class="edit-label">{{ $t('offers.edit.amenitiesLabel') }}</label>
+              <label class="edit-label">Atouts du logement</label>
+              <p class="edit-hint-text">Points forts mis en avant (bulles en haut de la page)</p>
               <div class="edit-tags-grid">
                 <button
-                  v-for="equip in equipementsDisponibles"
+                  v-for="equip in atoulsDisponibles"
                   :key="equip"
                   @click="toggleTag(equip)"
                   class="edit-tag-btn"
@@ -529,6 +605,23 @@ const prevImage = () => {
                   type="button"
                 >
                   {{ getTagEmoji(equip) }} {{ translateTag(equip) }}
+                </button>
+              </div>
+            </div>
+
+            <div class="edit-group">
+              <label class="edit-label">Équipements du logement</label>
+              <p class="edit-hint-text">Liste complète affichée dans la section "Équipements"</p>
+              <div class="edit-tags-grid">
+                <button
+                  v-for="equip in equipementsListDisponibles"
+                  :key="equip"
+                  @click="toggleEquipement(equip)"
+                  class="edit-tag-btn"
+                  :class="{ selected: editForm.equipements.includes(equip) }"
+                  type="button"
+                >
+                  {{ getEquipementEmoji(equip) }} {{ equip }}
                 </button>
               </div>
             </div>
@@ -1149,5 +1242,79 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
   .nav-btn.next { right: 5px; }
   .edit-toolbar { flex-direction: column; align-items: stretch; }
   .edit-images-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+
+/* =============================================
+   SECTION ÉQUIPEMENTS (Mode visiteur)
+   ============================================= */
+.equipements-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 20px 0;
+}
+
+.equip-count {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.equipements-grid-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.equip-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.equip-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.equip-label {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-voir-plus {
+  background: white;
+  border: 2px solid #2563eb;
+  color: #2563eb;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.btn-voir-plus:hover {
+  background: #2563eb;
+  color: white;
+}
+.desc-voir-plus {
+  margin-bottom: 20px;
+}
+
+/* Hint text sous les labels édition */
+.edit-hint-text {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: -8px 0 12px 0;
 }
 </style>

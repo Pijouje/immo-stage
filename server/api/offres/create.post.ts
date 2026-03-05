@@ -48,10 +48,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 6. Préparation des tags (équipements)
+  // 6. Préparation des tags (atouts) et équipements
   let tags: string[] = []
   if (body.tags && Array.isArray(body.tags)) {
     tags = body.tags.filter((tag: string) => tag && tag.trim() !== '')
+  }
+
+  let equipements: string[] = []
+  if (body.equipements && Array.isArray(body.equipements)) {
+    equipements = body.equipements.filter((e: string) => e && e.trim() !== '')
   }
 
   // SECURITE : Validation de la longueur des champs texte
@@ -106,6 +111,7 @@ export default defineEventHandler(async (event) => {
         chambresDisponibles: body.chambresDisponibles ? Number(body.chambresDisponibles) : null,
         surface: body.surface ? Number(body.surface) : null,
         tags: tags.length > 0 ? tags : undefined,
+        equipements: equipements.length > 0 ? equipements : undefined,
 
         // Relation avec l'utilisateur connecté
         proprietaireId: parseInt(session.user.id),

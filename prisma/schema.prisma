@@ -58,6 +58,7 @@ model offre {
   caution             Int?
   coloc               Int                @default(0)
   tags                Json?
+  equipements         Json?
   createdAt           DateTime           @default(now())
   charges             Int?               @default(0)
   proprietaireId      Int

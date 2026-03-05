@@ -128,10 +128,17 @@ export default defineEventHandler(async (event) => {
     updateData.chambresDisponibles = val
   }
 
-  // --- Tags (équipements) ---
+  // --- Tags (atouts) ---
   if (body.tags !== undefined) {
     if (Array.isArray(body.tags)) {
       updateData.tags = body.tags.filter((t: string) => t && t.trim() !== '')
+    }
+  }
+
+  // --- Équipements ---
+  if (body.equipements !== undefined) {
+    if (Array.isArray(body.equipements)) {
+      updateData.equipements = body.equipements.filter((e: string) => e && e.trim() !== '')
     }
   }
 

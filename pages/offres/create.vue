@@ -35,7 +35,8 @@ const form = ref({
   coloc: '',
   chambresDisponibles: '',
   surface: '',
-  tags: []
+  tags: [],
+  equipements: []
 })
 
 // --- GESTION DES IMAGES (Upload fichiers) ---
@@ -43,12 +44,36 @@ const imageFiles = ref([])       // { file: File, preview: string, url: string, 
 const isDragging = ref(false)
 const uploadError = ref('')
 
-// Liste des équipements disponibles (clés françaises = valeurs stockées en BDD)
+// Liste des ATOUTS (tags = points forts en bulles)
 const equipementsDisponibles = [
   'WiFi / Fibre', 'Cuisine équipée', 'Lave-linge', 'Sèche-linge',
   'Lave-vaisselle', 'Parking', 'Balcon', 'Terrasse', 'Ascenseur',
   'Meublé', 'Cave', 'Gardien', 'Proche transports', 'Proche commerces'
 ]
+
+// Liste des ÉQUIPEMENTS (section détaillée avec icônes)
+const equipementsDetailDisponibles = [
+  'Lave-linge', 'Sèche-linge', 'Lave-vaisselle', 'Réfrigérateur',
+  'Congélateur', 'Four', 'Micro-ondes', 'Plaque de cuisson',
+  'Hotte aspirante', 'Cafetière', 'Grille-pain', 'Ustensiles de cuisine',
+  'Télévision', 'WiFi / Fibre', 'Climatisation', 'Chauffage',
+  'Linge de lit', 'Serviettes de bain', 'Sèche-cheveux',
+  'Fer à repasser', 'Bureau', 'Parking', 'Cave', 'Ascenseur',
+  'Balcon', 'Terrasse', 'Jardin'
+]
+
+const equipementEmojis = {
+  'Lave-linge': '🫧', 'Sèche-linge': '💨', 'Lave-vaisselle': '🍽️',
+  'Réfrigérateur': '🧊', 'Congélateur': '❄️', 'Four': '🔥',
+  'Micro-ondes': '📡', 'Plaque de cuisson': '🍳', 'Hotte aspirante': '🌬️',
+  'Cafetière': '☕', 'Grille-pain': '🍞', 'Ustensiles de cuisine': '🥄',
+  'Télévision': '📺', 'WiFi / Fibre': '📶', 'Climatisation': '🌡️',
+  'Chauffage': '🔆', 'Linge de lit': '🛏️', 'Serviettes de bain': '🚿',
+  'Sèche-cheveux': '💇', 'Fer à repasser': '👔', 'Bureau': '🖥️',
+  'Parking': '🅿️', 'Cave': '📦', 'Ascenseur': '🛗',
+  'Balcon': '🌿', 'Terrasse': '☀️', 'Jardin': '🌳'
+}
+const getEquipementEmoji = (equip) => equipementEmojis[equip] || '✦'
 
 // Traduction des tags selon la langue active
 const tagKeyMap = {
@@ -136,14 +161,18 @@ const supprimerImage = (index) => {
   imageFiles.value.splice(index, 1)
 }
 
-// Toggle équipement
+// Toggle atout (tag)
 const toggleEquipement = (equip) => {
   const index = form.value.tags.indexOf(equip)
-  if (index > -1) {
-    form.value.tags.splice(index, 1)
-  } else {
-    form.value.tags.push(equip)
-  }
+  if (index > -1) form.value.tags.splice(index, 1)
+  else form.value.tags.push(equip)
+}
+
+// Toggle équipement détaillé
+const toggleEquipementDetail = (equip) => {
+  const index = form.value.equipements.indexOf(equip)
+  if (index > -1) form.value.equipements.splice(index, 1)
+  else form.value.equipements.push(equip)
 }
 
 // Validation du formulaire
@@ -192,7 +221,8 @@ const soumettreOffre = async () => {
         chambresDisponibles: form.value.chambresDisponibles ? Number(form.value.chambresDisponibles) : null,
         surface: form.value.surface ? Number(form.value.surface) : null,
         images: imagesValides,
-        tags: form.value.tags
+        tags: form.value.tags,
+        equipements: form.value.equipements
       }
     })
 
@@ -225,7 +255,8 @@ const reinitialiserFormulaire = () => {
     coloc: '',
     chambresDisponibles: '',
     surface: '',
-    tags: []
+    tags: [],
+    equipements: []
   }
   // Libérer les previews
   imageFiles.value.forEach(img => URL.revokeObjectURL(img.preview))
@@ -462,10 +493,10 @@ const reinitialiserFormulaire = () => {
             </div>
           </div>
 
-          <!-- Équipements -->
+          <!-- Atouts -->
           <div class="section">
             <h2 class="section-title">{{ $t('offers.create.sections.amenities') }}</h2>
-            <p class="section-description">{{ $t('offers.create.amenities.description') }}</p>
+            <p class="section-description">Points forts mis en avant sous forme de bulles (ex: Meublé, Parking…)</p>
 
             <div class="equipements-grid">
               <button
@@ -478,6 +509,26 @@ const reinitialiserFormulaire = () => {
               >
                 <span class="check-icon">{{ form.tags.includes(equip) ? '✓' : '' }}</span>
                 {{ translateTag(equip) }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Équipements détaillés -->
+          <div class="section">
+            <h2 class="section-title">Équipements du logement</h2>
+            <p class="section-description">Liste complète affichée dans la section "Équipements" de l'annonce ({{ form.equipements.length }} sélectionné{{ form.equipements.length > 1 ? 's' : '' }})</p>
+
+            <div class="equipements-grid">
+              <button
+                v-for="equip in equipementsDetailDisponibles"
+                :key="equip"
+                @click.prevent="toggleEquipementDetail(equip)"
+                class="equipement-tag"
+                :class="{ 'selected': form.equipements.includes(equip) }"
+                type="button"
+              >
+                <span class="check-icon">{{ form.equipements.includes(equip) ? '✓' : '' }}</span>
+                {{ getEquipementEmoji(equip) }} {{ equip }}
               </button>
             </div>
           </div>
