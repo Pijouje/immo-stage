@@ -423,12 +423,12 @@ const ouvrirDocument = async (doc: any) => {
           
           <div class="Groupe_Input">
             <label>{{ $t('profile.modals.currentPassword') }}</label>
-            <input v-model="editForm.currentPassword" type="password" class="Input_Style" placeholder="••••••••">
+             <PasswordInput v-model="editForm.currentPassword" placeholder="••••••••" />
           </div>
           
           <div class="Groupe_Input">
             <label>{{ $t('profile.modals.newPassword') }}</label>
-            <input v-model="editForm.newPassword" type="password" class="Input_Style" placeholder="••••••••">
+            <PasswordInput v-model="editForm.newPassword" placeholder="••••••••" />
             
             <!-- Checklist de validation -->
             <div v-if="editForm.newPassword.length > 0" class="password-checklist">
@@ -452,7 +452,7 @@ const ouvrirDocument = async (doc: any) => {
           
           <div class="Groupe_Input">
             <label>{{ $t('profile.modals.confirmNewPassword') }}</label>
-            <input v-model="editForm.confirmPassword" type="password" class="Input_Style" placeholder="••••••••">
+            <PasswordInput v-model="editForm.confirmPassword" placeholder="••••••••" />
           </div>
           
           <div class="modal-actions">
