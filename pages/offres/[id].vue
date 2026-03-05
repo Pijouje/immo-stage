@@ -401,10 +401,10 @@ const prevImage = () => {
           v-for="(img, idx) in offre.imgs"
           :key="idx"
           :src="img"
-          :alt="`${offre.titre} - Photo ${idx + 1}`"
+          :alt="`${offre.titre} - Photo ${(idx as number) + 1}`"
           class="carousel-slide"
           :class="{ active: carouselIndex === idx }"
-          @click="openGallery(idx)"
+          @click="openGallery(idx as number)"
         >
 
         <!-- Flèches -->
@@ -426,7 +426,7 @@ const prevImage = () => {
             :key="idx"
             class="dot"
             :class="{ active: carouselIndex === idx }"
-            @click.stop="carouselIndex = idx"
+            @click.stop="carouselIndex = Number(idx)"
           ></span>
         </div>
       </div>
@@ -466,7 +466,17 @@ const prevImage = () => {
                 </NuxtLink>
               </div>
             </div>
-            <p class="location">📍 {{ offre.lieu }}</p>
+            <p class="location">
+              📍 {{ offre.lieu }} <br>
+              <a 
+                :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offre.lieu)}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="lien-maps"
+              >
+                Voir sur Maps 🗺️
+              </a>
+            </p>
 
             <div class="tags">
               <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
@@ -1047,6 +1057,14 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 /* Transition */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.lien-maps {
+  font-size: 0.85rem;
+  color: #2563eb;
+  text-decoration: underline;
+  margin-left: 10px;
+  padding-top: 10px;
+}
 
 /* =============================================
    MOBILE
