@@ -400,12 +400,15 @@ const prevImage = () => {
       >
         <!-- Grande image principale (gauche) avec carousel -->
         <div class="photo-main">
-          <img
-            :src="offre.imgs[carouselIndex]"
-            :alt="`${offre.titre} - Photo ${carouselIndex + 1}`"
-            class="photo-main-img"
-            @click="openGallery(carouselIndex)"
-          />
+          <Transition name="img-fade">
+            <img
+              :key="carouselIndex"
+              :src="offre.imgs[carouselIndex]"
+              :alt="`${offre.titre} - Photo ${carouselIndex + 1}`"
+              class="photo-main-img"
+              @click="openGallery(carouselIndex)"
+            />
+          </Transition>
 
           <!-- Flèches -->
           <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-prev" @click.stop="prevCarousel" aria-label="Photo précédente">❮</button>
@@ -420,16 +423,23 @@ const prevImage = () => {
           <div class="carousel-counter">{{ carouselIndex + 1 }} / {{ offre.imgs.length }}</div>
         </div>
 
-        <!-- Miniatures à droite (2 images fixes) -->
+        <!-- Miniatures à droite (tournent avec le carousel) -->
         <div v-if="offre.imgs.length > 1" class="photo-side">
-          <img
+          <div
             v-for="offset in (offre.imgs.length >= 3 ? [1, 2] : [1])"
             :key="offset"
-            :src="offre.imgs[offset]"
-            :alt="`${offre.titre} - Photo ${offset + 1}`"
-            class="photo-thumb"
-            @click="openGallery(offset)"
-          />
+            class="photo-thumb-wrapper"
+          >
+            <Transition name="thumb-fade">
+              <img
+                :key="(carouselIndex + offset) % offre.imgs.length"
+                :src="offre.imgs[(carouselIndex + offset) % offre.imgs.length]"
+                :alt="`${offre.titre} - Photo ${(carouselIndex + offset) % offre.imgs.length + 1}`"
+                class="photo-thumb"
+                @click="openGallery((carouselIndex + offset) % offre.imgs.length)"
+              />
+            </Transition>
+          </div>
         </div>
       </div>
 
@@ -720,15 +730,25 @@ const prevImage = () => {
 }
 
 .photo-main-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   cursor: pointer;
-  transition: transform 0.4s ease;
 }
-.photo-main-img:hover {
-  transform: scale(1.02);
+
+/* Transition crossfade image principale */
+.img-fade-enter-active {
+  transition: opacity 0.6s ease;
+  z-index: 2;
 }
+.img-fade-leave-active {
+  transition: opacity 0.6s ease;
+  z-index: 1;
+}
+.img-fade-enter-from { opacity: 0; }
+.img-fade-leave-to   { opacity: 0; }
 
 .photo-side {
   display: flex;
@@ -736,17 +756,35 @@ const prevImage = () => {
   gap: 8px;
 }
 
-.photo-thumb {
+.photo-thumb-wrapper {
   flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-thumb {
+  position: absolute;
+  inset: 0;
   width: 100%;
+  height: 100%;
   object-fit: cover;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.3s;
 }
 .photo-thumb:hover {
   opacity: 0.85;
-  transform: scale(1.02);
 }
+
+/* Transition crossfade miniatures */
+.thumb-fade-enter-active {
+  transition: opacity 0.4s ease;
+  z-index: 2;
+}
+.thumb-fade-leave-active {
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+.thumb-fade-enter-from { opacity: 0; }
+.thumb-fade-leave-to   { opacity: 0; }
 
 .carousel-arrow {
   position: absolute;
