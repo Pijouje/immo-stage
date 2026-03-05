@@ -398,17 +398,6 @@ const prevImage = () => {
         @mouseenter="carouselPaused = true"
         @mouseleave="carouselPaused = false"
       >
-<<<<<<< HEAD
-        <img
-          v-for="(img, idx) in offre.imgs"
-          :key="idx"
-          :src="img"
-          :alt="`${offre.titre} - Photo ${(idx as number) + 1}`"
-          class="carousel-slide"
-          :class="{ active: carouselIndex === idx }"
-          @click="openGallery(idx as number)"
-        >
-=======
         <!-- Grande image principale (gauche) avec carousel -->
         <div class="photo-main">
           <img
@@ -417,7 +406,6 @@ const prevImage = () => {
             class="photo-main-img"
             @click="openGallery(carouselIndex)"
           />
->>>>>>> 5bdf0990c9081ede78b949f106e03496a5241eef
 
           <!-- Flèches -->
           <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-prev" @click.stop="prevCarousel" aria-label="Photo précédente">❮</button>
@@ -432,17 +420,6 @@ const prevImage = () => {
           <div class="carousel-counter">{{ carouselIndex + 1 }} / {{ offre.imgs.length }}</div>
         </div>
 
-<<<<<<< HEAD
-        <!-- Dots -->
-        <div v-if="offre.imgs.length > 1" class="carousel-dots">
-          <span
-            v-for="(_, idx) in offre.imgs"
-            :key="idx"
-            class="dot"
-            :class="{ active: carouselIndex === idx }"
-            @click.stop="carouselIndex = Number(idx)"
-          ></span>
-=======
         <!-- Miniatures à droite (2 images fixes) -->
         <div v-if="offre.imgs.length > 1" class="photo-side">
           <img
@@ -453,7 +430,6 @@ const prevImage = () => {
             class="photo-thumb"
             @click="openGallery(offset)"
           />
->>>>>>> 5bdf0990c9081ede78b949f106e03496a5241eef
         </div>
       </div>
 
