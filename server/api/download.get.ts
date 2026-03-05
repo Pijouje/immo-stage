@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
         setHeader(event, 'Content-Type', contentType)
         setHeader(event, 'Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`)
         if (response.ContentLength) {
-            setHeader(event, 'Content-Length', String(response.ContentLength))
+            setHeader(event, 'Content-Length', response.ContentLength)
         }
 
         const buffer = Buffer.from(await response.Body!.transformToByteArray())
