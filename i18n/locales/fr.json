@@ -225,6 +225,11 @@
     "saving": "Enregistrement...",
     "savedSuccess": "Modifications enregistrées !",
     "notFound": "Annonce non trouvée",
+    "highlightsTitle": "Atouts du logement",
+    "amenitiesTitle": "Équipements",
+    "seeAllAmenities": "Voir les {n} équipements",
+    "showMore": "▼ Voir plus",
+    "showLess": "▲ Voir moins",
     "edit": {
       "images": "📷 Images du logement",
       "add": "Ajouter",

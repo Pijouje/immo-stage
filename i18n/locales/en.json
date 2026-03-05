@@ -225,6 +225,11 @@
     "saving": "Saving...",
     "savedSuccess": "Changes saved!",
     "notFound": "Listing not found",
+    "highlightsTitle": "Property highlights",
+    "amenitiesTitle": "Amenities",
+    "seeAllAmenities": "See all {n} amenities",
+    "showMore": "▼ See more",
+    "showLess": "▲ See less",
     "edit": {
       "images": "📷 Property images",
       "add": "Add",

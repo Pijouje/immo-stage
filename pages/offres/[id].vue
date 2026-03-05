@@ -194,6 +194,20 @@ const equipementEmojis: Record<string, string> = {
 }
 const getEquipementEmoji = (equip: string): string => equipementEmojis[equip] || '✦'
 
+const equipementTranslations: Record<string, string> = {
+  'Lave-linge': 'Washing machine', 'Sèche-linge': 'Dryer', 'Lave-vaisselle': 'Dishwasher',
+  'Réfrigérateur': 'Refrigerator', 'Congélateur': 'Freezer', 'Four': 'Oven',
+  'Micro-ondes': 'Microwave', 'Plaque de cuisson': 'Cooktop', 'Hotte aspirante': 'Extractor hood',
+  'Cafetière': 'Coffee maker', 'Grille-pain': 'Toaster', 'Ustensiles de cuisine': 'Kitchen utensils',
+  'Télévision': 'Television', 'WiFi / Fibre': 'WiFi / Fibre', 'Climatisation': 'Air conditioning',
+  'Chauffage': 'Heating', 'Linge de lit': 'Bed linen', 'Serviettes de bain': 'Bath towels',
+  'Sèche-cheveux': 'Hair dryer', 'Fer à repasser': 'Iron', 'Bureau': 'Desk',
+  'Parking': 'Parking', 'Cave': 'Cellar', 'Ascenseur': 'Elevator',
+  'Balcon': 'Balcony', 'Terrasse': 'Terrace', 'Jardin': 'Garden'
+}
+const translateEquipement = (equip: string): string =>
+  locale.value === 'en' ? (equipementTranslations[equip] || equip) : equip
+
 const EQUIPEMENTS_SHOWN = 8
 const showAllEquipements = ref(false)
 const displayedEquipements = computed(() =>
@@ -540,7 +554,7 @@ const prevImage = () => {
             </p>
 
             <div v-if="offre.tags.length > 0" class="atouts-section">
-              <h3 class="atouts-title">Atouts du logement</h3>
+              <h3 class="atouts-title">{{ $t('offers.highlightsTitle') }}</h3>
               <div class="tags">
                 <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
               </div>
@@ -555,17 +569,17 @@ const prevImage = () => {
               class="btn-voir-plus desc-voir-plus"
               @click="showFullDesc = !showFullDesc"
             >
-              {{ showFullDesc ? '▲ Voir moins' : '▼ Voir plus' }}
+              {{ showFullDesc ? $t('offers.showLess') : $t('offers.showMore') }}
             </button>
 
             <!-- Section équipements -->
             <template v-if="offre.equipements.length > 0">
               <div class="separator"></div>
-              <h2 class="equipements-title">Équipements <span class="equip-count">({{ offre.equipements.length }})</span></h2>
+              <h2 class="equipements-title">{{ $t('offers.amenitiesTitle') }} <span class="equip-count">({{ offre.equipements.length }})</span></h2>
               <div class="equipements-grid-display">
                 <div v-for="equip in displayedEquipements" :key="equip" class="equip-item">
                   <span class="equip-icon">{{ getEquipementEmoji(equip) }}</span>
-                  <span class="equip-label">{{ equip }}</span>
+                  <span class="equip-label">{{ translateEquipement(equip) }}</span>
                 </div>
               </div>
               <button
@@ -573,7 +587,7 @@ const prevImage = () => {
                 class="btn-voir-plus"
                 @click="showAllEquipements = !showAllEquipements"
               >
-                {{ showAllEquipements ? '▲ Voir moins' : `Voir les ${offre.equipements.length} équipements` }}
+                {{ showAllEquipements ? $t('offers.showLess') : $t('offers.seeAllAmenities', { n: offre.equipements.length }) }}
               </button>
             </template>
           </template>
