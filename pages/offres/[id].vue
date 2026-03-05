@@ -469,14 +469,14 @@ const prevImage = () => {
               </div>
             </div>
             <p class="location">
-              📍 {{ offre.lieu }} <br>
+              📍 {{ offre.lieu }}
               <a 
                 :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offre.lieu)}`"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="lien-maps"
+                class="btn-maps"
               >
-                Voir sur Maps 🗺️
+                🗺️ Voir sur Maps
               </a>
             </p>
 
@@ -1076,12 +1076,26 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.lien-maps {
-  font-size: 0.85rem;
-  color: #2563eb;
-  text-decoration: underline;
-  margin-left: 10px;
-  padding-top: 10px;
+.btn-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-top: 8px; 
+  margin-left: 20px;
+}
+
+.btn-maps:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 /* =============================================
