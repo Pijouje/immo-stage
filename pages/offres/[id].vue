@@ -390,44 +390,46 @@ const prevImage = () => {
         <span v-if="saveError" class="save-msg error">{{ saveError }}</span>
       </div>
 
-      <!-- ============ CAROUSEL ============ -->
+      <!-- ============ GALERIE PHOTOS ============ -->
       <div
         v-if="!editMode"
-        class="gallery-carousel"
+        class="photo-grid"
+        :class="{ 'photo-grid--single': offre.imgs.length === 1 }"
         @mouseenter="carouselPaused = true"
         @mouseleave="carouselPaused = false"
       >
-        <img
-          v-for="(img, idx) in offre.imgs"
-          :key="idx"
-          :src="img"
-          :alt="`${offre.titre} - Photo ${idx + 1}`"
-          class="carousel-slide"
-          :class="{ active: carouselIndex === idx }"
-          @click="openGallery(idx)"
-        >
+        <!-- Grande image principale (gauche) avec carousel -->
+        <div class="photo-main">
+          <img
+            :src="offre.imgs[carouselIndex]"
+            :alt="`${offre.titre} - Photo ${carouselIndex + 1}`"
+            class="photo-main-img"
+            @click="openGallery(carouselIndex)"
+          />
 
-        <!-- Flèches -->
-        <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-prev" @click.stop="prevCarousel" aria-label="Photo précédente">❮</button>
-        <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-next" @click.stop="nextCarousel" aria-label="Photo suivante">❯</button>
+          <!-- Flèches -->
+          <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-prev" @click.stop="prevCarousel" aria-label="Photo précédente">❮</button>
+          <button v-if="offre.imgs.length > 1" class="carousel-arrow carousel-next" @click.stop="nextCarousel" aria-label="Photo suivante">❯</button>
 
-        <!-- Compteur -->
-        <div class="carousel-counter">{{ carouselIndex + 1 }} / {{ offre.imgs.length }}</div>
+          <!-- Bouton voir toutes les photos -->
+          <button class="btn-see-photos" @click.stop="openGallery(carouselIndex)">
+            {{ $t('offers.seePhotos', { n: offre.imgs.length }) }}
+          </button>
 
-        <!-- Bouton voir toutes les photos -->
-        <button class="btn-see-photos" @click.stop="openGallery(carouselIndex)">
-          {{ $t('offers.seePhotos', { n: offre.imgs.length }) }}
-        </button>
+          <!-- Compteur -->
+          <div class="carousel-counter">{{ carouselIndex + 1 }} / {{ offre.imgs.length }}</div>
+        </div>
 
-        <!-- Dots -->
-        <div v-if="offre.imgs.length > 1" class="carousel-dots">
-          <span
-            v-for="(_, idx) in offre.imgs"
-            :key="idx"
-            class="dot"
-            :class="{ active: carouselIndex === idx }"
-            @click.stop="carouselIndex = idx"
-          ></span>
+        <!-- Miniatures à droite (2 images fixes) -->
+        <div v-if="offre.imgs.length > 1" class="photo-side">
+          <img
+            v-for="offset in (offre.imgs.length >= 3 ? [1, 2] : [1])"
+            :key="offset"
+            :src="offre.imgs[offset]"
+            :alt="`${offre.titre} - Photo ${offset + 1}`"
+            class="photo-thumb"
+            @click="openGallery(offset)"
+          />
         </div>
       </div>
 
@@ -685,30 +687,55 @@ const prevImage = () => {
 .save-msg.error { background: #fee2e2; color: #991b1b; }
 
 /* =============================================
-   CAROUSEL (Mode visiteur)
+   GALERIE PHOTOS (Mode visiteur)
    ============================================= */
-.gallery-carousel {
-  position: relative;
-  height: 450px;
+.photo-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+  height: 480px;
   border-radius: 20px;
   overflow: hidden;
   margin-bottom: 40px;
-  cursor: pointer;
+}
+
+.photo-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.photo-main {
+  position: relative;
+  overflow: hidden;
   background: #000;
 }
 
-.carousel-slide {
-  position: absolute;
-  inset: 0;
+.photo-main-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.7s ease;
+  cursor: pointer;
+  transition: transform 0.4s ease;
+}
+.photo-main-img:hover {
+  transform: scale(1.02);
 }
 
-.carousel-slide.active {
-  opacity: 1;
+.photo-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-thumb {
+  flex: 1;
+  width: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.3s;
+}
+.photo-thumb:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
 }
 
 .carousel-arrow {
@@ -735,55 +762,46 @@ const prevImage = () => {
 
 .carousel-counter {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
   background: rgba(0, 0, 0, 0.55);
   color: white;
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   z-index: 3;
 }
 
 .btn-see-photos {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 16px;
+  left: 16px;
   background: white;
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #01111d;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   z-index: 3;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-see-photos:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
 }
 
-.carousel-dots {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 7px;
-  z-index: 3;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  transition: background 0.3s, transform 0.3s;
-}
-
-.dot.active {
-  background: white;
-  transform: scale(1.25);
+@media (max-width: 640px) {
+  .photo-grid {
+    grid-template-columns: 1fr;
+    height: 260px;
+  }
+  .photo-side {
+    display: none;
+  }
 }
 
 /* =============================================

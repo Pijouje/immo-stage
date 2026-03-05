@@ -144,7 +144,7 @@ const retryFetch = async () => {
             <p class="location">
               <span class="pin" aria-hidden="true">📍</span> {{ offre.lieu }}
             </p>
-            <p class="price"><strong>{{ offre.prix }}€</strong> /mois</p>
+            <p class="price"><strong>{{ offre.prix }}</strong> /mois</p>
             <div class="card-action">
              <OffreBouton :to="`/offres/${offre.id}`">
                {{ $t('offers.viewOffer') }}
