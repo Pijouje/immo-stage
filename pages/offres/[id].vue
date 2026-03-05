@@ -539,8 +539,11 @@ const prevImage = () => {
               </a>
             </p>
 
-            <div v-if="offre.tags.length > 0" class="tags">
-              <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
+            <div v-if="offre.tags.length > 0" class="atouts-section">
+              <h3 class="atouts-title">Atouts du logement</h3>
+              <div class="tags">
+                <span v-for="tag in offre.tags" :key="tag" class="tag">{{ getTagEmoji(tag) }} {{ translateTag(tag) }}</span>
+              </div>
             </div>
 
             <div class="separator"></div>
@@ -1047,6 +1050,8 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 }
 
 .location { color: #64748b; font-size: 1.1rem; margin: 10px 0 20px 0; font-weight: 500; }
+.atouts-section { margin-bottom: 0; }
+.atouts-title { font-size: 1rem; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
 .tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
 .tag { background: white; padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; border: 1px solid #e2e8f0; }
 .separator { height: 1px; background: #cbd5e1; margin: 30px 0; width: 100%; }
