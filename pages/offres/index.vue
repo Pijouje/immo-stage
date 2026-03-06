@@ -40,6 +40,32 @@ const canCreateOffre = computed(() => {
   return role === 'ADMIN' || role === 'PROPRIETAIRE'
 })
 
+const deleteTarget = ref<{ id: number; titre: string } | null>(null)
+const deleting = ref(false)
+
+const confirmDelete = (id: number, titre: string) => {
+  deleteTarget.value = { id, titre }
+}
+
+const cancelDelete = () => {
+  deleteTarget.value = null
+}
+
+const deleteOffre = async () => {
+  if (!deleteTarget.value) return
+  deleting.value = true
+  try {
+    await $fetch(`/api/offres/${deleteTarget.value.id}`, { method: 'DELETE' })
+    deleteTarget.value = null
+    await refresh()
+  } catch (e) {
+    console.error(e)
+    deleteTarget.value = null
+  } finally {
+    deleting.value = false
+  }
+}
+
 const page = ref(1)
 
 const { data, pending, error, refresh } = await useFetch('/api/offres', {
@@ -149,6 +175,15 @@ const retryFetch = async () => {
              <OffreBouton :to="`/offres/${offre.id}`">
                {{ $t('offers.viewOffer') }}
              </OffreBouton>
+             <button
+               v-if="canCreateOffre"
+               @click.prevent="confirmDelete(offre.id, offre.titre)"
+               class="btn-delete-card"
+               :title="$t('offers.deleteOffer')"
+               aria-label="Supprimer l'annonce"
+             >
+               🗑️
+             </button>
             </div>
           </div>
         </article>
@@ -161,6 +196,25 @@ const retryFetch = async () => {
       </nav>
 
     </div>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION -->
+    <Teleport to="body">
+      <div v-if="deleteTarget" class="delete-overlay" @click.self="cancelDelete">
+        <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="$t('offers.deleteConfirmTitle')">
+          <h2>{{ $t('offers.deleteConfirmTitle') }}</h2>
+          <p>{{ $t('offers.deleteConfirmMessage') }}</p>
+          <p class="delete-modal-name">« {{ deleteTarget.titre }} »</p>
+          <div class="delete-modal-actions">
+            <button @click="cancelDelete" class="btn-cancel-delete" :disabled="deleting">
+              {{ $t('offers.deleteCancel') }}
+            </button>
+            <button @click="deleteOffre" class="btn-confirm-delete" :disabled="deleting">
+              {{ deleting ? $t('offers.deleting') : $t('offers.deleteConfirmBtn') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>
 
@@ -437,4 +491,100 @@ const retryFetch = async () => {
   color: #01111d;
   font-size: 0.95rem;
 }
+
+.card-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-delete-card {
+  background: none;
+  border: 2px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.btn-delete-card:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.delete-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.delete-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.delete-modal h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #01111d;
+  margin: 0 0 12px 0;
+}
+
+.delete-modal p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.delete-modal-name {
+  font-weight: 700;
+  color: #01111d;
+  margin-bottom: 24px !important;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancel-delete {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #334155;
+  transition: all 0.2s;
+}
+.btn-cancel-delete:hover:not(:disabled) { border-color: #94a3b8; }
+.btn-cancel-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-confirm-delete {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  background: #ef4444;
+  color: white;
+  transition: all 0.2s;
+}
+.btn-confirm-delete:hover:not(:disabled) { background: #dc2626; }
+.btn-confirm-delete:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

@@ -369,6 +369,24 @@ const saveAll = async () => {
   }
 }
 
+// --- SUPPRESSION ---
+const showDeleteConfirm = ref(false)
+const deleting = ref(false)
+
+const deleteOffre = async () => {
+  deleting.value = true
+  try {
+    await $fetch(`/api/offres/${route.params.id}`, { method: 'DELETE' })
+    showDeleteConfirm.value = false
+    await navigateTo('/offres')
+  } catch (e: any) {
+    saveError.value = e.data?.statusMessage || t('errors.saveError')
+    showDeleteConfirm.value = false
+  } finally {
+    deleting.value = false
+  }
+}
+
 // --- CAROUSEL ---
 const carouselIndex = ref(0)
 const carouselPaused = ref(false)
@@ -449,9 +467,31 @@ const prevImage = () => {
           </button>
         </template>
 
+        <button @click="showDeleteConfirm = true" class="btn-delete-offer">
+          {{ $t('offers.deleteOffer') }}
+        </button>
+
         <span v-if="saveMessage" class="save-msg success">{{ saveMessage }}</span>
         <span v-if="saveError" class="save-msg error">{{ saveError }}</span>
       </div>
+
+      <!-- MODALE CONFIRMATION SUPPRESSION -->
+      <Teleport to="body">
+        <div v-if="showDeleteConfirm" class="delete-overlay" @click.self="showDeleteConfirm = false">
+          <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="$t('offers.deleteConfirmTitle')">
+            <h2>{{ $t('offers.deleteConfirmTitle') }}</h2>
+            <p>{{ $t('offers.deleteConfirmMessage') }}</p>
+            <div class="delete-modal-actions">
+              <button @click="showDeleteConfirm = false" class="btn-cancel-delete" :disabled="deleting">
+                {{ $t('offers.deleteCancel') }}
+              </button>
+              <button @click="deleteOffre" class="btn-confirm-delete" :disabled="deleting">
+                {{ deleting ? $t('offers.deleting') : $t('offers.deleteConfirmBtn') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <!-- ============ GALERIE PHOTOS ============ -->
       <div
@@ -806,6 +846,91 @@ const prevImage = () => {
 }
 .btn-save-all:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
 .btn-save-all:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-delete-offer {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid #ef4444;
+  background: white;
+  color: #ef4444;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+.btn-delete-offer:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.delete-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.delete-modal h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #01111d;
+  margin: 0 0 12px 0;
+}
+
+.delete-modal p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancel-delete {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #334155;
+  transition: all 0.2s;
+}
+.btn-cancel-delete:hover:not(:disabled) { border-color: #94a3b8; }
+.btn-cancel-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-confirm-delete {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  background: #ef4444;
+  color: white;
+  transition: all 0.2s;
+}
+.btn-confirm-delete:hover:not(:disabled) { background: #dc2626; }
+.btn-confirm-delete:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .save-msg {
   font-weight: 700;
