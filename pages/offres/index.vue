@@ -500,7 +500,7 @@ const retryFetch = async () => {
 
 .btn-delete-card {
   background: none;
-  border: 2px solid #fecaca;
+  border: 2px solid #fb8080;
   border-radius: 8px;
   padding: 8px 10px;
   cursor: pointer;
