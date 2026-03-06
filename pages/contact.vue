@@ -188,7 +188,7 @@ const ouvrirModalDocuments = async () => {
     chargementDocuments.value = true
     try {
         const data = await $fetch('/api/profile/me')
-        mesDocuments.value = data?.documents || []
+        mesDocuments.value = data?.document || []
     } catch (e) {
         mesDocuments.value = []
     } finally {
