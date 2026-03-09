@@ -1,6 +1,6 @@
 <script setup>
 
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, computed } from 'vue'
 definePageMeta({ middleware: 'auth' })
 const { t } = useI18n()
 const { data: session } = useAuth()
@@ -20,6 +20,7 @@ const boxConversation = ref(null)
 let intervalId = null
 const inputFichier = ref(null)
 const imageAgrandie = ref(null)
+
 
 // SECURITE : Empêcher les URLs javascript: / data: dans les liens de fichiers (protection XSS)
 const sanitizeUrl = (url) => {
@@ -91,7 +92,7 @@ const scrollToBottom = async () => {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
   $fetch('/api/users/ping', { method: 'POST' })
   const pingId = setInterval(() => {
     $fetch('/api/users/ping', { method: 'POST' })
@@ -103,6 +104,8 @@ onMounted(() => {
   }, 3000)
 
   onUnmounted(() => clearInterval(pingId))
+
+
 })
 
 const formatDate = (date) => {
@@ -284,9 +287,9 @@ const formatHeureMessage = (date) => {
       <div class="partie-gauche">
         <h2>{{ $t('messages.title') }}</h2>
         
-        <div v-if="contacts && contacts.length > 0">
-            <div 
-                v-for="user in contacts" 
+        <div class="contacts-liste" v-if="contacts && contacts.length > 0">
+            <div
+                v-for="user in contacts"
                 :key="user.id" 
                 class="contact" 
                 :class="{ active: contactId === user.id }"
@@ -334,10 +337,6 @@ const formatHeureMessage = (date) => {
                             {{ contactActuel.enLigne ? $t('messages.online') : $t('messages.offline') }}
                         </span>
                     </div>
-                </div>
-                <div class="concernant">
-                    <div class="Logo_Cercle">🏠</div>
-                    <p>{{ $t('messages.about') }} T2 Meublé - Saint-Leu</p>
                 </div>
             </template>
 
@@ -549,6 +548,12 @@ const formatHeureMessage = (date) => {
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+}
+
+.contacts-liste {
+    flex: 1;
+    overflow-y: auto;
 }
 
 .carte h2 {
@@ -704,21 +709,6 @@ const formatHeureMessage = (date) => {
     color: #94a3b8;
 }
 
-.concernant {
-    background-color: #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 8px;
-    margin-right: 50px;
-    padding: 1px 10px; 
-}
-
-.concernant p {
-    color: #2563EB;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
 
 .zone-chat {
     flex: 1;
@@ -1417,11 +1407,7 @@ const formatHeureMessage = (date) => {
 
 @media (max-width: 768px) {
     
-    .concernant {
-        display: none;
-    }
-    
-    .page {
+.page {
         padding: 0;
         height: auto; 
         max-height: none; 

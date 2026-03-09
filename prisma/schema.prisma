@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model avis {
   id          Int      @id @default(autoincrement())
   note        Int
@@ -63,7 +64,7 @@ model offre {
   charges             Int?               @default(0)
   proprietaireId      Int
   surface             Int?
-  updatedAt           DateTime
+  updatedAt           DateTime           @updatedAt
   chambresDisponibles Int?
   descriptionEn       String?            @db.Text
   titreEn             String?
@@ -117,7 +118,7 @@ model user {
   role                                              user_role          @default(ETUDIANT)
   createdAt                                         DateTime           @default(now())
   avatar                                            String?
-  updatedAt                                         DateTime
+  updatedAt                                         DateTime           @updatedAt
   derniereActivite                                  DateTime?
   avis                                              avis[]
   document                                          document[]
