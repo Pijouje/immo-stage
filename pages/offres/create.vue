@@ -265,6 +265,21 @@ const reinitialiserFormulaire = () => {
   errorMessage.value = ''
   successMessage.value = ''
 }
+
+const draggedIndex = ref(null)
+
+const onImageDragStart = (index) => { draggedIndex.value = index }
+const onImageDragOver = (e, index) => {
+  e.preventDefault()
+  if (draggedIndex.value === null || draggedIndex.value === index) return
+  const imgs = [...imageFiles.value]
+  const [moved] = imgs.splice(draggedIndex.value, 1)
+  imgs.splice(index, 0, moved)
+  imageFiles.value = imgs
+  draggedIndex.value = index
+}
+const onImageDragEnd = () => { draggedIndex.value = null }
+
 </script>
 
 <template>
@@ -482,7 +497,16 @@ const reinitialiserFormulaire = () => {
 
             <!-- Previews -->
             <div v-if="imageFiles.length > 0" class="image-previews">
-              <div v-for="(img, index) in imageFiles" :key="index" class="image-preview">
+              <div 
+                v-for="(img, index) in imageFiles" 
+                :key="index" 
+                class="image-preview"
+                draggable="true"
+                @dragstart="onImageDragStart(index)"
+                @dragover="onImageDragOver($event, index)"
+                @dragend="onImageDragEnd"
+                :class="{ 'dragging': draggedIndex === index }"
+              >
                 <img :src="img.preview" alt="Preview" class="preview-img">
                 <div v-if="img.uploading" class="upload-overlay">
                   <span class="spinner"></span>
@@ -914,6 +938,15 @@ label {
   background: #f8fafc;
 }
 
+.edit-image-card,
+.image-preview {
+  cursor: grab;
+}
+.edit-image-card.dragging,
+.image-preview.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .header {
