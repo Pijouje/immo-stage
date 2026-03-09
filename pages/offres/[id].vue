@@ -448,6 +448,21 @@ const prevImage = () => {
     currentImageIndex.value = offre.value.imgs.length - 1
   }
 }
+
+const draggedIndex = ref<number | null>(null)
+
+const onDragStart = (index: number) => { draggedIndex.value = index }
+const onDragOver = (e: DragEvent, index: number) => {
+  e.preventDefault()
+  if (draggedIndex.value === null || draggedIndex.value === index) return
+  const imgs = [...editForm.value.images]
+  const [moved] = imgs.splice(draggedIndex.value, 1)
+  if (moved !== undefined) imgs.splice(index, 0, moved)
+  editForm.value.images = imgs
+  draggedIndex.value = index
+}
+const onDragEnd = () => { draggedIndex.value = null }
+
 </script>
 
 <template>
@@ -550,7 +565,16 @@ const prevImage = () => {
       <div v-else class="edit-images-section">
         <h3>{{ $t('offers.edit.images') }}</h3>
         <div class="edit-images-grid">
-          <div v-for="(img, index) in editForm.images" :key="index" class="edit-image-card">
+          <div 
+            v-for="(img, index) in editForm.images" 
+            :key="index" 
+            class="edit-image-card"
+            draggable="true"
+            @dragstart="onDragStart(index)"
+            @dragover="onDragOver($event, index)"
+            @dragend="onDragEnd"
+            :class="{ 'dragging': draggedIndex === index }"
+          >
             <img :src="img" alt="Image offre" class="edit-image-thumb">
             <button @click="removeImage(index)" class="btn-remove-img" type="button">✕</button>
           </div>
@@ -1373,6 +1397,16 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
   color: #0f172a;
 }
 
+
+.edit-image-card,
+.image-preview {
+  cursor: grab;
+}
+.edit-image-card.dragging,
+.image-preview.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
 /* =============================================
    MOBILE
    ============================================= */
