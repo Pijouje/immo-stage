@@ -58,6 +58,7 @@ export default defineNuxtConfig({
     '/videos/**': {
       headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
     },
+    '/messages': { redirect: '/contact' },
   },
 
   i18n: {
@@ -75,6 +76,7 @@ export default defineNuxtConfig({
         file: 'en.json'
       }
     ],
+    // @ts-ignore
     lazy: true,
     langDir: 'locales',
     defaultLocale: 'fr',
@@ -88,6 +90,7 @@ export default defineNuxtConfig({
 
   sitemap: {
     xsl: false,
+    // @ts-ignore
     i18n: true
   },
 
@@ -95,4 +98,6 @@ export default defineNuxtConfig({
   seo: {
     redirectToCanonicalSiteUrl: true,
   },
+
+
 })
