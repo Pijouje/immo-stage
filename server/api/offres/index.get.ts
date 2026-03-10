@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, statusMessage: 'Vous devez être connecté' })
     }
 
-    const role = session.user.role
+    const role = (session.user as any).role
     if (role !== 'ADMIN' && role !== 'PROPRIETAIRE') {
       throw createError({ statusCode: 403, statusMessage: 'Accès refusé' })
     }
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
     // Les propriétaires ne voient que leurs propres offres
     if (role === 'PROPRIETAIRE') {
-      whereClause.proprietaireId = parseInt(session.user.id)
+      whereClause.proprietaireId = parseInt((session.user as any).id)
     }
   }
 
