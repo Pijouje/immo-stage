@@ -11,6 +11,9 @@ if (error.value) {
     console.error("Erreur API Users :", error.value)
 }
 
+const route = useRoute()
+const { data: offres } = await useFetch('/api/offres')
+const concernantParContact = ref({}) // { contactId: offreId }
 const contactId = ref(null)
 const contactActuel = ref(null)
 const messages = ref([])
@@ -52,15 +55,18 @@ const ouvrirConversation = async (user) => {
     contactActuel.value = user
     conversationOuverte.value = true
 
-    try {
-        await $fetch('/api/messages/read', {
-            method: 'POST',
-            body: { contactId: user.id }
-        })
-        refreshContacts()
-    } catch (e) { console.error(e) }
+    // Charger le concernant depuis le serveur
+    const result = await $fetch('/api/messages/concernant?contactId=' + user.id)
+    concernantParContact.value[user.id] = result.offreId
 
-    await chargerMessages(true)
+    // ... reste du code existant
+    if (route.query.offreId) {
+        await $fetch('/api/messages/concernant', {
+            method: 'POST',
+            body: { contactId: user.id, offreId: Number(route.query.offreId) }
+        })
+        concernantParContact.value[user.id] = Number(route.query.offreId)
+    }
 }
 
 const fermerConversation = () => {
@@ -279,6 +285,22 @@ const formatHeureMessage = (date) => {
 
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit'})
 }
+
+
+
+const offreSelectionnee = computed({
+    get: () => concernantParContact.value[contactId.value] || null,
+    set: (val) => { if (contactId.value) concernantParContact.value[contactId.value] = val }
+})
+
+watch(offreSelectionnee, async (newVal) => {
+    if (!contactId.value) return
+    await $fetch('/api/messages/concernant', {
+        method: 'POST',
+        body: { contactId: contactId.value, offreId: newVal }
+    })
+})
+
 </script>
 
 <template>
@@ -337,6 +359,15 @@ const formatHeureMessage = (date) => {
                             {{ contactActuel.enLigne ? $t('messages.online') : $t('messages.offline') }}
                         </span>
                     </div>
+                </div>
+                <div class="concernant" v-if="contactActuel">
+                    <div class="Logo_Cercle">🏠</div>
+                    <select v-model="offreSelectionnee" class="concernant-select">
+                        <option :value="null">{{ $t('messages.noOffer') }}</option>
+                        <option v-for="offre in offres?.offres" :key="offre.id" :value="offre.id">
+                            {{ offre.titre }}
+                        </option>
+                    </select>
                 </div>
             </template>
 
@@ -1405,6 +1436,32 @@ const formatHeureMessage = (date) => {
     color: #2563EB;
 }
 
+.concernant {
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    margin-right: 50px;
+    padding: 6px 12px;
+}
+
+.Logo_Cercle {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.concernant-select {
+    background: none;
+    border: none;
+    color: #2563EB;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    max-width: 200px;
+}
+
 @media (max-width: 768px) {
     
 .page {
@@ -1488,6 +1545,9 @@ const formatHeureMessage = (date) => {
         justify-content: center;
         font-size: 0.8rem;
         padding: 10px;
+    }
+    .concernant {
+        display: none;
     }
 }
 

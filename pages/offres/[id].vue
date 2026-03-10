@@ -751,8 +751,8 @@ const onDragEnd = () => { draggedIndex.value = null }
                   </strong>
                 </div>
               </div>
-              <OffreBouton to="/contact">
-                {{ $t('offers.contactOwner') }}
+              <OffreBouton :to="`/contact?offreId=${offre.id}`">
+                  {{ $t('offers.contactOwner') }}
               </OffreBouton>
             </template>
 

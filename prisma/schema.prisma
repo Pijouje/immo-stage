@@ -72,6 +72,7 @@ model offre {
   user                user               @relation(fields: [proprietaireId], references: [id], map: "Offre_proprietaireId_fkey")
   offreimage          offreimage[]
   reviewpermission    reviewpermission[]
+  conversationoffre conversationoffre[]
 
   @@index([proprietaireId], map: "Offre_proprietaireId_fkey")
 }
@@ -127,6 +128,15 @@ model user {
   offre                                             offre[]
   reviewpermission_reviewpermission_grantedByTouser reviewpermission[] @relation("reviewpermission_grantedByTouser")
   reviewpermission_reviewpermission_userIdTouser    reviewpermission[] @relation("reviewpermission_userIdTouser")
+}
+
+model conversationoffre {
+  id      Int  @id @default(autoincrement())
+  user1Id Int
+  user2Id Int
+  offreId Int?
+  offre   offre? @relation(fields: [offreId], references: [id], onDelete: SetNull)
+  @@unique([user1Id, user2Id])
 }
 
 enum document_status {

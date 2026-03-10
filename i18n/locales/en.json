@@ -116,7 +116,9 @@
     "savedToDocs": "✓ Saved",
     "saveToDocs": "💾 My docs",
     "saving": "...",
-    "offline": "Offline"
+    "offline": "Offline",
+    "noOffer": "No offer",
+    "about": "About:"
   },
   "password": {
     "minLength": "12 Characters",
