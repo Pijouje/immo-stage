@@ -1,3 +1,6 @@
+/// <reference path="../../../next-auth.d.ts" />
+
+import { getServerSession } from '#auth'
 import { prisma } from '../../utils/prisma'
 
 
@@ -22,6 +25,23 @@ export default defineEventHandler(async (event) => {
 
   if (!offre) {
     throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée' })
+  }
+
+  // Si l'offre n'est pas ACTIVE, seul le propriétaire ou un admin peut la voir
+  if (offre.status !== 'ACTIVE') {
+    const session = await getServerSession(event)
+
+    if (!session || !session.user) {
+      throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée' })
+    }
+
+    const userId = parseInt(session.user.id)
+    const isAdmin = session.user.role === 'ADMIN'
+    const isOwner = offre.proprietaireId === userId
+
+    if (!isAdmin && !isOwner) {
+      throw createError({ statusCode: 404, statusMessage: 'Annonce non trouvée' })
+    }
   }
 
   return offre

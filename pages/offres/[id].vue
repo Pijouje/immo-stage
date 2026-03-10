@@ -16,6 +16,8 @@ interface Offre {
   surface: number | null;
   chambresDisponibles: number | null;
   proprietaireId: number;
+  status: string;
+  archivedAt: string | null;
   tags: string[] | string;
   offreimage: { url: string }[];
   avis: { note: number }[];
@@ -372,18 +374,64 @@ const saveAll = async () => {
 // --- SUPPRESSION ---
 const showDeleteConfirm = ref(false)
 const deleting = ref(false)
+const isPermanentDelete = ref(false)
+
+const offreStatus = computed(() => offreRaw.value?.status || 'ACTIVE')
+const isArchived = computed(() => offreStatus.value === 'ARCHIVED')
+
+const openDeleteConfirm = (permanent: boolean = false) => {
+  isPermanentDelete.value = permanent
+  showDeleteConfirm.value = true
+}
 
 const deleteOffre = async () => {
   deleting.value = true
   try {
-    await $fetch(`/api/offres/${route.params.id}`, { method: 'DELETE' })
+    const url = isPermanentDelete.value
+      ? `/api/offres/${route.params.id}?permanent=true`
+      : `/api/offres/${route.params.id}`
+    await $fetch(url, { method: 'DELETE' })
     showDeleteConfirm.value = false
+    isPermanentDelete.value = false
     await navigateTo('/offres')
   } catch (e: any) {
     saveError.value = e.data?.statusMessage || t('errors.saveError')
     showDeleteConfirm.value = false
+    isPermanentDelete.value = false
   } finally {
     deleting.value = false
+  }
+}
+
+// --- TOGGLE ACTIVER/DÉSACTIVER ---
+const togglingStatus = ref(false)
+
+const toggleOffreStatus = async () => {
+  togglingStatus.value = true
+  try {
+    await $fetch(`/api/offres/${route.params.id}/toggle-status`, { method: 'POST' })
+    await refresh()
+  } catch (e: any) {
+    saveError.value = e.data?.statusMessage || t('errors.saveError')
+    console.error(e)
+  } finally {
+    togglingStatus.value = false
+  }
+}
+
+// --- RESTAURER ---
+const restoring = ref(false)
+
+const restoreOffre = async () => {
+  restoring.value = true
+  try {
+    await $fetch(`/api/offres/${route.params.id}/restore`, { method: 'POST' })
+    await refresh()
+  } catch (e: any) {
+    saveError.value = e.data?.statusMessage || t('errors.saveError')
+    console.error(e)
+  } finally {
+    restoring.value = false
   }
 }
 
@@ -469,9 +517,17 @@ const onDragEnd = () => { draggedIndex.value = null }
   <article class="detail-page" itemscope itemtype="https://schema.org/Apartment">
     <div class="container">
 
+      <!-- BANNIÈRE DE STATUT -->
+      <div v-if="canEdit && offreStatus === 'INACTIVE'" class="status-banner status-banner-inactive">
+        {{ $t('offers.inactiveBanner') }}
+      </div>
+      <div v-if="canEdit && offreStatus === 'ARCHIVED'" class="status-banner status-banner-archived">
+        {{ $t('offers.archivedBanner') }}
+      </div>
+
       <!-- BOUTON TOGGLE ÉDITION -->
       <div v-if="canEdit" class="edit-toolbar">
-        <button @click="toggleEditMode" class="btn-toggle-edit" :class="{ active: editMode }">
+        <button v-if="!isArchived" @click="toggleEditMode" class="btn-toggle-edit" :class="{ active: editMode }">
           <span v-if="editMode">{{ $t('offers.visitorView') }}</span>
           <span v-else>{{ $t('offers.editMode') }}</span>
         </button>
@@ -482,8 +538,41 @@ const onDragEnd = () => { draggedIndex.value = null }
           </button>
         </template>
 
-        <button @click="showDeleteConfirm = true" class="btn-delete-offer">
-          {{ $t('offers.deleteOffer') }}
+        <!-- Bouton activer/désactiver (seulement si non archivée) -->
+        <button
+          v-if="!isArchived"
+          @click="toggleOffreStatus"
+          :disabled="togglingStatus"
+          class="btn-toggle-status"
+          :class="offreStatus === 'ACTIVE' ? 'btn-deactivate' : 'btn-activate'"
+        >
+          {{ offreStatus === 'ACTIVE' ? $t('offers.deactivate') : $t('offers.activate') }}
+        </button>
+
+        <!-- Bouton restaurer (seulement si archivée) -->
+        <button
+          v-if="isArchived"
+          @click="restoreOffre"
+          :disabled="restoring"
+          class="btn-restore"
+        >
+          {{ restoring ? $t('offers.restoring') : $t('offers.restore') }}
+        </button>
+
+        <!-- Bouton supprimer -->
+        <button
+          v-if="isArchived"
+          @click="openDeleteConfirm(true)"
+          class="btn-delete-offer"
+        >
+          {{ $t('offers.permanentDelete') }}
+        </button>
+        <button
+          v-else
+          @click="openDeleteConfirm(false)"
+          class="btn-delete-offer"
+        >
+          {{ $t('offers.moveToTrash') }}
         </button>
 
         <span v-if="saveMessage" class="save-msg success">{{ saveMessage }}</span>
@@ -493,15 +582,15 @@ const onDragEnd = () => { draggedIndex.value = null }
       <!-- MODALE CONFIRMATION SUPPRESSION -->
       <Teleport to="body">
         <div v-if="showDeleteConfirm" class="delete-overlay" @click.self="showDeleteConfirm = false">
-          <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="$t('offers.deleteConfirmTitle')">
-            <h2>{{ $t('offers.deleteConfirmTitle') }}</h2>
-            <p>{{ $t('offers.deleteConfirmMessage') }}</p>
+          <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="isPermanentDelete ? $t('offers.permanentDeleteConfirmTitle') : $t('offers.moveToTrashConfirmTitle')">
+            <h2>{{ isPermanentDelete ? $t('offers.permanentDeleteConfirmTitle') : $t('offers.moveToTrashConfirmTitle') }}</h2>
+            <p>{{ isPermanentDelete ? $t('offers.permanentDeleteConfirmMessage') : $t('offers.moveToTrashConfirmMessage') }}</p>
             <div class="delete-modal-actions">
-              <button @click="showDeleteConfirm = false" class="btn-cancel-delete" :disabled="deleting">
+              <button @click="showDeleteConfirm = false; isPermanentDelete = false" class="btn-cancel-delete" :disabled="deleting">
                 {{ $t('offers.deleteCancel') }}
               </button>
               <button @click="deleteOffre" class="btn-confirm-delete" :disabled="deleting">
-                {{ deleting ? $t('offers.deleting') : $t('offers.deleteConfirmBtn') }}
+                {{ deleting ? $t('offers.deleting') : (isPermanentDelete ? $t('offers.permanentDeleteConfirmBtn') : $t('offers.moveToTrash')) }}
               </button>
             </div>
           </div>
@@ -870,6 +959,75 @@ const onDragEnd = () => { draggedIndex.value = null }
 }
 .btn-save-all:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
 .btn-save-all:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Bannière de statut */
+.status-banner {
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.status-banner-inactive {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.status-banner-archived {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+/* Bouton toggle statut (activer/désactiver) */
+.btn-toggle-status {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid;
+  transition: all 0.2s;
+}
+.btn-toggle-status:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-deactivate {
+  border-color: #f59e0b;
+  background: white;
+  color: #92400e;
+}
+.btn-deactivate:hover:not(:disabled) {
+  background: #fef3c7;
+}
+
+.btn-activate {
+  border-color: #10b981;
+  background: white;
+  color: #065f46;
+}
+.btn-activate:hover:not(:disabled) {
+  background: #d1fae5;
+}
+
+/* Bouton restaurer */
+.btn-restore {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid #2563eb;
+  background: white;
+  color: #2563eb;
+  transition: all 0.2s;
+}
+.btn-restore:hover:not(:disabled) {
+  background: #dbeafe;
+}
+.btn-restore:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-delete-offer {
   padding: 10px 20px;

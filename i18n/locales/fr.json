@@ -311,6 +311,35 @@
         "description": "Sélectionnez les équipements disponibles"
       }
     },
+    "tabs": {
+      "active": "Actives",
+      "inactive": "Inactives",
+      "archived": "Corbeille"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "archived": "Archivée"
+    },
+    "inactiveBanner": "Cette annonce est actuellement inactive et n'est pas visible par les visiteurs.",
+    "archivedBanner": "Cette annonce est dans la corbeille. Vous pouvez la restaurer ou la supprimer définitivement.",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "restore": "Restaurer",
+    "restoring": "Restauration...",
+    "restored": "Annonce restaurée !",
+    "moveToTrash": "Mettre en corbeille",
+    "moveToTrashConfirmTitle": "Mettre en corbeille",
+    "moveToTrashConfirmMessage": "Cette annonce sera déplacée dans la corbeille. Vous pourrez la restaurer plus tard.",
+    "permanentDelete": "Supprimer définitivement",
+    "permanentDeleteConfirmTitle": "Suppression définitive",
+    "permanentDeleteConfirmMessage": "Cette action est irréversible. L'annonce et toutes ses données seront définitivement supprimées.",
+    "permanentDeleteConfirmBtn": "Supprimer définitivement",
+    "archivedOn": "Archivée le {date}",
+    "emptyTrash": "La corbeille est vide",
+    "emptyTrashMessage": "Aucune annonce archivée pour le moment.",
+    "noInactiveOffers": "Aucune annonce inactive",
+    "noInactiveOffersMessage": "Toutes vos annonces sont actuellement actives.",
     "tags": {
       "wifiFibre": "WiFi / Fibre",
       "cuisineEquipee": "Cuisine équipée",

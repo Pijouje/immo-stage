@@ -33,6 +33,7 @@ useHead({
   ],
 })
 
+const { t, locale } = useI18n()
 const { data: session } = useAuth()
 
 const canCreateOffre = computed(() => {
@@ -40,38 +41,90 @@ const canCreateOffre = computed(() => {
   return role === 'ADMIN' || role === 'PROPRIETAIRE'
 })
 
+// Onglet actif (visible uniquement pour PROPRIETAIRE/ADMIN)
+const currentTab = ref<'ACTIVE' | 'INACTIVE' | 'ARCHIVED'>('ACTIVE')
+
+const changeTab = (tab: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') => {
+  currentTab.value = tab
+  page.value = 1
+}
+
+// Suppression (soft delete ou permanent)
 const deleteTarget = ref<{ id: number; titre: string } | null>(null)
 const deleting = ref(false)
+const isPermanentDelete = ref(false)
 
-const confirmDelete = (id: number, titre: string) => {
+const confirmDelete = (id: number, titre: string, permanent: boolean = false) => {
   deleteTarget.value = { id, titre }
+  isPermanentDelete.value = permanent
 }
 
 const cancelDelete = () => {
   deleteTarget.value = null
+  isPermanentDelete.value = false
 }
 
 const deleteOffre = async () => {
   if (!deleteTarget.value) return
   deleting.value = true
   try {
-    await $fetch(`/api/offres/${deleteTarget.value.id}`, { method: 'DELETE' })
+    const url = isPermanentDelete.value
+      ? `/api/offres/${deleteTarget.value.id}?permanent=true`
+      : `/api/offres/${deleteTarget.value.id}`
+    await $fetch(url, { method: 'DELETE' })
     deleteTarget.value = null
+    isPermanentDelete.value = false
     await refresh()
   } catch (e) {
     console.error(e)
     deleteTarget.value = null
+    isPermanentDelete.value = false
   } finally {
     deleting.value = false
   }
 }
 
+// Toggle activer/désactiver
+const togglingId = ref<number | null>(null)
+
+const toggleStatus = async (id: number) => {
+  togglingId.value = id
+  try {
+    await $fetch(`/api/offres/${id}/toggle-status`, { method: 'POST' })
+    await refresh()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    togglingId.value = null
+  }
+}
+
+// Restaurer depuis la corbeille
+const restoringId = ref<number | null>(null)
+
+const restoreOffre = async (id: number) => {
+  restoringId.value = id
+  try {
+    await $fetch(`/api/offres/${id}/restore`, { method: 'POST' })
+    await refresh()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    restoringId.value = null
+  }
+}
+
 const page = ref(1)
 
+const statusQuery = computed(() => {
+  if (!canCreateOffre.value) return undefined
+  return currentTab.value
+})
+
 const { data, pending, error, refresh } = await useFetch('/api/offres', {
-  query: { page },
+  query: { page, status: statusQuery },
   lazy: true,
-  watch: [page]
+  watch: [page, statusQuery]
 })
 
 const offres = computed(() => data.value?.offres ?? [])
@@ -109,6 +162,14 @@ const retryFetch = async () => {
   await refresh()
 }
 
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
 </script>
 
 <template>
@@ -132,6 +193,31 @@ const retryFetch = async () => {
         <span class="btn-text">{{ $t('offers.createOffer') }}</span>
       </NuxtLink>
 
+      <!-- ONGLETS (visibles uniquement pour PROPRIETAIRE/ADMIN) -->
+      <div v-if="canCreateOffre" class="tabs-bar">
+        <button
+          class="tab-btn"
+          :class="{ active: currentTab === 'ACTIVE' }"
+          @click="changeTab('ACTIVE')"
+        >
+          {{ $t('offers.tabs.active') }}
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: currentTab === 'INACTIVE' }"
+          @click="changeTab('INACTIVE')"
+        >
+          {{ $t('offers.tabs.inactive') }}
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: currentTab === 'ARCHIVED' }"
+          @click="changeTab('ARCHIVED')"
+        >
+          {{ $t('offers.tabs.archived') }}
+        </button>
+      </div>
+
       <div v-if="error" class="state-box error-box" role="alert">
         <div class="icon" aria-hidden="true">⚠️</div>
         <h2>{{ $t('offers.errorTitle') }}</h2>
@@ -144,18 +230,35 @@ const retryFetch = async () => {
         <p>{{ $t('offers.loading') }}</p>
       </div>
 
+      <!-- Empty states selon l'onglet -->
       <div v-else-if="!offres || offres.length === 0" class="state-box empty-box">
-        <div class="icon" aria-hidden="true">📭</div>
-        <h2>{{ $t('offers.noOffers') }}</h2>
-        <p>{{ $t('offers.noOffersMessage') }}</p>
-
-        <NuxtLink v-if="canCreateOffre" to="/offres/create" class="btn-create-first">
-          {{ $t('offers.createFirst') }}
-        </NuxtLink>
+        <template v-if="currentTab === 'ARCHIVED' && canCreateOffre">
+          <div class="icon" aria-hidden="true">🗑️</div>
+          <h2>{{ $t('offers.emptyTrash') }}</h2>
+          <p>{{ $t('offers.emptyTrashMessage') }}</p>
+        </template>
+        <template v-else-if="currentTab === 'INACTIVE' && canCreateOffre">
+          <div class="icon" aria-hidden="true">⏸️</div>
+          <h2>{{ $t('offers.noInactiveOffers') }}</h2>
+          <p>{{ $t('offers.noInactiveOffersMessage') }}</p>
+        </template>
+        <template v-else>
+          <div class="icon" aria-hidden="true">📭</div>
+          <h2>{{ $t('offers.noOffers') }}</h2>
+          <p>{{ $t('offers.noOffersMessage') }}</p>
+          <NuxtLink v-if="canCreateOffre" to="/offres/create" class="btn-create-first">
+            {{ $t('offers.createFirst') }}
+          </NuxtLink>
+        </template>
       </div>
 
       <div v-else class="offres-grid">
-        <article v-for="offre in offres" :key="offre.id" class="card">
+        <article
+          v-for="offre in offres"
+          :key="offre.id"
+          class="card"
+          :class="{ 'card-inactive': offre.status === 'INACTIVE', 'card-archived': offre.status === 'ARCHIVED' }"
+        >
           <div class="card-image">
             <img
               :src="offre.image || '/images/default.png'"
@@ -164,6 +267,13 @@ const retryFetch = async () => {
               width="350"
               height="220"
             >
+            <!-- Badge de statut -->
+            <span v-if="offre.status === 'INACTIVE'" class="badge badge-inactive">
+              {{ $t('offers.status.inactive') }}
+            </span>
+            <span v-if="offre.status === 'ARCHIVED'" class="badge badge-archived">
+              {{ $t('offers.status.archived') }}
+            </span>
           </div>
           <div class="card-content">
             <h2>{{ offre.titre }}</h2>
@@ -171,19 +281,73 @@ const retryFetch = async () => {
               <span class="pin" aria-hidden="true">📍</span> {{ offre.lieu }}
             </p>
             <p class="price"><strong>{{ offre.prix }}</strong> /mois</p>
+
+            <!-- Date d'archivage -->
+            <p v-if="offre.status === 'ARCHIVED' && offre.archivedAt" class="archived-date">
+              {{ $t('offers.archivedOn', { date: formatDate(offre.archivedAt) }) }}
+            </p>
+
             <div class="card-action">
              <OffreBouton :to="`/offres/${offre.id}`">
                {{ $t('offers.viewOffer') }}
              </OffreBouton>
-             <button
-               v-if="canCreateOffre"
-               @click.prevent="confirmDelete(offre.id, offre.titre)"
-               class="btn-delete-card"
-               :title="$t('offers.deleteOffer')"
-               aria-label="Supprimer l'annonce"
-             >
-               🗑️
-             </button>
+
+             <!-- Actions pour les offres ACTIVES -->
+             <template v-if="canCreateOffre && currentTab === 'ACTIVE'">
+               <button
+                 @click.prevent="toggleStatus(offre.id)"
+                 class="btn-action-card btn-toggle-card"
+                 :title="$t('offers.deactivate')"
+                 :disabled="togglingId === offre.id"
+               >
+                 ⏸️
+               </button>
+               <button
+                 @click.prevent="confirmDelete(offre.id, offre.titre)"
+                 class="btn-delete-card"
+                 :title="$t('offers.moveToTrash')"
+               >
+                 🗑️
+               </button>
+             </template>
+
+             <!-- Actions pour les offres INACTIVES -->
+             <template v-if="canCreateOffre && currentTab === 'INACTIVE'">
+               <button
+                 @click.prevent="toggleStatus(offre.id)"
+                 class="btn-action-card btn-activate-card"
+                 :title="$t('offers.activate')"
+                 :disabled="togglingId === offre.id"
+               >
+                 ▶️
+               </button>
+               <button
+                 @click.prevent="confirmDelete(offre.id, offre.titre)"
+                 class="btn-delete-card"
+                 :title="$t('offers.moveToTrash')"
+               >
+                 🗑️
+               </button>
+             </template>
+
+             <!-- Actions pour les offres ARCHIVÉES -->
+             <template v-if="canCreateOffre && currentTab === 'ARCHIVED'">
+               <button
+                 @click.prevent="restoreOffre(offre.id)"
+                 class="btn-action-card btn-restore-card"
+                 :title="$t('offers.restore')"
+                 :disabled="restoringId === offre.id"
+               >
+                 ↩️
+               </button>
+               <button
+                 @click.prevent="confirmDelete(offre.id, offre.titre, true)"
+                 class="btn-delete-card btn-permanent-delete"
+                 :title="$t('offers.permanentDelete')"
+               >
+                 ❌
+               </button>
+             </template>
             </div>
           </div>
         </article>
@@ -200,16 +364,16 @@ const retryFetch = async () => {
     <!-- MODALE CONFIRMATION SUPPRESSION -->
     <Teleport to="body">
       <div v-if="deleteTarget" class="delete-overlay" @click.self="cancelDelete">
-        <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="$t('offers.deleteConfirmTitle')">
-          <h2>{{ $t('offers.deleteConfirmTitle') }}</h2>
-          <p>{{ $t('offers.deleteConfirmMessage') }}</p>
+        <div class="delete-modal" role="dialog" aria-modal="true" :aria-label="isPermanentDelete ? $t('offers.permanentDeleteConfirmTitle') : $t('offers.moveToTrashConfirmTitle')">
+          <h2>{{ isPermanentDelete ? $t('offers.permanentDeleteConfirmTitle') : $t('offers.moveToTrashConfirmTitle') }}</h2>
+          <p>{{ isPermanentDelete ? $t('offers.permanentDeleteConfirmMessage') : $t('offers.moveToTrashConfirmMessage') }}</p>
           <p class="delete-modal-name">« {{ deleteTarget.titre }} »</p>
           <div class="delete-modal-actions">
             <button @click="cancelDelete" class="btn-cancel-delete" :disabled="deleting">
               {{ $t('offers.deleteCancel') }}
             </button>
             <button @click="deleteOffre" class="btn-confirm-delete" :disabled="deleting">
-              {{ deleting ? $t('offers.deleting') : $t('offers.deleteConfirmBtn') }}
+              {{ deleting ? $t('offers.deleting') : (isPermanentDelete ? $t('offers.permanentDeleteConfirmBtn') : $t('offers.moveToTrash')) }}
             </button>
           </div>
         </div>
@@ -233,14 +397,14 @@ const retryFetch = async () => {
 }
 
 .offres-page {
-  box-sizing: border-box; 
+  box-sizing: border-box;
   min-height: calc(100vh - 90px);
   width: 100%;
   background-color: #f4f7f6;
-  background-image: url('/images/bg.png'); 
+  background-image: url('/images/bg.png');
   background-size: cover;
   background-position: center;
-  padding: 120px 0 60px 0; 
+  padding: 120px 0 60px 0;
 }
 
 .container {
@@ -291,11 +455,11 @@ const retryFetch = async () => {
     padding: 14px 20px;
     font-size: 0.9rem;
   }
-  
+
   .btn-text {
     display: none; /* Masquer le texte sur mobile, garder juste l'icône */
   }
-  
+
   .btn-floating-create {
     width: 56px;
     height: 56px;
@@ -303,6 +467,42 @@ const retryFetch = async () => {
     justify-content: center;
     border-radius: 50%;
   }
+}
+
+/* ===== ONGLETS ===== */
+.tabs-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  max-width: 420px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #01111d;
+  background: #f1f5f9;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 /* Bouton de création pour l'état vide */
@@ -412,10 +612,49 @@ const retryFetch = async () => {
   transform: translateY(-10px);
 }
 
+.card-inactive {
+  opacity: 0.7;
+  border: 2px solid #f59e0b;
+}
+
+.card-archived {
+  opacity: 0.6;
+  border: 2px solid #ef4444;
+}
+
+.card-image {
+  position: relative;
+}
+
 .card-image img {
   width: 100%;
   height: 220px;
   object-fit: cover;
+}
+
+/* Badges de statut */
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-inactive {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.badge-archived {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
 }
 
 .card-content {
@@ -450,9 +689,17 @@ const retryFetch = async () => {
   color: #01111d;
 }
 
+.archived-date {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 15px;
+  font-style: italic;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .offres-grid { grid-template-columns: 1fr; }
+  .tabs-bar { max-width: 100%; }
 }
 
 /* PAGINATION */
@@ -495,7 +742,7 @@ const retryFetch = async () => {
 .card-action {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-delete-card {
@@ -512,6 +759,51 @@ const retryFetch = async () => {
 .btn-delete-card:hover {
   background: #fee2e2;
   border-color: #ef4444;
+}
+
+.btn-permanent-delete {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+.btn-permanent-delete:hover {
+  background: #ef4444;
+}
+
+.btn-action-card {
+  background: none;
+  border: 2px solid #94a3b8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.btn-action-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-toggle-card {
+  border-color: #f59e0b;
+}
+.btn-toggle-card:hover:not(:disabled) {
+  background: #fef3c7;
+}
+
+.btn-activate-card {
+  border-color: #10b981;
+}
+.btn-activate-card:hover:not(:disabled) {
+  background: #d1fae5;
+}
+
+.btn-restore-card {
+  border-color: #2563eb;
+}
+.btn-restore-card:hover:not(:disabled) {
+  background: #dbeafe;
 }
 
 .delete-overlay {

@@ -39,8 +39,27 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 5. Supprimer l'offre (les relations cascadent automatiquement via Prisma schema)
-  await prisma.offre.delete({ where: { id } })
+  // 5. Suppression définitive ou mise en corbeille
+  const query = getQuery(event)
+  const permanent = query.permanent === 'true'
 
-  return { success: true }
+  if (permanent) {
+    // Suppression définitive : uniquement pour les offres déjà archivées
+    if (offre.status !== 'ARCHIVED') {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Seules les offres archivées peuvent être supprimées définitivement'
+      })
+    }
+
+    await prisma.offre.delete({ where: { id } })
+    return { success: true, permanentlyDeleted: true }
+  } else {
+    // Soft delete : mise en corbeille
+    await prisma.offre.update({
+      where: { id },
+      data: { status: 'ARCHIVED', archivedAt: new Date() }
+    })
+    return { success: true, archived: true }
+  }
 })
