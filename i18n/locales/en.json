@@ -309,6 +309,35 @@
         "description": "Select available amenities"
       }
     },
+    "tabs": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "archived": "Trash"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "archived": "Archived"
+    },
+    "inactiveBanner": "This listing is currently inactive and not visible to the public.",
+    "archivedBanner": "This listing is in the trash. You can restore it or permanently delete it.",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "restore": "Restore",
+    "restoring": "Restoring...",
+    "restored": "Listing restored!",
+    "moveToTrash": "Move to trash",
+    "moveToTrashConfirmTitle": "Move to trash",
+    "moveToTrashConfirmMessage": "This listing will be moved to the trash. You can restore it later.",
+    "permanentDelete": "Delete permanently",
+    "permanentDeleteConfirmTitle": "Permanent deletion",
+    "permanentDeleteConfirmMessage": "This action cannot be undone. The listing and all its data will be permanently deleted.",
+    "permanentDeleteConfirmBtn": "Delete permanently",
+    "archivedOn": "Archived on {date}",
+    "emptyTrash": "Trash is empty",
+    "emptyTrashMessage": "No archived listings at the moment.",
+    "noInactiveOffers": "No inactive listings",
+    "noInactiveOffersMessage": "All your listings are currently active.",
     "tags": {
       "wifiFibre": "WiFi / Fibre",
       "cuisineEquipee": "Equipped kitchen",

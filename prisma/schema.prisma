@@ -65,6 +65,8 @@ model offre {
   proprietaireId      Int
   surface             Int?
   updatedAt           DateTime           @updatedAt
+  status              offre_status       @default(ACTIVE)
+  archivedAt          DateTime?
   chambresDisponibles Int?
   descriptionEn       String?            @db.Text
   titreEn             String?
@@ -133,6 +135,12 @@ enum document_status {
   EN_ATTENTE
   VALIDE
   REFUSE
+}
+
+enum offre_status {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
 }
 
 enum user_role {
