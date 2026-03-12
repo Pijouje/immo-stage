@@ -73,6 +73,8 @@ const ouvrirConversation = async (user) => {
         })
         concernantParContact.value[user.id] = Number(route.query.offreId)
     }
+
+    await chargerMessages(true)
 }
 
 const fermerConversation = () => {
@@ -309,6 +311,19 @@ watch(offreSelectionnee, async (newVal) => {
     })
 })
 
+const getInitiale = (user) => {
+  if (!user || !user.prenom) return '?'
+  return user.prenom.charAt(0).toUpperCase()
+}
+
+
+const getAvatarColor = (name) => {
+  const colors = ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  if (!name) return colors[0];
+  const index = name.length % colors.length;
+  return colors[index];
+}
+
 </script>
 
 <template>
@@ -325,7 +340,9 @@ watch(offreSelectionnee, async (newVal) => {
                 :class="{ active: contactId === user.id }"
                 @click="ouvrirConversation(user)"
             >
-              <div class="avatar"></div>
+                <div class="avatar avatar-circle" :style="{ backgroundColor: getAvatarColor(user.prenom) }">
+                    {{ getInitiale(user) }}
+                </div>
               
                 <div class="info-text">
                     <div class="top-line">
@@ -358,7 +375,9 @@ watch(offreSelectionnee, async (newVal) => {
                 <button class="btn-retour" @click="fermerConversation">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
-                <div class="avatar-chat"></div>
+                <div class="avatar-chat initiale-avatar avatar-circle" :style="{ backgroundColor: getAvatarColor(contactActuel.prenom) }">
+                    {{ getInitiale(contactActuel) }}
+                </div>
                 <div class="chat-info">
                     <h3>{{ contactActuel.prenom }} {{ contactActuel.nom }}</h3>
                     <div class="status-container">
@@ -537,7 +556,7 @@ watch(offreSelectionnee, async (newVal) => {
       <div v-if="fichierASupprimer" class="modal-overlay" @click.self="fichierASupprimer = null">
         <div class="modal-content">
           <h3>{{ $t('messages.deleteFileTitle') }}</h3>
-          <p>{{ $t('messages.deleteFileConfirm') }}</p>
+          <p>{{ $t('messages.deleteFiledivouvriConfirm') }}</p>
           <div v-if="suppressionErreur" class="modal-error">{{ suppressionErreur }}</div>
           <div class="modal-actions">
             <button @click="fichierASupprimer = null" class="btn-annuler">{{ $t('messages.deleteFileCancel') }}</button>
@@ -623,14 +642,44 @@ watch(offreSelectionnee, async (newVal) => {
     background-color: #f8fafc;
 }
 
-.avatar {
-    background-image: url('/images/Gims.webp');
+/* Style de base pour les cercles */
+.avatar-circle {
+    background-image: none !important; /* On force la suppression de l'image Gims */
+    background-color: #2563EB; /* Bleu par défaut */
+    border-radius: 50%; /* Cercle parfait */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* Dimensions pour la liste de gauche */
+.avatar.avatar-circle {
     width: 50px;
     height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+/* Dimensions pour la zone de chat (en haut) */
+.avatar-chat.avatar-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+    margin-right: 20px;
+}
+
+/* Optionnel : Effet au survol du contact */
+.contact:hover .avatar-circle {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Style pour le contact actif */
+.contact.active .avatar-circle {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #2563EB;
 }
 
 .info-text {
@@ -694,17 +743,6 @@ watch(offreSelectionnee, async (newVal) => {
     align-items: center;
     padding: 0 30px;
     box-sizing: border-box;
-}
-
-.avatar-chat {
-    background-image: url('/images/Gims.webp');
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
-    margin-right: 20px;
 }
 
 .chat-info{
