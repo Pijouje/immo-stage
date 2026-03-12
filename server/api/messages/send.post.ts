@@ -84,7 +84,7 @@ export default defineEventHandler(async (event) => {
 
 
         resend.emails.send({
-            from: 'onboarding@resend.dev',
+            from: 'noreply@ton-domaine.com',
             to: emailDest,
             subject: 'Nouveau message de ' + expediteurNom + ' — Stud\'Loc',
             html: htmlEmail

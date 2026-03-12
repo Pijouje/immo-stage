@@ -23,6 +23,7 @@ const boxConversation = ref(null)
 let intervalId = null
 const inputFichier = ref(null)
 const imageAgrandie = ref(null)
+let pingId = null
 
 
 // SECURITE : Empêcher les URLs javascript: / data: dans les liens de fichiers (protection XSS)
@@ -55,6 +56,11 @@ const ouvrirConversation = async (user) => {
     contactActuel.value = user
     conversationOuverte.value = true
 
+    await $fetch('/api/messages/read', {
+        method: 'POST',
+        body: { contactId: user.id }
+    })
+    
     // Charger le concernant depuis le serveur
     const result = await $fetch('/api/messages/concernant?contactId=' + user.id)
     concernantParContact.value[user.id] = result.offreId
@@ -100,7 +106,8 @@ const scrollToBottom = async () => {
 
 onMounted(async () => {
   $fetch('/api/users/ping', { method: 'POST' })
-  const pingId = setInterval(() => {
+  
+  pingId = setInterval(() => {
     $fetch('/api/users/ping', { method: 'POST' })
   }, 30000)
 
@@ -108,10 +115,11 @@ onMounted(async () => {
     if (contactId.value) chargerMessages(false)
     refreshContacts()
   }, 3000)
+})
 
-  onUnmounted(() => clearInterval(pingId))
-
-
+onUnmounted(() => {
+  clearInterval(pingId)
+  clearInterval(intervalId)
 })
 
 const formatDate = (date) => {
