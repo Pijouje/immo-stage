@@ -1,7 +1,7 @@
 <template>
   <div class="legal-page">
     <div class="container">
-      
+
       <div class="page-header">
         <div class="header-icon">⚖️</div>
         <h1>Mentions Légales</h1>
@@ -10,35 +10,34 @@
       <section class="section">
         <h2>1. Éditeur du site</h2>
         <div class="info-grid">
-          <div><strong>Nom :</strong> [Nom de la société ou du responsable]</div>
-          <div><strong>Forme juridique :</strong> [Auto-entrepreneur / SARL / SAS...]</div>
-          <div><strong>Capital social :</strong> [Si applicable]</div>
-          <div><strong>SIRET :</strong> [Numéro SIRET]</div>
-          <div><strong>Adresse :</strong> [Adresse complète]</div>
-          <div><strong>Email :</strong> <a href="mailto:contact@votresite.fr">contact@votresite.fr</a></div>
-          <div><strong>Téléphone :</strong> [Numéro]</div>
+          <div><strong>Nom :</strong> Poncey Valdemar Isabelle</div>
+          <div><strong>Forme juridique :</strong> Auto-entrepreneur</div>
+          <div><strong>SIRET :</strong> À compléter</div>
+          <div><strong>Adresse :</strong> Quartier Sainte-Anne, Amiens (80000)</div>
+          <div><strong>Email :</strong> contact@studloc.fr</div>
+          <div><strong>Site web :</strong> <a href="https://studloc.fr" target="_blank" rel="noopener">https://studloc.fr</a></div>
         </div>
       </section>
 
       <section class="section">
         <h2>2. Directeur de la publication</h2>
-        <p><strong>Nom :</strong> [Nom du responsable légal]</p>
+        <p><strong>Nom :</strong> Poncey Valdemar Isabelle</p>
       </section>
 
       <section class="section">
         <h2>3. Hébergement</h2>
         <div class="info-grid">
-          <div><strong>Hébergeur :</strong> [Nom de l'hébergeur, ex: OVH, Vercel, AWS...]</div>
-          <div><strong>Adresse :</strong> [Adresse de l'hébergeur]</div>
-          <div><strong>Site web :</strong> <a href="https://www.ovh.com" target="_blank" rel="noopener">[URL]</a></div>
+          <div><strong>Hébergeur :</strong> OVHcloud</div>
+          <div><strong>Adresse :</strong> 2 rue Kellermann, 59100 Roubaix, France</div>
+          <div><strong>Site web :</strong> <a href="https://www.ovhcloud.com" target="_blank" rel="noopener">https://www.ovhcloud.com</a></div>
         </div>
       </section>
 
       <section class="section">
         <h2>4. Propriété intellectuelle</h2>
         <p>
-          L'ensemble du contenu de ce site (textes, images, vidéos, logos, graphismes) est la propriété exclusive de 
-          <strong>[Nom du Site]</strong>, sauf mention contraire. Toute reproduction, distribution ou utilisation 
+          L'ensemble du contenu de ce site (textes, images, vidéos, logos, graphismes) est la propriété exclusive de
+          <strong>Stud'Loc</strong>, sauf mention contraire. Toute reproduction, distribution ou utilisation
           sans autorisation préalable est interdite et constitue une contrefaçon sanctionnée par le Code de la Propriété Intellectuelle.
         </p>
       </section>
@@ -46,7 +45,7 @@
       <section class="section">
         <h2>5. Données personnelles</h2>
         <p>
-          Pour en savoir plus sur la collecte et le traitement de vos données personnelles, 
+          Pour en savoir plus sur la collecte et le traitement de vos données personnelles,
           consultez notre <NuxtLink to="/legal/privacy" class="link-inline">Politique de Confidentialité</NuxtLink>.
         </p>
       </section>
@@ -54,8 +53,8 @@
       <section class="section">
         <h2>6. Cookies</h2>
         <p>
-          Ce site utilise uniquement des cookies strictement nécessaires (authentification et sécurité des paiements), 
-          exemptés de consentement conformément à la réglementation CNIL. 
+          Ce site utilise uniquement des cookies strictement nécessaires (authentification et sécurité),
+          exemptés de consentement conformément à la réglementation CNIL.
           Pour plus d'informations, consultez notre <NuxtLink to="/legal/privacy" class="link-inline">Politique de Confidentialité</NuxtLink>.
         </p>
       </section>
@@ -63,7 +62,7 @@
       <section class="section">
         <h2>7. Droit applicable et litiges</h2>
         <p>
-          Les présentes mentions légales sont régies par le droit français. 
+          Les présentes mentions légales sont régies par le droit français.
           En cas de litige, et à défaut de résolution amiable, les tribunaux français seront seuls compétents.
         </p>
       </section>
@@ -74,9 +73,9 @@
 
 <script setup>
 useHead({
-  title: 'Mentions Légales - NOM DU SITE',
+  title: 'Mentions Légales - Stud\'Loc',
   meta: [
-    { name: 'description', content: 'Informations légales concernant le site NOM DU SITE' }
+    { name: 'description', content: 'Informations légales concernant le site Stud\'Loc' }
   ]
 })
 </script>
@@ -151,6 +150,7 @@ useHead({
 .info-grid div {
   padding: 8px 0;
   border-bottom: 1px solid #f1f5f9;
+  color: #334155;
 }
 
 .info-grid a {

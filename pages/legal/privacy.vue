@@ -2,7 +2,6 @@
   <div class="privacy-page">
     <div class="container">
 
-      <!-- En-tête -->
       <div class="page-header">
         <div class="header-icon">🔒</div>
         <h1>Politique de Confidentialité</h1>
@@ -11,23 +10,21 @@
         </p>
       </div>
 
-      <!-- Introduction -->
       <section class="section">
         <p class="intro-text">
-          Chez <strong>{{ nomSite }}</strong>, nous prenons la protection de votre vie privée très au sérieux. 
-          Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles 
+          Chez <strong>Stud'Loc</strong>, nous prenons la protection de votre vie privée très au sérieux.
+          Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles
           lorsque vous utilisez notre plateforme de location de logements étudiants.
         </p>
         <div class="highlight-box">
-          <strong>🛡️ Notre engagement :</strong> Nous ne revendons aucune donnée personnelle à des tiers. 
+          <strong>🛡️ Notre engagement :</strong> Nous ne revendons aucune donnée personnelle à des tiers.
           Vos informations sont utilisées uniquement dans le cadre de notre service.
         </div>
       </section>
 
-      <!-- Section 1 : Données collectées -->
       <section class="section">
         <h2>1. Données que nous collectons</h2>
-        
+
         <h3>1.1 Lors de l'inscription</h3>
         <ul>
           <li><strong>Informations d'identification :</strong> Nom, prénom, adresse email</li>
@@ -37,9 +34,9 @@
 
         <h3>1.2 Lors de l'utilisation du service</h3>
         <ul>
-          <li><strong>Documents justificatifs :</strong> Pièce d'identité, justificatifs de garants (uniquement si nécessaire)</li>
+          <li><strong>Documents justificatifs :</strong> Pièce d'identité, justificatifs de revenus ou de garants (uniquement si vous les déposez)</li>
           <li><strong>Messages :</strong> Conversations avec les propriétaires via notre messagerie interne</li>
-          <li><strong>Avis :</strong> Commentaires et notes laissés sur les logements (uniquement si vous y êtes autorisé)</li>
+          <li><strong>Avis :</strong> Commentaires et notes laissés sur les logements</li>
         </ul>
 
         <h3>1.3 Données techniques</h3>
@@ -49,7 +46,6 @@
         </ul>
       </section>
 
-      <!-- Section 2 : COOKIES (LA PLUS IMPORTANTE) -->
       <section class="section cookies-section">
         <div class="cookies-header">
           <h2>2. Cookies et traceurs</h2>
@@ -59,15 +55,15 @@
         <div class="info-box info-primary">
           <div class="info-icon">ℹ️</div>
           <div class="info-content">
-            <strong>Bonne nouvelle :</strong> Nous n'utilisons <strong>aucun traceur publicitaire</strong> 
+            <strong>Bonne nouvelle :</strong> Nous n'utilisons <strong>aucun traceur publicitaire</strong>
             ni outil de statistiques tiers (type Google Analytics, Facebook Pixel, etc.).
           </div>
         </div>
 
         <h3>2.1 Cookies strictement nécessaires (exemptés de consentement)</h3>
         <p>
-          Conformément à l'article 82 de la loi Informatique et Libertés et aux lignes directrices de la CNIL, 
-          nous utilisons uniquement des cookies <strong>strictement nécessaires au fonctionnement du site</strong>, 
+          Conformément à l'article 82 de la loi Informatique et Libertés et aux lignes directrices de la CNIL,
+          nous utilisons uniquement des cookies <strong>strictement nécessaires au fonctionnement du site</strong>,
           qui sont exemptés de consentement préalable.
         </p>
 
@@ -102,15 +98,15 @@
         <div class="info-box info-success">
           <div class="info-icon">✅</div>
           <div class="info-content">
-            Nous ne déposons <strong>aucun cookie à des fins publicitaires, de ciblage comportemental ou de profilage</strong>. 
-            Vous ne verrez donc jamais de bannière de consentement aux cookies sur notre site, car tous nos cookies 
+            Nous ne déposons <strong>aucun cookie à des fins publicitaires, de ciblage comportemental ou de profilage</strong>.
+            Vous ne verrez donc jamais de bannière de consentement aux cookies sur notre site, car tous nos cookies
             relèvent de l'exemption prévue par la réglementation.
           </div>
         </div>
 
         <h3>2.3 Comment gérer les cookies ?</h3>
         <p>
-          Bien que nos cookies soient exemptés de consentement, vous pouvez toujours les bloquer via les paramètres de votre navigateur. 
+          Bien que nos cookies soient exemptés de consentement, vous pouvez toujours les bloquer via les paramètres de votre navigateur.
           Attention : cela empêchera le bon fonctionnement du site (vous ne pourrez plus rester connecté).
         </p>
         <ul>
@@ -120,16 +116,15 @@
         </ul>
       </section>
 
-      <!-- Section 3 : Utilisation des données -->
       <section class="section">
         <h2>3. Comment utilisons-nous vos données ?</h2>
         <p>Vos données personnelles sont utilisées uniquement pour :</p>
         <ul>
           <li>✓ Gérer votre compte et votre authentification</li>
-          <li>✓ Vous mettre en relation avec les propriétaires (messagerie)</li>
-          <li>✓ Traiter vos demandes de location</li>
-          <li>✓ Vous permettre de laisser des avis (si autorisé)</li>
-          <li>✓ Répondre à vos questions via le formulaire de contact</li>
+          <li>✓ Vous mettre en relation avec les propriétaires via la messagerie intégrée</li>
+          <li>✓ Traiter vos demandes de location et dossiers de candidature</li>
+          <li>✓ Vous permettre de laisser des avis sur les logements</li>
+          <li>✓ Vous envoyer des notifications par e-mail (nouveaux messages, mises à jour)</li>
           <li>✓ Assurer la sécurité et prévenir la fraude</li>
         </ul>
         <p class="emphasis">
@@ -137,47 +132,46 @@
         </p>
       </section>
 
-      <!-- Section 4 : Partage des données -->
       <section class="section">
         <h2>4. Partage de vos données</h2>
         <p>Vos données peuvent être partagées uniquement dans les cas suivants :</p>
-        
+
         <h3>4.1 Avec les propriétaires</h3>
         <p>
-          Lorsque vous contactez un propriétaire, celui-ci peut voir votre nom, prénom et vos messages. 
-          Vos documents justificatifs ne sont visibles que par les administrateurs et le propriétaire concerné.
+          Lorsque vous contactez un propriétaire, celui-ci peut voir votre nom, prénom et vos messages.
+          Vos documents justificatifs ne sont visibles que par le propriétaire concerné, uniquement si vous les partagez explicitement via la messagerie.
         </p>
 
-        <h3>4.2 Avec des prestataires techniques</h3>
+        <h3>4.2 Avec nos prestataires techniques</h3>
         <ul>
-          <li><strong>Hébergement :</strong> Nos serveurs sont hébergés chez [Nom hébergeur, ex: OVH, Vercel]</li>
-          <li><strong>Base de données :</strong> MySQL hébergé en France</li>
-          <li><strong>Paiements :</strong> Stripe et/ou PayPal (selon votre choix) — ces prestataires ont leur propre politique de confidentialité</li>
+          <li><strong>Hébergement :</strong> OVHcloud — 2 rue Kellermann, 59100 Roubaix, France</li>
+          <li><strong>Base de données :</strong> MySQL hébergé chez OVHcloud (France)</li>
+          <li><strong>Stockage de fichiers :</strong> Cloudflare R2 — utilisé pour le stockage des photos et documents</li>
+          <li><strong>Envoi d'e-mails :</strong> Resend — utilisé pour les notifications transactionnelles</li>
         </ul>
 
         <h3>4.3 Obligations légales</h3>
         <p>
-          Nous pouvons être amenés à communiquer vos données aux autorités compétentes si la loi nous l'impose 
+          Nous pouvons être amenés à communiquer vos données aux autorités compétentes si la loi nous l'impose
           (ex : réquisition judiciaire).
         </p>
       </section>
 
-      <!-- Section 5 : Conservation -->
       <section class="section">
         <h2>5. Durée de conservation</h2>
         <ul>
           <li><strong>Compte actif :</strong> Vos données sont conservées tant que votre compte existe</li>
           <li><strong>Compte supprimé :</strong> Vos données sont effacées sous 30 jours (sauf obligations légales)</li>
           <li><strong>Messages :</strong> Conservés pendant la durée de votre compte</li>
+          <li><strong>Documents justificatifs :</strong> Supprimés sur demande ou à la suppression du compte</li>
           <li><strong>Logs de sécurité :</strong> Conservés 1 an maximum</li>
         </ul>
       </section>
 
-      <!-- Section 6 : Vos droits -->
       <section class="section">
         <h2>6. Vos droits (RGPD)</h2>
         <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez des droits suivants :</p>
-        
+
         <div class="rights-grid">
           <div class="right-card">
             <div class="right-icon">👁️</div>
@@ -202,12 +196,12 @@
           <div class="right-card">
             <div class="right-icon">🚫</div>
             <h4>Droit d'opposition</h4>
-            <p>Vous pouvez vous opposer à certains traitements (prospection)</p>
+            <p>Vous pouvez vous opposer à certains traitements de vos données</p>
           </div>
           <div class="right-card">
             <div class="right-icon">⏸️</div>
             <h4>Droit à la limitation</h4>
-            <p>Vous pouvez demander le gel temporaire de vos données</p>
+            <p>Vous pouvez demander le gel temporaire du traitement de vos données</p>
           </div>
         </div>
 
@@ -215,62 +209,59 @@
           <div class="info-icon">📧</div>
           <div class="info-content">
             <strong>Pour exercer vos droits :</strong><br>
-            Contactez-nous via notre <NuxtLink to="/contact" class="link-inline">formulaire de contact</NuxtLink> 
-            ou par email à <a href="mailto:contact@votresite.fr" class="link-inline">contact@votresite.fr</a>. 
+            Contactez-nous via notre <NuxtLink to="/contact" class="link-inline">formulaire de contact</NuxtLink>
+            ou par email à <a href="mailto:contact@studloc.fr" class="link-inline">contact@studloc.fr</a>.
             Nous vous répondrons sous 30 jours maximum.
           </div>
         </div>
       </section>
 
-      <!-- Section 7 : Sécurité -->
       <section class="section">
         <h2>7. Sécurité de vos données</h2>
         <p>Nous mettons en œuvre les mesures techniques et organisationnelles suivantes :</p>
         <ul>
-          <li>✓ <strong>Mots de passe hashés</strong> avec bcrypt (algorithme de chiffrement robuste)</li>
+          <li>✓ <strong>Mots de passe hashés</strong> avec bcrypt</li>
           <li>✓ <strong>Connexion HTTPS</strong> (chiffrement SSL/TLS)</li>
-          <li>✓ <strong>Protection CSRF</strong> contre les attaques de type Cross-Site Request Forgery</li>
-          <li>✓ <strong>Limitation des tentatives de connexion</strong> (protection contre le brute-force)</li>
-          <li>✓ <strong>Sauvegardes régulières</strong> de la base de données</li>
-          <li>✓ <strong>Accès restreint</strong> aux données (seuls les administrateurs autorisés)</li>
+          <li>✓ <strong>Protection CSRF</strong> contre les attaques Cross-Site Request Forgery</li>
+          <li>✓ <strong>Vérification du type MIME</strong> des fichiers téléversés côté serveur</li>
+          <li>✓ <strong>Accès restreint aux fichiers</strong> — chaque document n'est accessible qu'à son propriétaire et aux participants de la conversation concernée</li>
+          <li>✓ <strong>Variables d'environnement</strong> pour toutes les clés et secrets sensibles</li>
         </ul>
       </section>
 
-      <!-- Section 8 : Modifications -->
       <section class="section">
         <h2>8. Modifications de cette politique</h2>
         <p>
-          Nous nous réservons le droit de modifier cette politique de confidentialité à tout moment. 
-          La date de dernière mise à jour est indiquée en haut de cette page. 
+          Nous nous réservons le droit de modifier cette politique de confidentialité à tout moment.
+          La date de dernière mise à jour est indiquée en haut de cette page.
           Les modifications importantes vous seront notifiées par email ou via une bannière sur le site.
         </p>
       </section>
 
-      <!-- Section 9 : Contact -->
       <section class="section section-contact">
         <h2>9. Nous contacter</h2>
         <p>Pour toute question concernant cette politique de confidentialité ou vos données personnelles :</p>
-        
+
         <div class="contact-card">
           <div class="contact-row">
-            <strong>Email :</strong> 
-            <a href="mailto:contact@votresite.fr">contact@votresite.fr</a>
+            <strong>Email :</strong>
+            <a href="mailto:contact@studloc.fr">contact@studloc.fr</a>
           </div>
           <div class="contact-row">
-            <strong>Formulaire :</strong> 
+            <strong>Formulaire :</strong>
             <NuxtLink to="/contact">Page de contact</NuxtLink>
           </div>
           <div class="contact-row">
-            <strong>Responsable des données :</strong> 
-            [Nom du responsable légal]
+            <strong>Responsable des données :</strong>
+            Poncey Valdemar Isabelle
           </div>
         </div>
 
         <div class="info-box info-cnil">
           <div class="info-icon">⚖️</div>
           <div class="info-content">
-            <strong>Autorité de contrôle :</strong> Si vous estimez que vos droits ne sont pas respectés, 
-            vous pouvez déposer une réclamation auprès de la 
+            <strong>Autorité de contrôle :</strong> Si vous estimez que vos droits ne sont pas respectés,
+            vous pouvez déposer une réclamation auprès de la
             <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener" class="link-inline">
               CNIL (Commission Nationale de l'Informatique et des Libertés)
             </a>.
@@ -283,25 +274,22 @@
 </template>
 
 <script setup>
-// Données dynamiques
-const nomSite = 'NOM DU SITE'
-const dateMAJ = new Date().toLocaleDateString('fr-FR', { 
-  day: 'numeric', 
-  month: 'long', 
-  year: 'numeric' 
+const dateMAJ = new Date().toLocaleDateString('fr-FR', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
 })
 
-// SEO
 useHead({
-  title: 'Politique de Confidentialité - ' + nomSite,
+  title: "Politique de Confidentialité - Stud'Loc",
   meta: [
-    { name: 'description', content: 'Découvrez comment nous protégeons vos données personnelles. Aucun traceur publicitaire, cookies strictement nécessaires.' }
+    { name: 'description', content: "Découvrez comment Stud'Loc protège vos données personnelles. Aucun traceur publicitaire, cookies strictement nécessaires." }
   ]
 })
 </script>
 
 <style scoped>
-/* ─── VARIABLES ───────────────────────────────────────────────── */
+/* ─── BASE ─────────────────────────────────────────────────────── */
 .privacy-page {
   --blue-primary: #2563eb;
   --blue-dark: #1e40af;
@@ -326,7 +314,7 @@ useHead({
   padding: 0 20px;
 }
 
-/* ─── EN-TÊTE ────────────────────────────────────────────────── */
+/* ─── EN-TÊTE ──────────────────────────────────────────────────── */
 .page-header {
   text-align: center;
   margin-bottom: 60px;
@@ -356,7 +344,7 @@ useHead({
   font-style: italic;
 }
 
-/* ─── SECTIONS ───────────────────────────────────────────────── */
+/* ─── SECTIONS ─────────────────────────────────────────────────── */
 .section {
   background: white;
   border-radius: 16px;
@@ -416,14 +404,13 @@ useHead({
   font-size: 1.2rem;
 }
 
-/* ─── INTRO ──────────────────────────────────────────────────── */
+/* ─── INTRO ────────────────────────────────────────────────────── */
 .intro-text {
   font-size: 1.05rem;
   line-height: 1.8;
   color: #475569;
 }
 
-/* ─── HIGHLIGHT BOX ──────────────────────────────────────────── */
 .highlight-box {
   background: linear-gradient(135deg, var(--blue-lighter), var(--blue-light));
   border-left: 4px solid var(--blue-primary);
@@ -434,7 +421,7 @@ useHead({
   line-height: 1.6;
 }
 
-/* ─── SECTION COOKIES (LA STAR) ─────────────────────────────── */
+/* ─── SECTION COOKIES ──────────────────────────────────────────── */
 .cookies-section {
   border: 2px solid var(--blue-primary);
   box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
@@ -457,6 +444,7 @@ useHead({
   border: none;
 }
 
+/* ─── BADGE ────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
   padding: 6px 16px;
@@ -472,7 +460,7 @@ useHead({
   color: #065f46;
 }
 
-/* ─── INFO BOXES ─────────────────────────────────────────────── */
+/* ─── INFO BOXES ───────────────────────────────────────────────── */
 .info-box {
   display: flex;
   gap: 16px;
@@ -512,7 +500,7 @@ useHead({
   border-color: #dc2626;
 }
 
-/* ─── TABLEAU COOKIES ────────────────────────────────────────── */
+/* ─── TABLEAU COOKIES ──────────────────────────────────────────── */
 .cookies-table {
   margin: 24px 0;
   overflow-x: auto;
@@ -571,10 +559,10 @@ td.exempt {
   font-weight: 700;
 }
 
-/* ─── GRILLE DES DROITS ──────────────────────────────────────── */
+/* ─── GRILLE DROITS ────────────────────────────────────────────── */
 .rights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
   margin: 24px 0;
 }
@@ -611,7 +599,7 @@ td.exempt {
   line-height: 1.5;
 }
 
-/* ─── CONTACT CARD ───────────────────────────────────────────── */
+/* ─── CONTACT ──────────────────────────────────────────────────── */
 .section-contact {
   background: linear-gradient(135deg, var(--blue-lighter), white);
 }
@@ -637,7 +625,7 @@ td.exempt {
 }
 
 .contact-row strong {
-  min-width: 180px;
+  min-width: 200px;
   color: var(--blue-dark);
 }
 
@@ -651,12 +639,11 @@ td.exempt {
   text-decoration: underline;
 }
 
-/* ─── LIENS ──────────────────────────────────────────────────── */
+/* ─── LIENS & DIVERS ───────────────────────────────────────────── */
 .link-inline {
   color: var(--blue-primary);
   text-decoration: underline;
   font-weight: 600;
-  transition: color 0.2s;
 }
 
 .link-inline:hover {
@@ -672,7 +659,7 @@ td.exempt {
   color: #92400e;
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+/* ─── RESPONSIVE ───────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .privacy-page {
     padding: 30px 0;
@@ -707,7 +694,8 @@ td.exempt {
     font-size: 0.85rem;
   }
 
-  th, td {
+  th,
+  td {
     padding: 10px 8px;
   }
 
