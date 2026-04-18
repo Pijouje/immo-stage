@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev',
+            from: 'noreply@studloc.fr',
             to: destinataire,
             subject: 'Réinitialisation de votre mot de passe — Stud\'Loc',
             html: '<div style="font-family: \'Segoe UI\', sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">'

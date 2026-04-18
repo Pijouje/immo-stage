@@ -62,17 +62,11 @@
       </section>
 
       <section class="section">
-        <h2>4. Paiements (CGV)</h2>
-        <p>
-          Les paiements effectués sur la plateforme (cautions, loyers) sont sécurisés via 
-          <strong>Stripe</strong> et/ou <strong>PayPal</strong>. 
-          Nous ne stockons aucune information bancaire.
-        </p>
-        <h3>4.1 Frais de service</h3>
+        <h3>4 Frais de service</h3>
         <p>
           [À compléter : Précisez si vous prenez une commission, des frais de dossier, etc.]
         </p>
-        <h3>4.2 Remboursements</h3>
+        <h3>4.1 Remboursements</h3>
         <p>
           Les conditions de remboursement dépendent de chaque annonce et doivent être convenues 
           directement entre le locataire et le propriétaire.
@@ -160,7 +154,7 @@
         <h2>12. Contact</h2>
         <p>Pour toute question concernant ces CGU :</p>
         <div class="contact-box">
-          <div>📧 Email : <a href="mailto:contact@votresite.fr">contact@votresite.fr</a></div>
+          <div>📧 Email : <a href="mailto:contact@votresite.fr">contact@studloc.fr</a></div>
           <div>📝 Formulaire : <NuxtLink to="/contact">Page de contact</NuxtLink></div>
         </div>
       </section>
@@ -170,7 +164,7 @@
 </template>
 
 <script setup>
-const nomSite = 'NOM DU SITE'
+const nomSite = 'studloc.fr'
 const dateMAJ = new Date().toLocaleDateString('fr-FR', { 
   day: 'numeric', 
   month: 'long', 
