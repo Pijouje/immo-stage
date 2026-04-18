@@ -62,33 +62,21 @@
       </section>
 
       <section class="section">
-        <h3>4 Frais de service</h3>
-        <p>
-          [À compléter : Précisez si vous prenez une commission, des frais de dossier, etc.]
-        </p>
-        <h3>4.1 Remboursements</h3>
-        <p>
-          Les conditions de remboursement dépendent de chaque annonce et doivent être convenues 
-          directement entre le locataire et le propriétaire.
-        </p>
-      </section>
-
-      <section class="section">
-        <h2>5. Responsabilités</h2>
-        <h3>5.1 Rôle de la plateforme</h3>
+        <h2>4. Responsabilités</h2>
+        <h3>4.1 Rôle de la plateforme</h3>
         <p>
           <strong>{{ nomSite }}</strong> est un intermédiaire technique mettant en relation 
           propriétaires et locataires. Nous ne sommes pas partie au contrat de location 
           et ne pouvons être tenus responsables des litiges entre utilisateurs.
         </p>
 
-        <h3>5.2 Vérification des annonces</h3>
+        <h3>4.2 Vérification des annonces</h3>
         <p>
           Nous faisons notre possible pour vérifier les annonces, mais ne garantissons pas 
           l'exactitude des informations fournies par les propriétaires.
         </p>
 
-        <h3>5.3 Limitation de responsabilité</h3>
+        <h3>4.3 Limitation de responsabilité</h3>
         <p>
           Nous ne pouvons être tenus responsables des dommages directs ou indirects 
           résultant de l'utilisation du service, sauf en cas de faute lourde ou intentionnelle.
@@ -96,7 +84,7 @@
       </section>
 
       <section class="section">
-        <h2>6. Modération et sanctions</h2>
+        <h2>5. Modération et sanctions</h2>
         <p>
           Nous nous réservons le droit de supprimer tout contenu ou compte ne respectant pas les présentes CGU, 
           sans préavis ni indemnité.
@@ -107,7 +95,7 @@
       </section>
 
       <section class="section">
-        <h2>7. Propriété intellectuelle</h2>
+        <h2>6. Propriété intellectuelle</h2>
         <p>
           Tous les éléments du site (design, logo, textes, code) sont protégés par le droit d'auteur. 
           Toute reproduction sans autorisation est interdite.
@@ -119,7 +107,7 @@
       </section>
 
       <section class="section">
-        <h2>8. Protection des données</h2>
+        <h2>7. Protection des données</h2>
         <p>
           Vos données personnelles sont traitées conformément à notre 
           <NuxtLink to="/legal/privacy" class="link-inline">Politique de Confidentialité</NuxtLink>.
@@ -127,7 +115,7 @@
       </section>
 
       <section class="section">
-        <h2>9. Modifications des CGU</h2>
+        <h2>8. Modifications des CGU</h2>
         <p>
           Nous nous réservons le droit de modifier les présentes CGU à tout moment. 
           Les modifications importantes vous seront notifiées par email.
@@ -135,7 +123,7 @@
       </section>
 
       <section class="section">
-        <h2>10. Résiliation</h2>
+        <h2>9. Résiliation</h2>
         <p>
           Vous pouvez supprimer votre compte à tout moment depuis votre profil ou en nous contactant. 
           La suppression entraîne l'effacement de vos données personnelles sous 30 jours.
@@ -143,7 +131,7 @@
       </section>
 
       <section class="section">
-        <h2>11. Droit applicable et juridiction</h2>
+        <h2>10. Droit applicable et juridiction</h2>
         <p>
           Les présentes CGU sont régies par le droit français. 
           En cas de litige, les tribunaux français seront seuls compétents.
@@ -151,10 +139,10 @@
       </section>
 
       <section class="section section-contact">
-        <h2>12. Contact</h2>
+        <h2>11. Contact</h2>
         <p>Pour toute question concernant ces CGU :</p>
         <div class="contact-box">
-          <div>📧 Email : <a href="mailto:contact@votresite.fr">contact@studloc.fr</a></div>
+          <div>📧 Email : <a href="mailto:contact@studloc.fr">contact@studloc.fr</a></div>
           <div>📝 Formulaire : <NuxtLink to="/contact">Page de contact</NuxtLink></div>
         </div>
       </section>
