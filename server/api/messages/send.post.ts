@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
     if (messagesNonLusExistants === 0) {
         const expediteurNom = `${(session.user as any).prenom || ''} ${(session.user as any).nom || ''}`.trim() || 'Un utilisateur'
         const emailDest = process.env.EMAIL_DEV_OVERRIDE || destinataire.email
-        const siteUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const siteUrl = process.env.AUTH_ORIGIN?.replace('/api/auth', '') || 'https://studloc.fr'
         const apercu = contenu.substring(0, 200) + (contenu.length > 200 ? '...' : '')
         
         const htmlEmail = '<div style="font-family: \'Segoe UI\', sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">'
